@@ -1,0 +1,2 @@
+import {prisma} from '@/lib/prisma';import {requireAdmin} from '@/lib/guard';
+export async function GET(req:Request){const g=await requireAdmin();if(g.error)return g.error;const c=new URL(req.url).searchParams.get('classe');const rows=await prisma.estoqueLocal.findMany({where:{genero:{situacao:'ATIVO',...(c==='QS'||c==='QR'?{classe:c}:{})}},include:{genero:{include:{unidade:true,categoria:true}},local:true,lote:true},orderBy:{genero:{nome:'asc'}}});return Response.json(rows.map(x=>({...x,quantidade:Number(x.quantidade)})))}

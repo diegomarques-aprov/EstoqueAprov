@@ -1,0 +1,2 @@
+import bcrypt from 'bcryptjs'; import { prisma } from '@/lib/prisma'; import { createSession } from '@/lib/auth';
+export async function POST(req:Request){ const {login,senha}=await req.json(); const u=await prisma.usuario.findUnique({where:{login}}); if(!u||u.situacao!=='ATIVO'||!(await bcrypt.compare(senha||'',u.senhaHash))) return Response.json({error:'Usuário ou senha inválidos.'},{status:401}); await prisma.usuario.update({where:{id:u.id},data:{ultimoAcesso:new Date()}}); await createSession(u.id); return Response.json({ok:true}); }

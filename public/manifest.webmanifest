@@ -1,0 +1,10 @@
+{
+  "name": "EstoqueAprov",
+  "short_name": "EstoqueAprov",
+  "description": "Sistema de Controle do Aprovisionamento",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#07110b",
+  "theme_color": "#1f6f3d",
+  "lang": "pt-BR"
+}

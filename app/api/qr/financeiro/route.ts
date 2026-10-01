@@ -1,0 +1,2 @@
+import {prisma} from '@/lib/prisma';import {requireAdmin} from '@/lib/guard';
+export async function GET(){const g=await requireAdmin();if(g.error)return g.error;const movs=await prisma.movimentacaoFinanceiraQR.findMany({orderBy:{criadoEm:'desc'},take:100,include:{usuario:{select:{nome:true}},compra:{select:{numero:true}}}});const saldo=movs.length?Number(movs[0].saldoResultante):0;return Response.json({saldo,movimentacoes:movs.map(m=>({...m,valor:Number(m.valor),saldoAnterior:Number(m.saldoAnterior),saldoResultante:Number(m.saldoResultante)}))})}

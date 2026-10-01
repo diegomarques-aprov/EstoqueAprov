@@ -1,0 +1,10 @@
+import {prisma} from '@/lib/prisma';import {requireAdmin} from '@/lib/guard';
+function dt(s:string,end=false){return new Date(s.slice(0,10)+(end?'T23:59:59.999Z':'T00:00:00.000Z'))}
+export async function GET(req:Request){const g=await requireAdmin();if(g.error)return g.error;const q=new URL(req.url).searchParams;const hoje=new Date().toISOString().slice(0,10);const inicio=q.get('inicio')||hoje,fim=q.get('fim')||inicio,classe=q.get('classe');const where:any={criadoEm:{gte:dt(inicio),lte:dt(fim,true)}};if(classe==='QS'||classe==='QR')where.classe=classe;
+const mov=await prisma.movimentacaoEstoque.findMany({where,include:{genero:{include:{unidade:true}},localOrigem:true,localDestino:true,lote:true},orderBy:{criadoEm:'desc'}});
+const efet=await prisma.efetivoAlimentado.findMany({where:{data:{gte:dt(inicio),lte:dt(fim,true)}},orderBy:{data:'asc'}});
+const estoque=await prisma.estoqueLocal.findMany({where:{quantidade:{gt:0},genero:{situacao:'ATIVO',...(classe==='QS'||classe==='QR'?{classe}:{})}},include:{genero:{include:{unidade:true}},local:true,lote:true}});
+const resumo:any={SALDO_INICIAL:0,RECEBIMENTO:0,SAIDA:0,DEVOLUCAO:0,PERDA:0,CORRECAO:0,TRANSFERENCIA:0};for(const m of mov)resumo[m.tipo]+=Number(m.quantidade);
+const baixos=estoque.filter(x=>x.genero.estoqueMinimo!=null).reduce((a:any[],x)=>{let r=a.find(y=>y.id===x.generoId);if(!r){r={id:x.generoId,nome:x.genero.nome,unidade:x.genero.unidade.sigla,qtd:0,min:Number(x.genero.estoqueMinimo)};a.push(r)}r.qtd+=Number(x.quantidade);return a},[]).filter(x=>x.qtd<x.min);
+const agora=Date.now(),limite=agora+30*86400000;const validade=estoque.filter(x=>x.lote?.validade&&new Date(x.lote.validade).getTime()<=limite).map(x=>({genero:x.genero.nome,lote:x.lote?.numero,validade:x.lote?.validade,quantidade:Number(x.quantidade),unidade:x.genero.unidade.sigla}));
+return Response.json({inicio,fim,classe:classe||'TODOS',resumo,movimentacoes:mov.map(x=>({...x,quantidade:Number(x.quantidade),valorUnitario:x.valorUnitario?Number(x.valorUnitario):null})),efetivos:efet,estoqueBaixo:baixos,validade});}

@@ -1,0 +1,1 @@
+import Link from'next/link';import{redirect}from'next/navigation';import{currentUser}from'@/lib/auth';import C from'@/components/EstoqueClient';export default async function P(){if(!await currentUser())redirect('/login');return <main><Link className="back" href="/dashboard">← Dashboard</Link><h1>Estoque atual</h1><C/></main>}
