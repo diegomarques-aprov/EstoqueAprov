@@ -1,308 +1,359 @@
-generator client { provider = "prisma-client-js" }
-datasource db { provider = "postgresql" url = env("DATABASE_URL") }
+generator client {
+  provider = "prisma-client-js"
+}
 
-enum Situacao { ATIVO INATIVO }
-enum ClasseGenero { QS QR }
-enum PerfilSistema { ADMIN_PRINCIPAL ADMINISTRADOR CHEFE_DEPOSITO GRADUADO_SERVICO }
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Situacao {
+  ATIVO
+  INATIVO
+}
+
+enum ClasseGenero {
+  QS
+  QR
+}
+
+enum PerfilSistema {
+  ADMIN_PRINCIPAL
+  ADMINISTRADOR
+  CHEFE_DEPOSITO
+  GRADUADO_SERVICO
+}
 
 model Usuario {
-  id String @id @default(cuid())
-  nome String
-  postoGraduacao String?
-  funcao String?
-  login String @unique
-  senhaHash String
-  perfil PerfilSistema @default(GRADUADO_SERVICO)
-  situacao Situacao @default(ATIVO)
-  ultimoAcesso DateTime?
-  criadoEm DateTime @default(now())
-  atualizadoEm DateTime @updatedAt
-  generosCriados Genero[] @relation("GeneroCriador")
-  auditorias Auditoria[]
-  recebimentos Recebimento[] @relation("RecebimentoCriador")
-  movimentacoesEstoque MovimentacaoEstoque[] @relation("MovUsuario")
-  saidas Saida[] @relation("SaidaCriador")
-  efetivos EfetivoAlimentado[] @relation("EfetivoUsuario")
-  recursosQR RecursoQR[] @relation("RecursoQRCriador")
+  id                      String                     @id @default(cuid())
+  nome                    String
+  postoGraduacao          String?
+  funcao                  String?
+  login                   String                     @unique
+  senhaHash               String
+  perfil                  PerfilSistema              @default(GRADUADO_SERVICO)
+  situacao                Situacao                   @default(ATIVO)
+  ultimoAcesso            DateTime?
+  criadoEm                DateTime                   @default(now())
+  atualizadoEm            DateTime                   @updatedAt
+  generosCriados          Genero[]                   @relation("GeneroCriador")
+  auditorias              Auditoria[]
+  recebimentos            Recebimento[]              @relation("RecebimentoCriador")
+  movimentacoesEstoque    MovimentacaoEstoque[]      @relation("MovUsuario")
+  saidas                  Saida[]                    @relation("SaidaCriador")
+  efetivos                EfetivoAlimentado[]        @relation("EfetivoUsuario")
+  recursosQR              RecursoQR[]                @relation("RecursoQRCriador")
   movimentosFinanceirosQR MovimentacaoFinanceiraQR[] @relation("MovFinanceiraQRUsuario")
-  comprasQR CompraQR[] @relation("CompraQRCriador")
+  comprasQR               CompraQR[]                 @relation("CompraQRCriador")
 }
 
 model LocalArmazenamento {
-  id String @id @default(cuid())
-  nome String @unique
-  descricao String?
-  situacao Situacao @default(ATIVO)
-  criadoEm DateTime @default(now())
-  atualizadoEm DateTime @updatedAt
-  categoriasPadrao Categoria[]
-  generosPadrao Genero[]
-  estoques EstoqueLocal[]
-  itensRecebimento ItemRecebimento[]
-  movimentacoesOrigem MovimentacaoEstoque[] @relation("MovLocalOrigem")
+  id                   String                @id @default(cuid())
+  nome                 String                @unique
+  descricao            String?
+  situacao             Situacao              @default(ATIVO)
+  criadoEm             DateTime              @default(now())
+  atualizadoEm         DateTime              @updatedAt
+  categoriasPadrao     Categoria[]
+  generosPadrao        Genero[]
+  estoques             EstoqueLocal[]
+  itensRecebimento     ItemRecebimento[]
+  movimentacoesOrigem  MovimentacaoEstoque[] @relation("MovLocalOrigem")
   movimentacoesDestino MovimentacaoEstoque[] @relation("MovLocalDestino")
 }
 
 model Categoria {
-  id String @id @default(cuid())
-  nome String @unique
-  controlaLotePadrao Boolean?
+  id                     String               @id @default(cuid())
+  nome                   String               @unique
+  controlaLotePadrao     Boolean?
   controlaValidadePadrao Boolean?
-  localPadraoId String?
-  localPadrao LocalArmazenamento? @relation(fields:[localPadraoId], references:[id])
-  situacao Situacao @default(ATIVO)
-  generos Genero[]
+  localPadraoId          String?
+  localPadrao            LocalArmazenamento?  @relation(fields: [localPadraoId], references: [id])
+  situacao               Situacao             @default(ATIVO)
+  generos                Genero[]
 }
 
 model UnidadeMedida {
-  id String @id @default(cuid())
-  sigla String @unique
-  nome String
+  id       String   @id @default(cuid())
+  sigla    String   @unique
+  nome     String
   situacao Situacao @default(ATIVO)
-  generos Genero[]
+  generos  Genero[]
 }
 
 model Genero {
-  id String @id @default(cuid())
-  nome String
-  classe ClasseGenero
-  categoriaId String?
-  categoria Categoria? @relation(fields:[categoriaId], references:[id])
-  unidadeId String
-  unidade UnidadeMedida @relation(fields:[unidadeId], references:[id])
-  controlaLote Boolean @default(false)
-  controlaValidade Boolean @default(false)
-  estoqueMinimo Decimal? @db.Decimal(14,3)
-  localPadraoId String?
-  localPadrao LocalArmazenamento? @relation(fields:[localPadraoId], references:[id])
-  situacao Situacao @default(ATIVO)
-  criadoPorId String
-  criadoPor Usuario @relation("GeneroCriador", fields:[criadoPorId], references:[id])
-  criadoEm DateTime @default(now())
-  atualizadoEm DateTime @updatedAt
-  lotes Lote[]
-  estoques EstoqueLocal[]
-  itensRecebimento ItemRecebimento[]
-  itensSaida ItemSaida[]
-  movimentacoesEstoque MovimentacaoEstoque[]
-  itensCompraQR ItemCompraQR[]
+  id                       String                     @id @default(cuid())
+  nome                     String
+  classe                   ClasseGenero
+  categoriaId              String?
+  categoria                Categoria?                 @relation(fields: [categoriaId], references: [id])
+  unidadeId                String
+  unidade                  UnidadeMedida              @relation(fields: [unidadeId], references: [id])
+  controlaLote             Boolean                    @default(false)
+  controlaValidade         Boolean                    @default(false)
+  estoqueMinimo            Decimal?                   @db.Decimal(14, 3)
+  localPadraoId            String?
+  localPadrao              LocalArmazenamento?        @relation(fields: [localPadraoId], references: [id])
+  situacao                 Situacao                   @default(ATIVO)
+  criadoPorId              String
+  criadoPor                Usuario                    @relation("GeneroCriador", fields: [criadoPorId], references: [id])
+  criadoEm                 DateTime                   @default(now())
+  atualizadoEm             DateTime                   @updatedAt
+  lotes                    Lote[]
+  estoques                 EstoqueLocal[]
+  itensRecebimento         ItemRecebimento[]
+  itensSaida               ItemSaida[]
+  movimentacoesEstoque     MovimentacaoEstoque[]
+  itensCompraQR            ItemCompraQR[]
   itensRecebimentoCompraQR ItemRecebimentoCompraQR[]
+
   @@unique([nome, classe])
 }
 
 model Auditoria {
-  id String @id @default(cuid())
-  usuarioId String?
-  usuario Usuario? @relation(fields:[usuarioId], references:[id])
-  acao String
-  entidade String
-  entidadeId String?
+  id              String   @id @default(cuid())
+  usuarioId       String?
+  usuario         Usuario? @relation(fields: [usuarioId], references: [id])
+  acao            String
+  entidade        String
+  entidadeId      String?
   dadosAnteriores Json?
-  dadosNovos Json?
-  criadoEm DateTime @default(now())
+  dadosNovos      Json?
+  criadoEm        DateTime @default(now())
 }
 
-enum TipoMovimentacao { SALDO_INICIAL RECEBIMENTO SAIDA DEVOLUCAO PERDA CORRECAO TRANSFERENCIA }
-enum ClasseOperacao { QS QR }
+enum TipoMovimentacao {
+  SALDO_INICIAL
+  RECEBIMENTO
+  SAIDA
+  DEVOLUCAO
+  PERDA
+  CORRECAO
+  TRANSFERENCIA
+}
+
+enum ClasseOperacao {
+  QS
+  QR
+}
 
 model EstoqueLocal {
-  id String @id @default(cuid())
-  generoId String
-  genero Genero @relation(fields:[generoId], references:[id])
-  localId String
-  local LocalArmazenamento @relation(fields:[localId], references:[id])
-  loteId String?
-  lote Lote? @relation(fields:[loteId], references:[id])
-  quantidade Decimal @default(0) @db.Decimal(14,3)
-  atualizadoEm DateTime @updatedAt
+  id           String             @id @default(cuid())
+  generoId     String
+  genero       Genero             @relation(fields: [generoId], references: [id])
+  localId      String
+  local        LocalArmazenamento @relation(fields: [localId], references: [id])
+  loteId       String?
+  lote         Lote?              @relation(fields: [loteId], references: [id])
+  quantidade   Decimal            @default(0) @db.Decimal(14, 3)
+  atualizadoEm DateTime           @updatedAt
+
   @@unique([generoId, localId, loteId])
 }
 
 model Lote {
-  id String @id @default(cuid())
-  generoId String
-  genero Genero @relation(fields:[generoId], references:[id])
-  numero String
-  validade DateTime?
-  criadoEm DateTime @default(now())
-  estoques EstoqueLocal[]
+  id            String                @id @default(cuid())
+  generoId      String
+  genero        Genero                @relation(fields: [generoId], references: [id])
+  numero        String
+  validade      DateTime?
+  criadoEm      DateTime              @default(now())
+  estoques      EstoqueLocal[]
   movimentacoes MovimentacaoEstoque[]
+
   @@unique([generoId, numero])
 }
 
 model Recebimento {
-  id String @id @default(cuid())
-  numero Int @unique @default(autoincrement())
-  classe ClasseOperacao
-  data DateTime
-  origem String?
-  documento String?
-  observacao String?
-  criadoPorId String
-  criadoPor Usuario @relation("RecebimentoCriador", fields:[criadoPorId], references:[id])
-  criadoEm DateTime @default(now())
-  itens ItemRecebimento[]
+  id               String                @id @default(cuid())
+  numero           Int                   @unique @default(autoincrement())
+  classe           ClasseOperacao
+  data             DateTime
+  origem           String?
+  documento        String?
+  observacao       String?
+  criadoPorId      String
+  criadoPor        Usuario               @relation("RecebimentoCriador", fields: [criadoPorId], references: [id])
+  criadoEm         DateTime              @default(now())
+  itens            ItemRecebimento[]
   vinculosCompraQR RecebimentoCompraQR[]
 }
 
 model ItemRecebimento {
-  id String @id @default(cuid())
-  recebimentoId String
-  recebimento Recebimento @relation(fields:[recebimentoId], references:[id], onDelete:Cascade)
-  generoId String
-  genero Genero @relation(fields:[generoId], references:[id])
-  quantidade Decimal @db.Decimal(14,3)
-  valorUnitario Decimal? @db.Decimal(14,4)
-  localId String
-  local LocalArmazenamento @relation(fields:[localId], references:[id])
-  loteId String?
-  lote Lote? @relation(fields:[loteId], references:[id])
+  id             String             @id @default(cuid())
+  recebimentoId  String
+  recebimento    Recebimento        @relation(fields: [recebimentoId], references: [id], onDelete: Cascade)
+  generoId       String
+  genero         Genero             @relation(fields: [generoId], references: [id])
+  quantidade     Decimal            @db.Decimal(14, 3)
+  valorUnitario  Decimal?           @db.Decimal(14, 4)
+  localId        String
+  local          LocalArmazenamento @relation(fields: [localId], references: [id])
+  loteId         String?
+  lote           Lote?              @relation(fields: [loteId], references: [id])
   itemCompraQRId String?
-  itemCompraQR ItemCompraQR? @relation(fields:[itemCompraQRId], references:[id])
+  itemCompraQR   ItemCompraQR?      @relation(fields: [itemCompraQRId], references: [id])
 }
 
-enum DestinoSaida { CAFE_DA_MANHA ALMOCO JANTAR CEIA OUTRO }
+enum DestinoSaida {
+  CAFE_DA_MANHA
+  ALMOCO
+  JANTAR
+  CEIA
+  OUTRO
+}
 
 model Saida {
-  id String @id @default(cuid())
-  numero Int @unique @default(autoincrement())
-  classe ClasseOperacao
-  destino DestinoSaida
-  data DateTime
-  observacao String?
-  criadoPorId String
-  criadoPor Usuario @relation("SaidaCriador", fields:[criadoPorId], references:[id])
-  criadoEm DateTime @default(now())
-  canceladaEm DateTime?
+  id                 String         @id @default(cuid())
+  numero             Int            @unique @default(autoincrement())
+  classe             ClasseOperacao
+  destino            DestinoSaida
+  data               DateTime
+  observacao         String?
+  criadoPorId        String
+  criadoPor          Usuario        @relation("SaidaCriador", fields: [criadoPorId], references: [id])
+  criadoEm           DateTime       @default(now())
+  canceladaEm        DateTime?
   motivoCancelamento String?
-  itens ItemSaida[]
+  itens              ItemSaida[]
 }
 
 model ItemSaida {
-  id String @id @default(cuid())
-  saidaId String
-  saida Saida @relation(fields:[saidaId], references:[id], onDelete:Cascade)
-  generoId String
-  genero Genero @relation(fields:[generoId], references:[id])
-  quantidade Decimal @db.Decimal(14,3)
+  id         String  @id @default(cuid())
+  saidaId    String
+  saida      Saida   @relation(fields: [saidaId], references: [id], onDelete: Cascade)
+  generoId   String
+  genero     Genero  @relation(fields: [generoId], references: [id])
+  quantidade Decimal @db.Decimal(14, 3)
 }
 
 model MovimentacaoEstoque {
-  id String @id @default(cuid())
-  tipo TipoMovimentacao
-  classe ClasseOperacao
-  generoId String
-  genero Genero @relation(fields:[generoId], references:[id])
-  loteId String?
-  lote Lote? @relation(fields:[loteId], references:[id])
-  localOrigemId String?
-  localOrigem LocalArmazenamento? @relation("MovLocalOrigem", fields:[localOrigemId], references:[id])
+  id             String               @id @default(cuid())
+  tipo           TipoMovimentacao
+  classe         ClasseOperacao
+  generoId       String
+  genero         Genero               @relation(fields: [generoId], references: [id])
+  loteId         String?
+  lote           Lote?                @relation(fields: [loteId], references: [id])
+  localOrigemId  String?
+  localOrigem    LocalArmazenamento?  @relation("MovLocalOrigem", fields: [localOrigemId], references: [id])
   localDestinoId String?
-  localDestino LocalArmazenamento? @relation("MovLocalDestino", fields:[localDestinoId], references:[id])
-  quantidade Decimal @db.Decimal(14,3)
-  valorUnitario Decimal? @db.Decimal(14,4)
+  localDestino   LocalArmazenamento?  @relation("MovLocalDestino", fields: [localDestinoId], references: [id])
+  quantidade     Decimal              @db.Decimal(14, 3)
+  valorUnitario  Decimal?             @db.Decimal(14, 4)
   referenciaTipo String?
-  referenciaId String?
-  observacao String?
-  usuarioId String
-  usuario Usuario @relation("MovUsuario", fields:[usuarioId], references:[id])
-  criadoEm DateTime @default(now())
+  referenciaId   String?
+  observacao     String?
+  usuarioId      String
+  usuario        Usuario              @relation("MovUsuario", fields: [usuarioId], references: [id])
+  criadoEm       DateTime             @default(now())
 }
 
-
 model EfetivoAlimentado {
-  id String @id @default(cuid())
-  data DateTime
-  refeicao DestinoSaida
-  quantidade Int
-  observacao String?
-  usuarioId String
-  usuario Usuario @relation("EfetivoUsuario", fields:[usuarioId], references:[id])
-  criadoEm DateTime @default(now())
-  atualizadoEm DateTime @updatedAt
+  id           String       @id @default(cuid())
+  data         DateTime
+  refeicao     DestinoSaida
+  quantidade   Int
+  observacao   String?
+  usuarioId    String
+  usuario      Usuario      @relation("EfetivoUsuario", fields: [usuarioId], references: [id])
+  criadoEm     DateTime     @default(now())
+  atualizadoEm DateTime     @updatedAt
+
   @@unique([data, refeicao])
 }
 
-enum TipoMovFinanceiraQR { ENTRADA EMPENHO ESTORNO AJUSTE_POSITIVO AJUSTE_NEGATIVO }
-enum StatusCompraQR { EMPENHADA PARCIALMENTE_RECEBIDA RECEBIDA CANCELADA }
+enum TipoMovFinanceiraQR {
+  ENTRADA
+  EMPENHO
+  ESTORNO
+  AJUSTE_POSITIVO
+  AJUSTE_NEGATIVO
+}
+
+enum StatusCompraQR {
+  EMPENHADA
+  PARCIALMENTE_RECEBIDA
+  RECEBIDA
+  CANCELADA
+}
 
 model RecursoQR {
-  id String @id @default(cuid())
-  descricao String
-  documento String?
-  valorInicial Decimal @db.Decimal(14,2)
-  criadoPorId String
-  criadoPor Usuario @relation("RecursoQRCriador", fields:[criadoPorId], references:[id])
-  criadoEm DateTime @default(now())
+  id           String   @id @default(cuid())
+  descricao    String
+  documento    String?
+  valorInicial Decimal  @db.Decimal(14, 2)
+  criadoPorId  String
+  criadoPor    Usuario  @relation("RecursoQRCriador", fields: [criadoPorId], references: [id])
+  criadoEm     DateTime @default(now())
 }
 
 model MovimentacaoFinanceiraQR {
-  id String @id @default(cuid())
-  tipo TipoMovFinanceiraQR
-  valor Decimal @db.Decimal(14,2)
-  saldoAnterior Decimal @db.Decimal(14,2)
-  saldoResultante Decimal @db.Decimal(14,2)
-  documento String?
-  observacao String?
-  compraId String?
-  compra CompraQR? @relation(fields:[compraId], references:[id])
-  usuarioId String
-  usuario Usuario @relation("MovFinanceiraQRUsuario", fields:[usuarioId], references:[id])
-  criadoEm DateTime @default(now())
+  id              String               @id @default(cuid())
+  tipo            TipoMovFinanceiraQR
+  valor           Decimal              @db.Decimal(14, 2)
+  saldoAnterior   Decimal              @db.Decimal(14, 2)
+  saldoResultante Decimal              @db.Decimal(14, 2)
+  documento       String?
+  observacao      String?
+  compraId        String?
+  compra          CompraQR?            @relation(fields: [compraId], references: [id])
+  usuarioId       String
+  usuario         Usuario              @relation("MovFinanceiraQRUsuario", fields: [usuarioId], references: [id])
+  criadoEm        DateTime             @default(now())
 }
 
 model CompraQR {
-  id String @id @default(cuid())
-  numero Int @unique @default(autoincrement())
-  data DateTime
-  fornecedor String?
-  documento String?
-  observacao String?
-  valorEstimado Decimal? @db.Decimal(14,2)
-  valorEmpenhado Decimal @db.Decimal(14,2)
-  status StatusCompraQR @default(EMPENHADA)
-  canceladaEm DateTime?
+  id                 String                     @id @default(cuid())
+  numero             Int                        @unique @default(autoincrement())
+  data               DateTime
+  fornecedor         String?
+  documento          String?
+  observacao         String?
+  valorEstimado      Decimal?                   @db.Decimal(14, 2)
+  valorEmpenhado     Decimal                    @db.Decimal(14, 2)
+  status             StatusCompraQR             @default(EMPENHADA)
+  canceladaEm        DateTime?
   motivoCancelamento String?
-  criadoPorId String
-  criadoPor Usuario @relation("CompraQRCriador", fields:[criadoPorId], references:[id])
-  criadoEm DateTime @default(now())
-  itens ItemCompraQR[]
-  movimentacoes MovimentacaoFinanceiraQR[]
-  recebimentos RecebimentoCompraQR[]
+  criadoPorId        String
+  criadoPor          Usuario                    @relation("CompraQRCriador", fields: [criadoPorId], references: [id])
+  criadoEm           DateTime                   @default(now())
+  itens              ItemCompraQR[]
+  movimentacoes      MovimentacaoFinanceiraQR[]
+  recebimentos       RecebimentoCompraQR[]
 }
 
 model ItemCompraQR {
-  id String @id @default(cuid())
-  compraId String
-  compra CompraQR @relation(fields:[compraId], references:[id], onDelete:Cascade)
-  generoId String
-  genero Genero @relation(fields:[generoId], references:[id])
-  quantidade Decimal @db.Decimal(14,3)
-  valorUnitarioEstimado Decimal? @db.Decimal(14,4)
-  valorUnitarioEmpenhado Decimal? @db.Decimal(14,4)
-  recebimentos ItemRecebimentoCompraQR[]
+  id                      String                     @id @default(cuid())
+  compraId                String
+  compra                  CompraQR                   @relation(fields: [compraId], references: [id], onDelete: Cascade)
+  generoId                String
+  genero                  Genero                     @relation(fields: [generoId], references: [id])
+  quantidade              Decimal                    @db.Decimal(14, 3)
+  valorUnitarioEstimado   Decimal?                   @db.Decimal(14, 4)
+  valorUnitarioEmpenhado  Decimal?                   @db.Decimal(14, 4)
+  recebimentos            ItemRecebimentoCompraQR[]
   itensRecebimentoEstoque ItemRecebimento[]
 }
 
 model RecebimentoCompraQR {
-  id String @id @default(cuid())
-  compraId String
-  compra CompraQR @relation(fields:[compraId], references:[id])
-  recebimentoId String @unique
-  recebimento Recebimento @relation(fields:[recebimentoId], references:[id])
-  criadoEm DateTime @default(now())
-  itens ItemRecebimentoCompraQR[]
+  id            String                    @id @default(cuid())
+  compraId      String
+  compra        CompraQR                  @relation(fields: [compraId], references: [id])
+  recebimentoId String                    @unique
+  recebimento   Recebimento               @relation(fields: [recebimentoId], references: [id])
+  criadoEm      DateTime                  @default(now())
+  itens         ItemRecebimentoCompraQR[]
 }
 
 model ItemRecebimentoCompraQR {
-  id String @id @default(cuid())
-  vinculoId String
-  vinculo RecebimentoCompraQR @relation(fields:[vinculoId], references:[id], onDelete:Cascade)
-  itemCompraId String
-  itemCompra ItemCompraQR @relation(fields:[itemCompraId], references:[id])
-  generoId String
-  genero Genero @relation(fields:[generoId], references:[id])
-  quantidade Decimal @db.Decimal(14,3)
-  valorUnitarioReal Decimal? @db.Decimal(14,4)
+  id                String               @id @default(cuid())
+  vinculoId         String
+  vinculo           RecebimentoCompraQR  @relation(fields: [vinculoId], references: [id], onDelete: Cascade)
+  itemCompraId      String
+  itemCompra        ItemCompraQR         @relation(fields: [itemCompraId], references: [id])
+  generoId          String
+  genero            Genero               @relation(fields: [generoId], references: [id])
+  quantidade        Decimal              @db.Decimal(14, 3)
+  valorUnitarioReal Decimal?             @db.Decimal(14, 4)
 }
-
