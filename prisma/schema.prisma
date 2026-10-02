@@ -160,6 +160,7 @@ model Lote {
   criadoEm      DateTime              @default(now())
   estoques      EstoqueLocal[]
   movimentacoes MovimentacaoEstoque[]
+itensRecebimento ItemRecebimento[]
 
   @@unique([generoId, numero])
 }
