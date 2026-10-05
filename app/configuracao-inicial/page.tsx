@@ -1,2 +1,35 @@
-import { redirect } from 'next/navigation'; import { prisma } from '@/lib/prisma'; import SetupForm from '@/components/SetupForm';
-export default async function Setup(){if(await prisma.usuario.count()>0)redirect('/login');return <main><div className="brand">EstoqueAprov</div><p className="muted">Configuração inicial</p><div className="card"><span className="tag">1 de 4</span><h1>Criar Administrador Principal</h1><p>Este primeiro usuário terá autoridade para configurar o sistema e cadastrar os demais usuários.</p><SetupForm/></div><div className="card"><h3>Depois deste passo</h3><p>Locais de armazenamento → Gêneros QS/QR → Conferência inicial.</p></div></main>}
+import { redirect } from 'next/navigation';
+import { prisma } from '@/lib/prisma';
+import SetupForm from '@/components/SetupForm';
+
+export const dynamic = 'force-dynamic';
+
+export default async function Setup() {
+  if ((await prisma.usuario.count()) > 0) {
+    redirect('/login');
+  }
+
+  return (
+    <main>
+      <div className="brand">EstoqueAprov</div>
+      <p className="muted">Configuração inicial</p>
+
+      <div className="card">
+        <span className="tag">1 de 4</span>
+        <h1>Criar Administrador Principal</h1>
+        <p>
+          Este primeiro usuário terá autoridade para configurar o sistema e
+          cadastrar os demais usuários.
+        </p>
+        <SetupForm />
+      </div>
+
+      <div className="card">
+        <h3>Depois deste passo</h3>
+        <p>
+          Locais de armazenamento → Gêneros QS/QR → Conferência inicial.
+        </p>
+      </div>
+    </main>
+  );
+}
