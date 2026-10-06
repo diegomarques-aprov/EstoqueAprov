@@ -4,43 +4,51 @@ export const dynamic = 'force-dynamic';
 
 export default function Home() {
   return (
-    <main
+    <div
       style={{
         position: 'fixed',
-        inset: 0,
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
         margin: 0,
         padding: 0,
+        zIndex: 9999,
+        background: '#000',
         overflow: 'hidden',
-        backgroundColor: '#000',
       }}
     >
       <Link
         href="/login"
         aria-label="Entrar no EstoqueAprov"
-        title="Entrar no EstoqueAprov"
         style={{
           position: 'absolute',
           inset: 0,
+          width: '100vw',
+          height: '100vh',
           display: 'block',
-          width: '100%',
-          height: '100%',
-          cursor: 'pointer',
+          margin: 0,
+          padding: 0,
         }}
       >
         <img
           src="/abertura-estoqueaprov.jpg.jpeg"
-          alt="EstoqueAprov - Entrar"
+          alt="EstoqueAprov"
           style={{
             position: 'absolute',
-            inset: 0,
-            width: '100%',
-            height: '100%',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            maxWidth: 'none',
             objectFit: 'cover',
-            objectPosition: 'center center',
+            objectPosition: 'center',
+            margin: 0,
+            padding: 0,
             display: 'block',
           }}
         />
       </Link>
-    </main>
+    </div>
   );
 }
