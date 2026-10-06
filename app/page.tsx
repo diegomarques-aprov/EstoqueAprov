@@ -16,7 +16,7 @@ export default function Home() {
       }}
     >
       <img
-        src="/abertura-estoqueaprov.jpg"
+        src="/abertura-estoqueaprov.jpg.jpeg"
         alt="EstoqueAprov"
         style={{
           width: '100%',
