@@ -6,42 +6,41 @@ export default function Home() {
   return (
     <main
       style={{
-        width: '100vw',
-        height: '100dvh',
+        position: 'fixed',
+        inset: 0,
         margin: 0,
         padding: 0,
         overflow: 'hidden',
-        position: 'relative',
         backgroundColor: '#000',
       }}
     >
-      <img
-        src="/abertura-estoqueaprov.jpg.jpeg"
-        alt="EstoqueAprov"
-        style={{
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover',
-          objectPosition: 'center',
-          display: 'block',
-        }}
-      />
-
       <Link
         href="/login"
         aria-label="Entrar no EstoqueAprov"
-        title="Entrar"
+        title="Entrar no EstoqueAprov"
         style={{
           position: 'absolute',
-          left: '40.5%',
-          top: '44%',
-          width: '19%',
-          height: '10%',
+          inset: 0,
           display: 'block',
-          borderRadius: '18px',
+          width: '100%',
+          height: '100%',
           cursor: 'pointer',
         }}
-      />
+      >
+        <img
+          src="/abertura-estoqueaprov.jpg.jpeg"
+          alt="EstoqueAprov - Entrar"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            objectPosition: 'center center',
+            display: 'block',
+          }}
+        />
+      </Link>
     </main>
   );
 }
