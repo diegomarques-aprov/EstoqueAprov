@@ -14,6 +14,9 @@ export default function LocaisClient() {
   const [erro, setErro] = useState('');
   const [sucesso, setSucesso] = useState('');
   const [mostrarLocais, setMostrarLocais] = useState(false);
+  const [editando, setEditando] = useState<Local | null>(null);
+  const [nomeEdicao, setNomeEdicao] = useState('');
+  const [descricaoEdicao, setDescricaoEdicao] = useState('');
   const nomeRef = useRef<HTMLInputElement>(null);
 
   async function carregarLocais() {
@@ -56,12 +59,64 @@ export default function LocaisClient() {
     }
 
     form.reset();
-
     setSucesso('Local cadastrado com sucesso.');
 
     await carregarLocais();
 
     nomeRef.current?.focus();
+  }
+
+  function iniciarEdicao(local: Local) {
+    setEditando(local);
+    setNomeEdicao(local.nome);
+    setDescricaoEdicao(local.descricao || '');
+    setErro('');
+    setSucesso('');
+  }
+
+  function cancelarEdicao() {
+    setEditando(null);
+    setNomeEdicao('');
+    setDescricaoEdicao('');
+    setErro('');
+  }
+
+  async function salvarEdicao(ev: FormEvent<HTMLFormElement>) {
+    ev.preventDefault();
+
+    if (!editando) return;
+
+    setErro('');
+    setSucesso('');
+
+    const r = await fetch('/api/locais', {
+      method: 'PUT',
+      headers: {
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        id: editando.id,
+        nome: nomeEdicao,
+        descricao: descricaoEdicao,
+      }),
+    });
+
+    const resposta = await r.json();
+
+    if (!r.ok) {
+      setErro(
+        resposta.error ||
+          'Não foi possível atualizar o local. Verifique os dados informados.'
+      );
+      return;
+    }
+
+    setEditando(null);
+    setNomeEdicao('');
+    setDescricaoEdicao('');
+    setSucesso('Local atualizado com sucesso.');
+
+    await carregarLocais();
   }
 
   return (
@@ -85,13 +140,13 @@ export default function LocaisClient() {
             Adicionar local
           </button>
 
-          {sucesso && (
+          {sucesso && !editando && (
             <p role="status">
               <strong>✓ {sucesso}</strong>
             </p>
           )}
 
-          {erro && (
+          {erro && !editando && (
             <p className="error" role="alert">
               {erro}
             </p>
@@ -117,20 +172,91 @@ export default function LocaisClient() {
             {locais.length ? (
               locais.map((local) => (
                 <div className="row" key={local.id}>
-                  <div>
-                    <b>{local.nome}</b>
-                    <div className="muted">
-                      {local.descricao || 'Sem descrição'}
-                    </div>
-                  </div>
+                  {editando?.id === local.id ? (
+                    <form onSubmit={salvarEdicao} style={{ width: '100%' }}>
+                      <h3>Editar local</h3>
 
-                  <span className="tag">
-                    {local.situacao || 'ATIVO'}
-                  </span>
+                      <label>Nome</label>
+                      <input
+                        value={nomeEdicao}
+                        onChange={(e) => setNomeEdicao(e.target.value)}
+                        required
+                        autoFocus
+                      />
+
+                      <label>Descrição</label>
+                      <input
+                        value={descricaoEdicao}
+                        onChange={(e) => setDescricaoEdicao(e.target.value)}
+                      />
+
+                      <div
+                        style={{
+                          display: 'flex',
+                          gap: '8px',
+                          marginTop: '12px',
+                        }}
+                      >
+                        <button className="btn" type="submit">
+                          Salvar alterações
+                        </button>
+
+                        <button
+                          className="linkbtn"
+                          type="button"
+                          onClick={cancelarEdicao}
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+
+                      {erro && (
+                        <p className="error" role="alert">
+                          {erro}
+                        </p>
+                      )}
+                    </form>
+                  ) : (
+                    <>
+                      <div>
+                        <b>{local.nome}</b>
+
+                        <div className="muted">
+                          {local.descricao || 'Sem descrição'}
+                        </div>
+                      </div>
+
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                        }}
+                      >
+                        <span className="tag">
+                          {local.situacao || 'ATIVO'}
+                        </span>
+
+                        <button
+                          type="button"
+                          className="linkbtn"
+                          onClick={() => iniciarEdicao(local)}
+                        >
+                          Editar
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
               ))
             ) : (
               <p className="muted">Nenhum local cadastrado.</p>
+            )}
+
+            {sucesso && !editando && (
+              <p role="status">
+                <strong>✓ {sucesso}</strong>
+              </p>
             )}
           </>
         )}
