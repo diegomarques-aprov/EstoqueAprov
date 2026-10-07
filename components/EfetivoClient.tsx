@@ -44,6 +44,16 @@ function numero(valor: string) {
   return Number.isFinite(n) && n >= 0 ? n : 0;
 }
 
+function calcularPlanejamento(
+  totalPrevisto: number,
+  margem: number
+) {
+  return (
+    totalPrevisto +
+    Math.ceil((totalPrevisto * margem) / 100)
+  );
+}
+
 export default function EfetivoClient() {
   const amanha = dataLocal(1);
 
@@ -54,7 +64,8 @@ export default function EfetivoClient() {
   const [cabosSoldados, setCabosSoldados] = useState('');
   const [outrosPrevistos, setOutrosPrevistos] = useState('');
 
-  const [usarTotalDireto, setUsarTotalDireto] = useState(false);
+  const [usarTotalDireto, setUsarTotalDireto] =
+    useState(false);
   const [totalDireto, setTotalDireto] = useState('');
 
   const [margem, setMargem] = useState('10');
@@ -77,8 +88,9 @@ export default function EfetivoClient() {
     ? numero(totalDireto)
     : somaCategorias;
 
-  const efetivoPlanejamento = Math.ceil(
-    totalPrevisto * (1 + numero(margem) / 100)
+  const efetivoPlanejamento = calcularPlanejamento(
+    totalPrevisto,
+    numero(margem)
   );
 
   async function carregar() {
@@ -160,7 +172,7 @@ export default function EfetivoClient() {
       }
 
       setMsg(
-        `Efetivo arranchado relacionado com sucesso. ${totalPrevisto} previsto(s); planejamento para ${efetivoPlanejamento} refeição(ões).`
+        `Efetivo arranchado relacionado com sucesso. ${j.totalPrevisto} previsto(s); planejamento para ${j.efetivoPlanejamento} refeição(ões).`
       );
 
       limparFormulario();
@@ -201,13 +213,17 @@ export default function EfetivoClient() {
             Refeição
             <select
               value={refeicao}
-              onChange={(e) => setRefeicao(e.target.value)}
+              onChange={(e) =>
+                setRefeicao(e.target.value)
+              }
             >
-              {Object.entries(nomes).map(([valor, nome]) => (
-                <option key={valor} value={valor}>
-                  {nome}
-                </option>
-              ))}
+              {Object.entries(nomes).map(
+                ([valor, nome]) => (
+                  <option key={valor} value={valor}>
+                    {nome}
+                  </option>
+                )
+              )}
             </select>
           </label>
 
@@ -216,7 +232,8 @@ export default function EfetivoClient() {
               marginTop: 16,
               marginBottom: 16,
               padding: 14,
-              border: '1px solid rgba(255,255,255,.12)',
+              border:
+                '1px solid rgba(255,255,255,.12)',
               borderRadius: 10,
             }}
           >
@@ -240,10 +257,14 @@ export default function EfetivoClient() {
               Informar somente o total de arranchados
             </label>
 
-            <p className="muted" style={{ marginBottom: 0 }}>
+            <p
+              className="muted"
+              style={{ marginBottom: 0 }}
+            >
               Se os quantitativos por categoria estiverem
-              disponíveis, deixe esta opção desmarcada e informe-os
-              abaixo. O sistema fará a soma automaticamente.
+              disponíveis, deixe esta opção desmarcada e
+              informe-os abaixo. O sistema fará a soma
+              automaticamente.
             </p>
           </div>
 
@@ -256,7 +277,9 @@ export default function EfetivoClient() {
                 step="1"
                 required
                 value={totalDireto}
-                onChange={(e) => setTotalDireto(e.target.value)}
+                onChange={(e) =>
+                  setTotalDireto(e.target.value)
+                }
               />
             </label>
           ) : (
@@ -326,7 +349,9 @@ export default function EfetivoClient() {
                 max="100"
                 step="0.1"
                 value={margem}
-                onChange={(e) => setMargem(e.target.value)}
+                onChange={(e) =>
+                  setMargem(e.target.value)
+                }
               />
             </label>
 
@@ -334,6 +359,7 @@ export default function EfetivoClient() {
               <span>
                 Efetivo considerado para planejamento
               </span>
+
               <strong>{efetivoPlanejamento}</strong>
             </div>
 
@@ -343,24 +369,50 @@ export default function EfetivoClient() {
                 style={{ marginBottom: 0 }}
               >
                 O cálculo dos gêneros utilizará{' '}
-                <strong>{efetivoPlanejamento}</strong>{' '}
-                refeição(ões), considerando o efetivo previsto e a
-                margem de segurança.
+                <strong>
+                  {efetivoPlanejamento}
+                </strong>{' '}
+                refeição(ões), considerando o efetivo
+                previsto e a margem de segurança.
               </p>
             )}
           </div>
 
-          <label>
-            Observação
-            <textarea
-              value={observacao}
-              onChange={(e) => setObservacao(e.target.value)}
-              placeholder="Informação complementar, se necessária."
-            />
-          </label>
+          <div style={{ marginBottom: 18 }}>
+            <label
+              htmlFor="observacao-arranchamento"
+              style={{
+                display: 'block',
+                marginBottom: 6,
+              }}
+            >
+              Observação
+            </label>
 
-          {msg && <div className="success">{msg}</div>}
-          {erro && <div className="error">{erro}</div>}
+            <textarea
+              id="observacao-arranchamento"
+              value={observacao}
+              onChange={(e) =>
+                setObservacao(e.target.value)
+              }
+              placeholder="Informação complementar, se necessária."
+              rows={3}
+              style={{
+                display: 'block',
+                width: '100%',
+                minHeight: 80,
+                resize: 'vertical',
+              }}
+            />
+          </div>
+
+          {msg && (
+            <div className="success">{msg}</div>
+          )}
+
+          {erro && (
+            <div className="error">{erro}</div>
+          )}
 
           <button
             className="btn"
@@ -379,7 +431,8 @@ export default function EfetivoClient() {
 
         {rows.length === 0 ? (
           <p className="muted">
-            Nenhum efetivo arranchado relacionado para esta data.
+            Nenhum efetivo arranchado relacionado para esta
+            data.
           </p>
         ) : (
           rows.map((item) => (
@@ -393,7 +446,9 @@ export default function EfetivoClient() {
               }}
             >
               <div>
-                <strong>{nomes[item.refeicao]}</strong>
+                <strong>
+                  {nomes[item.refeicao]}
+                </strong>
 
                 <div className="muted">
                   Previsto: {item.totalPrevisto}
@@ -410,7 +465,8 @@ export default function EfetivoClient() {
 
               <div style={{ textAlign: 'right' }}>
                 <strong>
-                  Planejamento: {item.efetivoPlanejamento}
+                  Planejamento:{' '}
+                  {item.efetivoPlanejamento}
                 </strong>
 
                 <div className="muted">
