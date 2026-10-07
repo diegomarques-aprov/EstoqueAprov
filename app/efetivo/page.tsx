@@ -1,1 +1,22 @@
-import Link from 'next/link';import {redirect} from 'next/navigation';import {currentUser} from '@/lib/auth';import EfetivoClient from '@/components/EfetivoClient';export default async function Page(){if(!await currentUser())redirect('/login');return <main><Link className="back" href="/dashboard">← Dashboard</Link><h1>Efetivo alimentado</h1><EfetivoClient/></main>}
+import Link from 'next/link';
+import { redirect } from 'next/navigation';
+import { currentUser } from '@/lib/auth';
+import EfetivoClient from '@/components/EfetivoClient';
+
+export default async function Page() {
+  if (!(await currentUser())) {
+    redirect('/login');
+  }
+
+  return (
+    <main>
+      <Link className="back" href="/dashboard">
+        ← Início
+      </Link>
+
+      <h1>Efetivo alimentado</h1>
+
+      <EfetivoClient />
+    </main>
+  );
+}
