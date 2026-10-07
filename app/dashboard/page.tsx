@@ -68,7 +68,7 @@ export default async function Dashboard() {
         <LogoutButton />
       </header>
 
-      <h1>Dashboard</h1>
+      <h1>Início</h1>
 
       <div className="grid">
         <div className="card">
