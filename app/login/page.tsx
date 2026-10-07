@@ -17,7 +17,7 @@ export default async function Login() {
   return (
     <main className="narrow">
       <div className="brand">EstoqueAprov</div>
-      <p className="muted">Sistema de Controle do Depósito do Aprovisionamento</p>
+      <p className="muted">Sistema de Controle do Estoque do Aprovisionamento</p>
 
       <div className="card">
         <h1>Entrar</h1>
