@@ -41,7 +41,7 @@ model Usuario {
   recebimentos            Recebimento[]              @relation("RecebimentoCriador")
   movimentacoesEstoque    MovimentacaoEstoque[]      @relation("MovUsuario")
   saidas                  Saida[]                    @relation("SaidaCriador")
-  efetivos                EfetivoAlimentado[]        @relation("EfetivoUsuario")
+  arranchamentos          Arranchamento[]            @relation("ArranchamentoUsuario")
   recursosQR              RecursoQR[]                @relation("RecursoQRCriador")
   movimentosFinanceirosQR MovimentacaoFinanceiraQR[] @relation("MovFinanceiraQRUsuario")
   comprasQR               CompraQR[]                 @relation("CompraQRCriador")
@@ -250,18 +250,44 @@ model MovimentacaoEstoque {
   criadoEm       DateTime             @default(now())
 }
 
-model EfetivoAlimentado {
-  id           String       @id @default(cuid())
-  data         DateTime
-  refeicao     DestinoSaida
-  quantidade   Int
-  observacao   String?
-  usuarioId    String
-  usuario      Usuario      @relation("EfetivoUsuario", fields: [usuarioId], references: [id])
-  criadoEm     DateTime     @default(now())
-  atualizadoEm DateTime     @updatedAt
+model Arranchamento {
+  id                     String       @id @default(cuid())
+  data                   DateTime
+  refeicao               DestinoSaida
+
+  // Efetivo previsto
+  oficiaisStenSgt         Int          @default(0)
+  cabosSoldados           Int          @default(0)
+  outrosPrevistos         Int          @default(0)
+  totalPrevisto           Int
+
+  // Planejamento do saque
+  margemSegurancaPercent  Decimal      @default(10) @db.Decimal(5, 2)
+  efetivoPlanejamento     Int
+
+  // Fechamento da refeição
+  arranchadosCompareceram Int?
+  naoArranchadosAtendidos Int          @default(0)
+  totalAtendido           Int?
+  fechamentoRealizadoEm  DateTime?
+
+  // Sobras da refeição, em kg
+  sobraKg                 Decimal?     @db.Decimal(14, 3)
+
+  observacao              String?
+
+  usuarioId               String
+  usuario                 Usuario      @relation(
+    "ArranchamentoUsuario",
+    fields: [usuarioId],
+    references: [id]
+  )
+
+  criadoEm                 DateTime     @default(now())
+  atualizadoEm             DateTime     @updatedAt
 
   @@unique([data, refeicao])
+  @@index([data])
 }
 
 enum TipoMovFinanceiraQR {
