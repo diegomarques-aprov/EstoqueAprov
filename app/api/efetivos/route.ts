@@ -122,9 +122,9 @@ export async function POST(req: Request) {
 
   const margem = dados.margemSegurancaPercent;
 
-  const efetivoPlanejamento = Math.ceil(
-    totalPrevisto * (1 + margem / 100)
-  );
+  const efetivoPlanejamento =
+  totalPrevisto +
+  Math.ceil((totalPrevisto * margem) / 100);
 
   const data = dia(dados.data);
 
