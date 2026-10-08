@@ -147,11 +147,11 @@ export default function RelatoriosClient() {
     );
 
   /*
-   * Para atendimento e sobra, somente registros
-   * efetivamente fechados entram no cálculo.
+   * Somente registros efetivamente fechados
+   * entram nos cálculos de atendimento e sobra.
    *
-   * Dessa forma, "pendente" nunca é interpretado
-   * como zero.
+   * Assim, um fechamento pendente nunca é
+   * interpretado como valor zero.
    */
   const registrosFechados =
     arranchamentos.filter(
@@ -175,6 +175,13 @@ export default function RelatoriosClient() {
         total + Number(item.sobraKg ?? 0),
       0
     );
+
+  const urlExcel =
+    `/api/relatorios/excel?inicio=${encodeURIComponent(
+      inicio
+    )}&fim=${encodeURIComponent(
+      fim
+    )}&classe=${encodeURIComponent(classe)}`;
 
   return (
     <>
@@ -229,7 +236,12 @@ export default function RelatoriosClient() {
 
         <div
           className="actions"
-          style={{ marginTop: 14 }}
+          style={{
+            marginTop: 14,
+            display: 'flex',
+            gap: 10,
+            flexWrap: 'wrap',
+          }}
         >
           <button
             className="btn"
@@ -240,6 +252,14 @@ export default function RelatoriosClient() {
               ? 'Gerando...'
               : 'Visualizar relatório'}
           </button>
+
+          <a
+            className="btn secondary"
+            href={urlExcel}
+            download
+          >
+            Baixar Excel
+          </a>
         </div>
 
         {erro && (
