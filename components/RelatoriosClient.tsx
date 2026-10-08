@@ -146,17 +146,35 @@ export default function RelatoriosClient() {
       0
     );
 
-  const totalAtendido = arranchamentos.reduce(
-    (total: number, item: any) =>
-      total + Number(item.totalAtendido || 0),
-    0
-  );
+  /*
+   * Para atendimento e sobra, somente registros
+   * efetivamente fechados entram no cálculo.
+   *
+   * Dessa forma, "pendente" nunca é interpretado
+   * como zero.
+   */
+  const registrosFechados =
+    arranchamentos.filter(
+      (item: any) =>
+        Boolean(item.fechamentoRealizadoEm)
+    );
 
-  const totalSobras = arranchamentos.reduce(
-    (total: number, item: any) =>
-      total + Number(item.sobraKg || 0),
-    0
-  );
+  const existeFechamento =
+    registrosFechados.length > 0;
+
+  const totalAtendido =
+    registrosFechados.reduce(
+      (total: number, item: any) =>
+        total + Number(item.totalAtendido ?? 0),
+      0
+    );
+
+  const totalSobras =
+    registrosFechados.reduce(
+      (total: number, item: any) =>
+        total + Number(item.sobraKg ?? 0),
+      0
+    );
 
   return (
     <>
@@ -263,7 +281,9 @@ export default function RelatoriosClient() {
                 </span>
 
                 <div className="big">
-                  {totalAtendido}
+                  {existeFechamento
+                    ? totalAtendido
+                    : '—'}
                 </div>
               </div>
 
@@ -273,10 +293,28 @@ export default function RelatoriosClient() {
                 </span>
 
                 <div className="big">
-                  {formatarNumero(totalSobras)} kg
+                  {existeFechamento
+                    ? `${formatarNumero(
+                        totalSobras
+                      )} kg`
+                    : '—'}
                 </div>
               </div>
             </div>
+
+            {!existeFechamento &&
+              arranchamentos.length > 0 && (
+                <p
+                  style={{
+                    color: '#facc15',
+                    marginBottom: 0,
+                  }}
+                >
+                  ⚠ Existem lançamentos com fechamento
+                  pendente. Atendimento e sobras ainda não
+                  foram apurados.
+                </p>
+              )}
           </div>
 
           <div className="card">
@@ -293,8 +331,8 @@ export default function RelatoriosClient() {
               const registrosDoDia =
                 arranchamentos.filter(
                   (item: any) =>
-                    String(item.data)
-                      .slice(0, 10) === dia
+                    String(item.data).slice(0, 10) ===
+                    dia
                 );
 
               if (
@@ -350,11 +388,19 @@ export default function RelatoriosClient() {
                       {formatarData(dia)}
                     </strong>
 
-                    <strong>
-                      {diaFechado
-                        ? '✓ Fechado'
-                        : '⚠ Pendente'}
-                    </strong>
+                    {diaFechado ? (
+                      <strong>
+                        ✓ Fechado
+                      </strong>
+                    ) : (
+                      <strong
+                        style={{
+                          color: '#facc15',
+                        }}
+                      >
+                        ⚠ Pendente
+                      </strong>
+                    )}
                   </div>
 
                   {registrosDoDia.map(
@@ -490,9 +536,13 @@ export default function RelatoriosClient() {
                                 Situação
                               </span>
 
-                              <strong>
-                                Fechamento
-                                pendente
+                              <strong
+                                style={{
+                                  color:
+                                    '#facc15',
+                                }}
+                              >
+                                Fechamento pendente
                               </strong>
                             </div>
                           )}
