@@ -38,6 +38,9 @@ export default async function Dashboard() {
 
   if (!u) redirect('/login');
 
+  /*
+   * ESTOQUE
+   */
   const estoques = await prisma.estoqueLocal.findMany({
     where: { quantidade: { gt: 0 } },
     include: {
@@ -51,6 +54,9 @@ export default async function Dashboard() {
       .filter((x) => x.genero.classe === c)
       .reduce((a, x) => a + Number(x.quantidade), 0);
 
+  /*
+   * ESTOQUE ABAIXO DO MÍNIMO
+   */
   const baixos = estoques
     .reduce((a: any[], x) => {
       if (x.genero.estoqueMinimo == null) return a;
@@ -73,6 +79,9 @@ export default async function Dashboard() {
     }, [])
     .filter((x) => x.q < x.m);
 
+  /*
+   * VALIDADE
+   */
   const lim = Date.now() + 30 * 86400000;
 
   const val = estoques.filter(
@@ -82,7 +91,13 @@ export default async function Dashboard() {
   );
 
   /*
-   * Arranchamento do dia seguinte
+   * DATA ATUAL
+   */
+  const hoje = new Date();
+  const inicioHoje = inicioDoDiaUTC(hoje);
+
+  /*
+   * ARRANCHAMENTO DO DIA SEGUINTE
    */
   const amanha = new Date();
   amanha.setDate(amanha.getDate() + 1);
@@ -120,16 +135,13 @@ export default async function Dashboard() {
     arranchamentosAmanha.length > 0;
 
   /*
-   * Fechamentos pendentes
+   * FECHAMENTOS PENDENTES
    *
-   * Considera arranchamentos de dias anteriores que ainda
-   * não tiveram o fechamento realizado.
+   * Arranchamentos de dias anteriores que ainda não
+   * tiveram o fechamento realizado.
    *
-   * O fechamento retroativo continua permitido.
+   * Não existe limite para lançamento retroativo.
    */
-  const hoje = new Date();
-  const inicioHoje = inicioDoDiaUTC(hoje);
-
   const fechamentosPendentes =
     await prisma.arranchamento.findMany({
       where: {
@@ -159,11 +171,27 @@ export default async function Dashboard() {
   const quantidadeDiasPendentes =
     diasPendentes.length;
 
+  /*
+   * LEMBRETE MENSAL DO QDAA
+   *
+   * Aparece somente nos dias 23, 24 e 25.
+   * O QDAA não é confeccionado dentro do EstoqueAprov.
+   * O sistema apenas auxilia por meio dos relatórios.
+   */
+  const diaDoMes = hoje.getDate();
+
+  const exibirLembreteQDAA =
+    diaDoMes >= 23 && diaDoMes <= 25;
+
+  const diasParaQDAA = 25 - diaDoMes;
+
   return (
     <main>
       <header className="top">
         <div>
-          <div className="brand">EstoqueAprov</div>
+          <div className="brand">
+            EstoqueAprov
+          </div>
 
           <span className="muted">
             {u.postoGraduacao
@@ -178,7 +206,10 @@ export default async function Dashboard() {
 
       <h1>Início</h1>
 
-      {/* FECHAMENTOS DE DIAS ANTERIORES */}
+      {/* ========================================= */}
+      {/* FECHAMENTOS PENDENTES */}
+      {/* ========================================= */}
+
       {fechamentosPendentes.length > 0 && (
         <div
           className="card"
@@ -205,14 +236,18 @@ export default async function Dashboard() {
           </p>
 
           <p className="muted">
-            Informe o comparecimento dos arranchados, os
-            não arranchados atendidos e a sobra pesada de
-            cada refeição. O lançamento permanecerá
-            vinculado à data real do serviço.
+            Informe o comparecimento dos arranchados,
+            os não arranchados atendidos e a sobra
+            pesada de cada refeição. O lançamento
+            permanecerá vinculado à data real do
+            serviço.
           </p>
 
           <div className="row">
-            <span>Refeições pendentes</span>
+            <span>
+              Refeições pendentes
+            </span>
+
             <strong>
               {fechamentosPendentes.length}
             </strong>
@@ -232,7 +267,10 @@ export default async function Dashboard() {
         </div>
       )}
 
+      {/* ========================================= */}
       {/* ARRANCHAMENTO DO DIA SEGUINTE */}
+      {/* ========================================= */}
+
       {!efetivoAmanhaInformado ? (
         <div
           className="card"
@@ -247,9 +285,10 @@ export default async function Dashboard() {
           </h2>
 
           <p>
-            Informe o efetivo arranchado previsto para
-            amanhã. O planejamento deve ser realizado para
-            que o saque dos gêneros ocorra{' '}
+            Informe o efetivo arranchado previsto
+            para amanhã. O planejamento deve ser
+            realizado para que o saque dos gêneros
+            ocorra{' '}
             <strong>
               antes das 15:00 do dia anterior
             </strong>
@@ -257,13 +296,16 @@ export default async function Dashboard() {
           </p>
 
           <p className="muted">
-            O efetivo informado será utilizado como base
-            para o planejamento das quantidades de
-            gêneros, considerando também a margem de
-            segurança definida no arranchamento.
+            O efetivo informado será utilizado como
+            base para o planejamento das quantidades
+            de gêneros, considerando também a margem
+            de segurança definida no arranchamento.
           </p>
 
-          <Link className="btn" href="/efetivo">
+          <Link
+            className="btn"
+            href="/efetivo"
+          >
             Informar efetivo de amanhã
           </Link>
         </div>
@@ -282,28 +324,39 @@ export default async function Dashboard() {
 
           <p>
             <strong>
-              Efetivo de arranchados para o dia seguinte
-              já relacionado.
+              Efetivo de arranchados para o dia
+              seguinte já relacionado.
             </strong>
           </p>
 
           <div className="row">
-            <span>Refeições relacionadas</span>
+            <span>
+              Refeições relacionadas
+            </span>
+
             <strong>
               {arranchamentosAmanha.length}
             </strong>
           </div>
 
           <div className="row">
-            <span>Efetivo previsto relacionado</span>
-            <strong>{totalPrevistoAmanha}</strong>
+            <span>
+              Efetivo previsto relacionado
+            </span>
+
+            <strong>
+              {totalPrevistoAmanha}
+            </strong>
           </div>
 
           <div className="row">
             <span>
               Efetivo considerado no planejamento
             </span>
-            <strong>{totalPlanejamentoAmanha}</strong>
+
+            <strong>
+              {totalPlanejamentoAmanha}
+            </strong>
           </div>
 
           <div
@@ -319,6 +372,64 @@ export default async function Dashboard() {
           </div>
         </div>
       )}
+
+      {/* ========================================= */}
+      {/* LEMBRETE DO QDAA */}
+      {/* ========================================= */}
+
+      {exibirLembreteQDAA && (
+        <div
+          className="card"
+          style={{
+            border: '1px solid #3b82f6',
+            background:
+              'rgba(59, 130, 246, 0.08)',
+          }}
+        >
+          <h2 style={{ marginTop: 0 }}>
+            📋 Lembrete QDAA
+          </h2>
+
+          {diaDoMes === 25 ? (
+            <p>
+              <strong>
+                O QDAA deve ser realizado hoje.
+              </strong>
+            </p>
+          ) : (
+            <p>
+              O QDAA deve ser realizado no dia 25.
+              Faltam{' '}
+              <strong>
+                {diasParaQDAA}{' '}
+                {diasParaQDAA === 1
+                  ? 'dia'
+                  : 'dias'}
+              </strong>
+              .
+            </p>
+          )}
+
+          <p className="muted">
+            Utilize os relatórios do EstoqueAprov
+            para auxiliar na consolidação das
+            informações de consumo e estoque.
+          </p>
+
+          <div className="actions">
+            <Link
+              className="btn secondary"
+              href="/relatorios"
+            >
+              Consultar relatórios
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================= */}
+      {/* RESUMO QS / QR */}
+      {/* ========================================= */}
 
       <div className="grid">
         <div className="card">
@@ -350,6 +461,10 @@ export default async function Dashboard() {
         </div>
       </div>
 
+      {/* ========================================= */}
+      {/* ALERTAS DE ESTOQUE */}
+      {/* ========================================= */}
+
       <div className="card">
         <h2>Atenção</h2>
 
@@ -365,8 +480,8 @@ export default async function Dashboard() {
                 className="btn secondary"
                 href="/relatorios"
               >
-                ⚠ {baixos.length} gênero(s) abaixo do
-                mínimo
+                ⚠ {baixos.length} gênero(s) abaixo
+                do mínimo
               </Link>
             )}
 
@@ -375,13 +490,17 @@ export default async function Dashboard() {
                 className="btn secondary"
                 href="/relatorios"
               >
-                ⏳ {val.length} lote(s) com validade em
-                até 30 dias
+                ⏳ {val.length} lote(s) com validade
+                em até 30 dias
               </Link>
             )}
           </div>
         )}
       </div>
+
+      {/* ========================================= */}
+      {/* OPERAÇÃO */}
+      {/* ========================================= */}
 
       <div className="card">
         <h2>Operação</h2>
@@ -445,6 +564,10 @@ export default async function Dashboard() {
         </div>
       </div>
 
+      {/* ========================================= */}
+      {/* CONFIGURAÇÃO */}
+      {/* ========================================= */}
+
       <div className="card">
         <h2>Configuração</h2>
 
@@ -467,9 +590,13 @@ export default async function Dashboard() {
 
       <p className="muted">
         * QS e QR podem usar unidades diferentes; o
-        detalhamento correto por gênero/unidade está na
-        consulta de estoque.
+        detalhamento correto por gênero/unidade está
+        na consulta de estoque.
       </p>
+
+      {/* ========================================= */}
+      {/* RODAPÉ */}
+      {/* ========================================= */}
 
       <footer
         style={{
@@ -484,12 +611,14 @@ export default async function Dashboard() {
         }}
       >
         <div>
-          Desenvolvido por: 1º Sgt Diego Marques - 18ª Bda
-          Inf Pan - Serviço de Aprovisionamento/2026
+          Desenvolvido por: 1º Sgt Diego Marques -
+          18ª Bda Inf Pan - Serviço de
+          Aprovisionamento/2026
         </div>
 
         <div>
-          EstoqueAprov — Versão {packageJson.version}
+          EstoqueAprov — Versão{' '}
+          {packageJson.version}
         </div>
 
         <div>
