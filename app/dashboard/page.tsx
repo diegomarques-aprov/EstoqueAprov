@@ -83,9 +83,6 @@ export default async function Dashboard() {
 
   /*
    * Arranchamento do dia seguinte
-   *
-   * O objetivo é avisar o usuário no Início enquanto ainda não
-   * houver efetivo previsto relacionado para amanhã.
    */
   const amanha = new Date();
   amanha.setDate(amanha.getDate() + 1);
@@ -122,6 +119,46 @@ export default async function Dashboard() {
   const efetivoAmanhaInformado =
     arranchamentosAmanha.length > 0;
 
+  /*
+   * Fechamentos pendentes
+   *
+   * Considera arranchamentos de dias anteriores que ainda
+   * não tiveram o fechamento realizado.
+   *
+   * O fechamento retroativo continua permitido.
+   */
+  const hoje = new Date();
+  const inicioHoje = inicioDoDiaUTC(hoje);
+
+  const fechamentosPendentes =
+    await prisma.arranchamento.findMany({
+      where: {
+        data: {
+          lt: inicioHoje,
+        },
+        fechamentoRealizadoEm: null,
+      },
+      orderBy: [
+        {
+          data: 'asc',
+        },
+        {
+          refeicao: 'asc',
+        },
+      ],
+    });
+
+  const diasPendentes = Array.from(
+    new Set(
+      fechamentosPendentes.map((item) =>
+        item.data.toISOString().slice(0, 10)
+      )
+    )
+  );
+
+  const quantidadeDiasPendentes =
+    diasPendentes.length;
+
   return (
     <main>
       <header className="top">
@@ -141,7 +178,61 @@ export default async function Dashboard() {
 
       <h1>Início</h1>
 
-      {/* CONTROLE DO ARRANCHAMENTO DO DIA SEGUINTE */}
+      {/* FECHAMENTOS DE DIAS ANTERIORES */}
+      {fechamentosPendentes.length > 0 && (
+        <div
+          className="card"
+          style={{
+            border: '1px solid #ef4444',
+            background:
+              'rgba(239, 68, 68, 0.08)',
+          }}
+        >
+          <h2 style={{ marginTop: 0 }}>
+            ⚠ Fechamento Diário pendente
+          </h2>
+
+          <p>
+            Existem{' '}
+            <strong>
+              {quantidadeDiasPendentes}{' '}
+              {quantidadeDiasPendentes === 1
+                ? 'dia'
+                : 'dias'}
+            </strong>{' '}
+            com fechamento do efetivo alimentado
+            pendente.
+          </p>
+
+          <p className="muted">
+            Informe o comparecimento dos arranchados, os
+            não arranchados atendidos e a sobra pesada de
+            cada refeição. O lançamento permanecerá
+            vinculado à data real do serviço.
+          </p>
+
+          <div className="row">
+            <span>Refeições pendentes</span>
+            <strong>
+              {fechamentosPendentes.length}
+            </strong>
+          </div>
+
+          <div
+            className="actions"
+            style={{ marginTop: 14 }}
+          >
+            <Link
+              className="btn"
+              href="/efetivo/fechamento"
+            >
+              Realizar Fechamento Diário
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* ARRANCHAMENTO DO DIA SEGUINTE */}
       {!efetivoAmanhaInformado ? (
         <div
           className="card"
@@ -159,14 +250,17 @@ export default async function Dashboard() {
             Informe o efetivo arranchado previsto para
             amanhã. O planejamento deve ser realizado para
             que o saque dos gêneros ocorra{' '}
-            <strong>antes das 15:00 do dia anterior</strong>.
+            <strong>
+              antes das 15:00 do dia anterior
+            </strong>
+            .
           </p>
 
           <p className="muted">
             O efetivo informado será utilizado como base
-            para o planejamento das quantidades de gêneros,
-            considerando também a margem de segurança
-            definida no arranchamento.
+            para o planejamento das quantidades de
+            gêneros, considerando também a margem de
+            segurança definida no arranchamento.
           </p>
 
           <Link className="btn" href="/efetivo">
@@ -293,7 +387,10 @@ export default async function Dashboard() {
         <h2>Operação</h2>
 
         <div className="actions">
-          <Link className="btn" href="/estoque/inicial">
+          <Link
+            className="btn"
+            href="/estoque/inicial"
+          >
             Estoque inicial
           </Link>
 
@@ -304,7 +401,10 @@ export default async function Dashboard() {
             Consultar estoque
           </Link>
 
-          <Link className="btn" href="/recebimentos">
+          <Link
+            className="btn"
+            href="/recebimentos"
+          >
             Novo recebimento
           </Link>
 
