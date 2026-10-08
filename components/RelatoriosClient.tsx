@@ -74,8 +74,7 @@ export default function RelatoriosClient() {
 
   const [dados, setDados] = useState<any>(null);
   const [erro, setErro] = useState('');
-  const [carregando, setCarregando] =
-    useState(false);
+  const [carregando, setCarregando] = useState(false);
 
   async function carregar() {
     if (!inicio || !fim) {
@@ -138,50 +137,49 @@ export default function RelatoriosClient() {
     0
   );
 
-  const totalPlanejamento =
-    arranchamentos.reduce(
-      (total: number, item: any) =>
-        total +
-        Number(item.efetivoPlanejamento || 0),
-      0
-    );
+  const totalPlanejamento = arranchamentos.reduce(
+    (total: number, item: any) =>
+      total + Number(item.efetivoPlanejamento || 0),
+    0
+  );
 
   /*
    * Somente registros efetivamente fechados
    * entram nos cálculos de atendimento e sobra.
    *
-   * Assim, um fechamento pendente nunca é
-   * interpretado como valor zero.
+   * Um fechamento pendente nunca é interpretado
+   * como valor zero.
    */
-  const registrosFechados =
-    arranchamentos.filter(
-      (item: any) =>
-        Boolean(item.fechamentoRealizadoEm)
-    );
+  const registrosFechados = arranchamentos.filter(
+    (item: any) =>
+      Boolean(item.fechamentoRealizadoEm)
+  );
 
   const existeFechamento =
     registrosFechados.length > 0;
 
-  const totalAtendido =
-    registrosFechados.reduce(
-      (total: number, item: any) =>
-        total + Number(item.totalAtendido ?? 0),
-      0
-    );
+  const totalAtendido = registrosFechados.reduce(
+    (total: number, item: any) =>
+      total + Number(item.totalAtendido ?? 0),
+    0
+  );
 
-  const totalSobras =
-    registrosFechados.reduce(
-      (total: number, item: any) =>
-        total + Number(item.sobraKg ?? 0),
-      0
-    );
+  const totalSobras = registrosFechados.reduce(
+    (total: number, item: any) =>
+      total + Number(item.sobraKg ?? 0),
+    0
+  );
+
+  const parametrosExportacao =
+    `inicio=${encodeURIComponent(inicio)}` +
+    `&fim=${encodeURIComponent(fim)}` +
+    `&classe=${encodeURIComponent(classe)}`;
 
   const urlExcel =
-    `/api/relatorios/excel?inicio=${encodeURIComponent(
-      inicio
-    )}&fim=${encodeURIComponent(
-      fim
-    )}&classe=${encodeURIComponent(classe)}`;
+    `/api/relatorios/excel?${parametrosExportacao}`;
+
+  const urlPdf =
+    `/api/relatorios/pdf?${parametrosExportacao}`;
 
   return (
     <>
@@ -259,6 +257,14 @@ export default function RelatoriosClient() {
             download
           >
             Baixar Excel
+          </a>
+
+          <a
+            className="btn secondary"
+            href={urlPdf}
+            download
+          >
+            Baixar PDF
           </a>
         </div>
 
@@ -355,9 +361,7 @@ export default function RelatoriosClient() {
                     dia
                 );
 
-              if (
-                registrosDoDia.length === 0
-              ) {
+              if (registrosDoDia.length === 0) {
                 return (
                   <div
                     key={dia}
@@ -455,9 +459,7 @@ export default function RelatoriosClient() {
                             </span>
 
                             <strong>
-                              {
-                                item.totalPrevisto
-                              }
+                              {item.totalPrevisto}
                             </strong>
                           </div>
 
@@ -476,14 +478,11 @@ export default function RelatoriosClient() {
 
                           <div className="row">
                             <span>
-                              Efetivo para
-                              planejamento
+                              Efetivo para planejamento
                             </span>
 
                             <strong>
-                              {
-                                item.efetivoPlanejamento
-                              }
+                              {item.efetivoPlanejamento}
                             </strong>
                           </div>
 
@@ -491,8 +490,7 @@ export default function RelatoriosClient() {
                             <>
                               <div className="row">
                                 <span>
-                                  Arranchados que
-                                  compareceram
+                                  Arranchados que compareceram
                                 </span>
 
                                 <strong>
@@ -504,8 +502,7 @@ export default function RelatoriosClient() {
 
                               <div className="row">
                                 <span>
-                                  Não arranchados
-                                  atendidos
+                                  Não arranchados atendidos
                                 </span>
 
                                 <strong>
@@ -521,9 +518,7 @@ export default function RelatoriosClient() {
                                 </span>
 
                                 <strong>
-                                  {
-                                    item.totalAtendido
-                                  }
+                                  {item.totalAtendido}
                                 </strong>
                               </div>
 
@@ -558,8 +553,7 @@ export default function RelatoriosClient() {
 
                               <strong
                                 style={{
-                                  color:
-                                    '#facc15',
+                                  color: '#facc15',
                                 }}
                               >
                                 Fechamento pendente
@@ -628,10 +622,7 @@ export default function RelatoriosClient() {
                         {formatarNumero(
                           item.quantidade
                         )}{' '}
-                        {
-                          item.genero.unidade
-                            .sigla
-                        }{' '}
+                        {item.genero.unidade.sigla}{' '}
                         ·{' '}
                         {new Date(
                           item.criadoEm
@@ -654,8 +645,7 @@ export default function RelatoriosClient() {
           <div className="card">
             <h2>Alertas de estoque</h2>
 
-            {dados.estoqueBaixo.length ===
-              0 &&
+            {dados.estoqueBaixo.length === 0 &&
             dados.validade.length === 0 ? (
               <p className="muted">
                 Sem alertas nos critérios
@@ -670,8 +660,7 @@ export default function RelatoriosClient() {
                       key={`baixo-${item.id}`}
                     >
                       <b>
-                        Estoque baixo ·{' '}
-                        {item.nome}
+                        Estoque baixo · {item.nome}
                       </b>
 
                       <span>
@@ -697,8 +686,7 @@ export default function RelatoriosClient() {
                       key={`validade-${indice}`}
                     >
                       <b>
-                        Validade ·{' '}
-                        {item.genero}
+                        Validade · {item.genero}
                       </b>
 
                       <span>
