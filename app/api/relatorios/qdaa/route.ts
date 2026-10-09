@@ -10,19 +10,34 @@ function inicioDoMes(ano: number, mes: number) {
   );
 }
 
-function inicioDoMesSeguinte(ano: number, mes: number) {
+function inicioDoMesSeguinte(
+  ano: number,
+  mes: number
+) {
   if (mes === 12) {
-    return new Date(`${ano + 1}-01-01T00:00:00.000Z`);
+    return new Date(
+      `${ano + 1}-01-01T00:00:00.000Z`
+    );
   }
 
   return new Date(
-    `${ano}-${String(mes + 1).padStart(2, '0')}-01T00:00:00.000Z`
+    `${ano}-${String(mes + 1).padStart(
+      2,
+      '0'
+    )}-01T00:00:00.000Z`
   );
 }
 
 function numero(valor: unknown) {
   return Number(valor || 0);
 }
+
+type MovimentoQDAA = {
+  generoId: string;
+  tipo: string;
+  quantidade: number;
+  dataOperacional: Date;
+};
 
 type ConsolidadoGenero = {
   generoId: string;
@@ -44,6 +59,37 @@ type ConsolidadoGenero = {
 
   movimentacoesNoMes: number;
 };
+
+function impactoEstoque(
+  tipo: string,
+  quantidade: number
+) {
+  switch (tipo) {
+    case 'SALDO_INICIAL':
+    case 'RECEBIMENTO':
+    case 'DEVOLUCAO':
+      return quantidade;
+
+    case 'SAIDA':
+    case 'PERDA':
+      return -quantidade;
+
+    case 'CORRECAO':
+      /*
+       * A correção já é gravada com sinal:
+       *
+       * positivo = acréscimo;
+       * negativo = redução.
+       */
+      return quantidade;
+
+    case 'TRANSFERENCIA':
+      return 0;
+
+    default:
+      return 0;
+  }
+}
 
 export async function GET(req: Request) {
   const g = await requireAdmin();
@@ -95,84 +141,232 @@ export async function GET(req: Request) {
   }
 
   const inicio = inicioDoMes(ano, mes);
-  const fimExclusivo = inicioDoMesSeguinte(
-    ano,
-    mes
-  );
+
+  const fimExclusivo =
+    inicioDoMesSeguinte(ano, mes);
 
   /*
-   * Gêneros QS cadastrados.
-   *
-   * O QDAA trabalha exclusivamente com gêneros
-   * provenientes da cadeia de suprimento.
+   * =====================================================
+   * GÊNEROS QS
+   * =====================================================
    */
-  const generos = await prisma.genero.findMany({
-    where: {
-      classe: 'QS',
-    },
-    include: {
-      unidade: true,
-    },
-    orderBy: {
-      nome: 'asc',
-    },
-  });
 
-  /*
-   * Todo o histórico QS anterior ao mês.
-   *
-   * É esse histórico que permite reconstruir o
-   * estoque existente na abertura do período.
-   */
-  const movimentosAnteriores =
-    await prisma.movimentacaoEstoque.findMany({
+  const generos =
+    await prisma.genero.findMany({
       where: {
         classe: 'QS',
-        criadoEm: {
-          lt: inicio,
-        },
       },
-      select: {
-        generoId: true,
-        tipo: true,
-        quantidade: true,
+
+      include: {
+        unidade: true,
+      },
+
+      orderBy: {
+        nome: 'asc',
       },
     });
 
   /*
-   * Movimentações QS ocorridas dentro do mês.
+   * =====================================================
+   * MOVIMENTAÇÕES GERAIS
+   * =====================================================
+   *
+   * SALDO_INICIAL
+   * DEVOLUCAO
+   * PERDA
+   * CORRECAO
+   * TRANSFERENCIA
+   *
+   * Esses movimentos ainda não possuem campo próprio
+   * de data operacional.
+   *
+   * Portanto, enquanto o modelo não for ampliado,
+   * usamos criadoEm.
+   *
+   * RECEBIMENTO e SAIDA serão tratados separadamente
+   * usando as datas operacionais das respectivas
+   * entidades.
    */
-  const movimentosMes =
+
+  const movimentosGerais =
     await prisma.movimentacaoEstoque.findMany({
       where: {
         classe: 'QS',
+
+        tipo: {
+          in: [
+            'SALDO_INICIAL',
+            'DEVOLUCAO',
+            'PERDA',
+            'CORRECAO',
+            'TRANSFERENCIA',
+          ],
+        },
+
         criadoEm: {
-          gte: inicio,
           lt: fimExclusivo,
         },
       },
+
       select: {
-        id: true,
         generoId: true,
         tipo: true,
         quantidade: true,
         criadoEm: true,
-        referenciaTipo: true,
-        referenciaId: true,
-        observacao: true,
       },
+
       orderBy: {
         criadoEm: 'asc',
       },
     });
 
   /*
-   * Estoque físico atualmente registrado.
+   * =====================================================
+   * RECEBIMENTOS QS
+   * =====================================================
    *
-   * Serve para conferência. O estoque final do
-   * mês histórico é reconstruído pelas
-   * movimentações, e não pelo saldo atual.
+   * Aqui usamos Recebimento.data.
+   *
+   * Exemplo:
+   *
+   * Recebido em 30/09
+   * Digitado em 01/10
+   *
+   * O movimento pertence a SETEMBRO.
    */
+
+  const recebimentos =
+    await prisma.itemRecebimento.findMany({
+      where: {
+        recebimento: {
+          classe: 'QS',
+
+          data: {
+            lt: fimExclusivo,
+          },
+        },
+      },
+
+      select: {
+        generoId: true,
+        quantidade: true,
+
+        recebimento: {
+          select: {
+            data: true,
+          },
+        },
+      },
+    });
+
+  /*
+   * =====================================================
+   * SAÍDAS QS
+   * =====================================================
+   *
+   * Utilizamos Saida.data, que representa a data
+   * operacional do saque/consumo.
+   *
+   * Saídas canceladas não representam consumo efetivo
+   * e são desconsideradas.
+   */
+
+  const saidas =
+    await prisma.itemSaida.findMany({
+      where: {
+        saida: {
+          classe: 'QS',
+
+          canceladaEm: null,
+
+          data: {
+            lt: fimExclusivo,
+          },
+        },
+      },
+
+      select: {
+        generoId: true,
+        quantidade: true,
+
+        saida: {
+          select: {
+            data: true,
+          },
+        },
+      },
+    });
+
+  /*
+   * =====================================================
+   * UNIFICAÇÃO DOS MOVIMENTOS
+   * =====================================================
+   */
+
+  const movimentos: MovimentoQDAA[] = [];
+
+  for (const movimento of movimentosGerais) {
+    movimentos.push({
+      generoId: movimento.generoId,
+      tipo: movimento.tipo,
+      quantidade: numero(
+        movimento.quantidade
+      ),
+      dataOperacional:
+        movimento.criadoEm,
+    });
+  }
+
+  for (const item of recebimentos) {
+    movimentos.push({
+      generoId: item.generoId,
+      tipo: 'RECEBIMENTO',
+      quantidade: numero(
+        item.quantidade
+      ),
+      dataOperacional:
+        item.recebimento.data,
+    });
+  }
+
+  for (const item of saidas) {
+    movimentos.push({
+      generoId: item.generoId,
+      tipo: 'SAIDA',
+      quantidade: numero(
+        item.quantidade
+      ),
+      dataOperacional:
+        item.saida.data,
+    });
+  }
+
+  /*
+   * =====================================================
+   * SEPARAÇÃO DO HISTÓRICO
+   * =====================================================
+   */
+
+  const movimentosAnteriores =
+    movimentos.filter(
+      (movimento) =>
+        movimento.dataOperacional < inicio
+    );
+
+  const movimentosMes =
+    movimentos.filter(
+      (movimento) =>
+        movimento.dataOperacional >= inicio &&
+        movimento.dataOperacional <
+          fimExclusivo
+    );
+
+  /*
+   * =====================================================
+   * ESTOQUE FÍSICO ATUAL
+   * =====================================================
+   */
+
   const estoqueAtualRegistros =
     await prisma.estoqueLocal.findMany({
       where: {
@@ -180,6 +374,7 @@ export async function GET(req: Request) {
           classe: 'QS',
         },
       },
+
       select: {
         generoId: true,
         quantidade: true,
@@ -192,49 +387,20 @@ export async function GET(req: Request) {
   for (const item of estoqueAtualRegistros) {
     estoqueAtualPorGenero.set(
       item.generoId,
+
       (estoqueAtualPorGenero.get(
         item.generoId
-      ) || 0) + numero(item.quantidade)
+      ) || 0) +
+        numero(item.quantidade)
     );
   }
 
   /*
-   * Regra de impacto físico das movimentações.
-   *
-   * TRANSFERENCIA não altera o total do gênero,
-   * apenas muda sua localização.
-   *
-   * CORRECAO depende do sinal registrado no
-   * movimento. Portanto o valor é preservado.
+   * =====================================================
+   * ESTOQUE INICIAL DO MÊS
+   * =====================================================
    */
-  function impactoEstoque(
-    tipo: string,
-    quantidade: number
-  ) {
-    switch (tipo) {
-      case 'SALDO_INICIAL':
-      case 'RECEBIMENTO':
-      case 'DEVOLUCAO':
-        return quantidade;
 
-      case 'SAIDA':
-      case 'PERDA':
-        return -quantidade;
-
-      case 'CORRECAO':
-        return quantidade;
-
-      case 'TRANSFERENCIA':
-        return 0;
-
-      default:
-        return 0;
-    }
-  }
-
-  /*
-   * Reconstrução do estoque na abertura do mês.
-   */
   const estoqueInicialPorGenero =
     new Map<string, number>();
 
@@ -244,16 +410,23 @@ export async function GET(req: Request) {
         movimento.generoId
       ) || 0;
 
-    const impacto = impactoEstoque(
-      movimento.tipo,
-      numero(movimento.quantidade)
-    );
+    const impacto =
+      impactoEstoque(
+        movimento.tipo,
+        movimento.quantidade
+      );
 
     estoqueInicialPorGenero.set(
       movimento.generoId,
       atual + impacto
     );
   }
+
+  /*
+   * =====================================================
+   * CONSOLIDAÇÃO POR GÊNERO
+   * =====================================================
+   */
 
   const consolidado = new Map<
     string,
@@ -294,23 +467,35 @@ export async function GET(req: Request) {
   }
 
   /*
-   * Consolidação das movimentações do mês,
-   * gênero por gênero.
+   * =====================================================
+   * MOVIMENTOS DO MÊS
+   * =====================================================
    */
+
   for (const movimento of movimentosMes) {
-    const item = consolidado.get(
-      movimento.generoId
-    );
+    const item =
+      consolidado.get(
+        movimento.generoId
+      );
 
     if (!item) {
       continue;
     }
 
-    const quantidade = numero(
-      movimento.quantidade
-    );
+    const quantidade =
+      movimento.quantidade;
 
-    item.movimentacoesNoMes += 1;
+    /*
+     * Transferência muda somente o local físico.
+     * Não é considerada movimentação de consumo
+     * ou entrada no QDAA.
+     */
+    if (
+      movimento.tipo !==
+      'TRANSFERENCIA'
+    ) {
+      item.movimentacoesNoMes += 1;
+    }
 
     switch (movimento.tipo) {
       case 'SALDO_INICIAL':
@@ -319,23 +504,28 @@ export async function GET(req: Request) {
         break;
 
       case 'RECEBIMENTO':
-        item.recebimentos += quantidade;
+        item.recebimentos +=
+          quantidade;
         break;
 
       case 'SAIDA':
-        item.consumo += quantidade;
+        item.consumo +=
+          quantidade;
         break;
 
       case 'DEVOLUCAO':
-        item.devolucoes += quantidade;
+        item.devolucoes +=
+          quantidade;
         break;
 
       case 'PERDA':
-        item.perdas += quantidade;
+        item.perdas +=
+          quantidade;
         break;
 
       case 'CORRECAO':
-        item.correcoes += quantidade;
+        item.correcoes +=
+          quantidade;
         break;
     }
 
@@ -346,16 +536,19 @@ export async function GET(req: Request) {
       );
   }
 
-  const itens = Array.from(
-    consolidado.values()
-  );
+  const itens =
+    Array.from(
+      consolidado.values()
+    );
 
   /*
-   * Não somamos gêneros de unidades diferentes.
+   * =====================================================
+   * TOTAIS POR UNIDADE
+   * =====================================================
    *
-   * Os totais são agrupados por unidade de
-   * medida: kg com kg, L com L, un com un.
+   * Nunca somamos kg + L + un.
    */
+
   const totaisPorUnidade = new Map<
     string,
     {
@@ -372,13 +565,15 @@ export async function GET(req: Request) {
   >();
 
   for (const item of itens) {
-    let total = totaisPorUnidade.get(
-      item.unidade
-    );
+    let total =
+      totaisPorUnidade.get(
+        item.unidade
+      );
 
     if (!total) {
       total = {
         unidade: item.unidade,
+
         estoqueInicial: 0,
         saldoInicialLancado: 0,
         recebimentos: 0,
@@ -421,15 +616,26 @@ export async function GET(req: Request) {
   }
 
   /*
-   * Estatísticas úteis para validação do
-   * fechamento mensal.
+   * =====================================================
+   * ESTATÍSTICAS
+   * =====================================================
    */
-  const generosComMovimento = itens.filter(
-    (item) => item.movimentacoesNoMes > 0
-  ).length;
+
+  const generosComMovimento =
+    itens.filter(
+      (item) =>
+        item.movimentacoesNoMes > 0
+    ).length;
 
   const generosSemMovimento =
-    itens.length - generosComMovimento;
+    itens.length -
+    generosComMovimento;
+
+  /*
+   * =====================================================
+   * RESPOSTA
+   * =====================================================
+   */
 
   return Response.json({
     relatorio:
@@ -441,8 +647,12 @@ export async function GET(req: Request) {
     periodo: {
       ano,
       mes,
+
       inicio:
-        inicio.toISOString().slice(0, 10),
+        inicio
+          .toISOString()
+          .slice(0, 10),
+
       fim: new Date(
         fimExclusivo.getTime() - 1
       )
@@ -453,8 +663,11 @@ export async function GET(req: Request) {
     classe: 'QS',
 
     estatisticas: {
-      generosCadastrados: itens.length,
+      generosCadastrados:
+        itens.length,
+
       generosComMovimento,
+
       generosSemMovimento,
     },
 
@@ -470,10 +683,25 @@ export async function GET(req: Request) {
         'Estoque final = estoque inicial + saldo inicial lançado no período + recebimentos + devoluções - consumo - perdas ± correções.',
     },
 
+    criterioDatas: {
+      recebimentos:
+        'Data operacional do recebimento.',
+
+      saidas:
+        'Data operacional da saída.',
+
+      demaisMovimentos:
+        'Data do lançamento enquanto não houver data operacional específica.',
+    },
+
     observacoes: [
       'Somente gêneros classificados como QS são considerados.',
       'Gêneros QR não participam desta consolidação.',
+      'Recebimentos são apropriados ao mês pela data operacional do recebimento.',
+      'Saídas são apropriadas ao mês pela data operacional da saída.',
+      'Saídas canceladas não são consideradas consumo.',
       'Transferências entre locais não alteram o estoque total do gênero.',
+      'Correções positivas acrescentam estoque e correções negativas reduzem estoque.',
       'Os totais são separados por unidade de medida para evitar soma entre kg, litros e unidades.',
       'O relatório serve como apoio à conferência e elaboração do QDAA.',
     ],
