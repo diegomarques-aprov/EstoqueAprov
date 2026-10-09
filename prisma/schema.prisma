@@ -24,6 +24,11 @@ enum PerfilSistema {
   GRADUADO_SERVICO
 }
 
+enum TipoReferenciaConsumoQS {
+  MENSAL
+  BIMESTRAL
+}
+
 model Usuario {
   id                      String                     @id @default(cuid())
   nome                    String
@@ -42,6 +47,7 @@ model Usuario {
   movimentacoesEstoque    MovimentacaoEstoque[]      @relation("MovUsuario")
   saidas                  Saida[]                    @relation("SaidaCriador")
   arranchamentos          Arranchamento[]            @relation("ArranchamentoUsuario")
+  referenciasConsumoQS    ReferenciaConsumoQS[]      @relation("ReferenciaConsumoQSUsuario")
   recursosQR              RecursoQR[]                @relation("RecursoQRCriador")
   movimentosFinanceirosQR MovimentacaoFinanceiraQR[] @relation("MovFinanceiraQRUsuario")
   comprasQR               CompraQR[]                 @relation("CompraQRCriador")
@@ -64,13 +70,13 @@ model LocalArmazenamento {
 
 model Categoria {
   id                     String               @id @default(cuid())
-  nome                   String               @unique
-  controlaLotePadrao     Boolean?
-  controlaValidadePadrao Boolean?
-  localPadraoId          String?
-  localPadrao            LocalArmazenamento?  @relation(fields: [localPadraoId], references: [id])
-  situacao               Situacao             @default(ATIVO)
-  generos                Genero[]
+  nome                     String               @unique
+  controlaLotePadrao       Boolean?
+  controlaValidadePadrao   Boolean?
+  localPadraoId            String?
+  localPadrao              LocalArmazenamento? @relation(fields: [localPadraoId], references: [id])
+  situacao                 Situacao             @default(ATIVO)
+  generos                  Genero[]
 }
 
 model UnidadeMedida {
@@ -104,10 +110,29 @@ model Genero {
   itensRecebimento         ItemRecebimento[]
   itensSaida               ItemSaida[]
   movimentacoesEstoque     MovimentacaoEstoque[]
+  referenciasConsumoQS     ReferenciaConsumoQS[]
   itensCompraQR            ItemCompraQR[]
   itensRecebimentoCompraQR ItemRecebimentoCompraQR[]
 
   @@unique([nome, classe])
+}
+
+model ReferenciaConsumoQS {
+  id               String                  @id @default(cuid())
+  generoId         String
+  genero           Genero                  @relation(fields: [generoId], references: [id])
+  tipo             TipoReferenciaConsumoQS
+  quantidade       Decimal                 @db.Decimal(14, 3)
+  mediaMensal      Decimal                 @db.Decimal(14, 3)
+  observacao       String?
+  usuarioId        String
+  usuario          Usuario                 @relation("ReferenciaConsumoQSUsuario", fields: [usuarioId], references: [id])
+  ativo            Boolean                 @default(true)
+  criadoEm         DateTime                @default(now())
+  atualizadoEm     DateTime                @updatedAt
+
+  @@index([generoId])
+  @@index([generoId, ativo])
 }
 
 model Auditoria {
@@ -152,15 +177,15 @@ model EstoqueLocal {
 }
 
 model Lote {
-  id            String                @id @default(cuid())
-  generoId      String
-  genero        Genero                @relation(fields: [generoId], references: [id])
-  numero        String
-  validade      DateTime?
-  criadoEm      DateTime              @default(now())
-  estoques      EstoqueLocal[]
-  movimentacoes MovimentacaoEstoque[]
-itensRecebimento ItemRecebimento[]
+  id               String                @id @default(cuid())
+  generoId         String
+  genero           Genero                @relation(fields: [generoId], references: [id])
+  numero           String
+  validade         DateTime?
+  criadoEm         DateTime              @default(now())
+  estoques         EstoqueLocal[]
+  movimentacoes    MovimentacaoEstoque[]
+  itensRecebimento ItemRecebimento[]
 
   @@unique([generoId, numero])
 }
@@ -277,10 +302,10 @@ model Arranchamento {
   observacao              String?
 
   usuarioId               String
-  usuario                 Usuario      @relation("ArranchamentoUsuario", fields: [usuarioId], references: [id]) 
+  usuario                 Usuario      @relation("ArranchamentoUsuario", fields: [usuarioId], references: [id])
 
-  criadoEm                 DateTime     @default(now())
-  atualizadoEm             DateTime     @updatedAt
+  criadoEm                DateTime     @default(now())
+  atualizadoEm            DateTime     @updatedAt
 
   @@unique([data, refeicao])
   @@index([data])
@@ -370,13 +395,13 @@ model RecebimentoCompraQR {
 }
 
 model ItemRecebimentoCompraQR {
-  id                String               @id @default(cuid())
+  id                String              @id @default(cuid())
   vinculoId         String
-  vinculo           RecebimentoCompraQR  @relation(fields: [vinculoId], references: [id], onDelete: Cascade)
+  vinculo           RecebimentoCompraQR @relation(fields: [vinculoId], references: [id], onDelete: Cascade)
   itemCompraId      String
-  itemCompra        ItemCompraQR         @relation(fields: [itemCompraId], references: [id])
+  itemCompra        ItemCompraQR        @relation(fields: [itemCompraId], references: [id])
   generoId          String
-  genero            Genero               @relation(fields: [generoId], references: [id])
-  quantidade        Decimal              @db.Decimal(14, 3)
-  valorUnitarioReal Decimal?             @db.Decimal(14, 4)
+  genero            Genero              @relation(fields: [generoId], references: [id])
+  quantidade        Decimal             @db.Decimal(14, 3)
+  valorUnitarioReal Decimal?            @db.Decimal(14, 4)
 }
