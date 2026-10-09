@@ -175,8 +175,10 @@ export default async function Dashboard() {
    * LEMBRETE MENSAL DO QDAA
    *
    * Aparece somente nos dias 23, 24 e 25.
-   * O QDAA não é confeccionado dentro do EstoqueAprov.
-   * O sistema apenas auxilia por meio dos relatórios.
+   *
+   * O QDAA possui módulo próprio no EstoqueAprov
+   * para apoio à consolidação mensal dos gêneros QS
+   * e ao planejamento do ressuprimento.
    */
   const diaDoMes = hoje.getDate();
 
@@ -411,17 +413,18 @@ export default async function Dashboard() {
           )}
 
           <p className="muted">
-            Utilize os relatórios do EstoqueAprov
-            para auxiliar na consolidação das
-            informações de consumo e estoque.
+            Consulte a consolidação mensal dos
+            gêneros QS e as informações de apoio ao
+            planejamento do próximo ressuprimento da
+            cadeia de suprimento.
           </p>
 
           <div className="actions">
             <Link
               className="btn secondary"
-              href="/relatorios"
+              href="/qdaa"
             >
-              Consultar relatórios
+              Acessar QDAA / Ressuprimento QS
             </Link>
           </div>
         </div>
@@ -553,6 +556,13 @@ export default async function Dashboard() {
             href="/relatorios"
           >
             Relatórios
+          </Link>
+
+          <Link
+            className="btn secondary"
+            href="/qdaa"
+          >
+            QDAA / Ressuprimento QS
           </Link>
 
           <Link
