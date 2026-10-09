@@ -18,14 +18,48 @@ const meses = [
 ];
 
 function formatarNumero(valor: unknown) {
-  return Number(valor || 0).toLocaleString('pt-BR', {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 3,
-  });
+  if (
+    valor === null ||
+    valor === undefined
+  ) {
+    return '—';
+  }
+
+  return Number(valor).toLocaleString(
+    'pt-BR',
+    {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 3,
+    }
+  );
+}
+
+function origemTexto(origem: string) {
+  if (
+    origem ===
+    'HISTORICO_ESTOQUEAPROV'
+  ) {
+    return 'Histórico do EstoqueAprov';
+  }
+
+  if (
+    origem ===
+    'REFERENCIA_INICIAL'
+  ) {
+    return 'Referência inicial';
+  }
+
+  return 'Sem base de cálculo';
 }
 
 export default function QDAAClient() {
   const hoje = new Date();
+
+  /*
+   * =====================================================
+   * QDAA
+   * =====================================================
+   */
 
   const [ano, setAno] = useState(
     hoje.getFullYear()
@@ -44,7 +78,86 @@ export default function QDAAClient() {
   const [carregando, setCarregando] =
     useState(false);
 
-  async function carregar() {
+  /*
+   * =====================================================
+   * RESSUPRIMENTO QS
+   * =====================================================
+   */
+
+  const [
+    ressuprimento,
+    setRessuprimento,
+  ] = useState<any>(null);
+
+  const [
+    carregandoRessuprimento,
+    setCarregandoRessuprimento,
+  ] = useState(false);
+
+  const [
+    erroRessuprimento,
+    setErroRessuprimento,
+  ] = useState('');
+
+  const [
+    mesesHistorico,
+    setMesesHistorico,
+  ] = useState(2);
+
+  const [
+    mesesCiclo,
+    setMesesCiclo,
+  ] = useState(2);
+
+  const [
+    margemSeguranca,
+    setMargemSeguranca,
+  ] = useState(10);
+
+  /*
+   * =====================================================
+   * REFERÊNCIA INICIAL
+   * =====================================================
+   */
+
+  const [
+    generoReferencia,
+    setGeneroReferencia,
+  ] = useState<any>(null);
+
+  const [
+    tipoReferencia,
+    setTipoReferencia,
+  ] = useState<
+    'MENSAL' | 'BIMESTRAL'
+  >('BIMESTRAL');
+
+  const [
+    quantidadeReferencia,
+    setQuantidadeReferencia,
+  ] = useState('');
+
+  const [
+    observacaoReferencia,
+    setObservacaoReferencia,
+  ] = useState('');
+
+  const [
+    salvandoReferencia,
+    setSalvandoReferencia,
+  ] = useState(false);
+
+  const [
+    mensagemReferencia,
+    setMensagemReferencia,
+  ] = useState('');
+
+  const [
+    erroReferencia,
+    setErroReferencia,
+  ] = useState('');
+
+  async function carregarQDAA() {
     setErro('');
     setCarregando(true);
 
@@ -53,13 +166,15 @@ export default function QDAAClient() {
         `/api/relatorios/qdaa?ano=${ano}&mes=${mes}`
       );
 
-      const json = await resposta.json();
+      const json =
+        await resposta.json();
 
       if (!resposta.ok) {
         setErro(
           json.error ||
             'Erro ao gerar apoio ao QDAA.'
         );
+
         return;
       }
 
@@ -73,25 +188,200 @@ export default function QDAAClient() {
     }
   }
 
+  async function carregarRessuprimento() {
+    setErroRessuprimento('');
+    setCarregandoRessuprimento(true);
+
+    try {
+      const params =
+        new URLSearchParams({
+          historico:
+            String(mesesHistorico),
+
+          ciclo:
+            String(mesesCiclo),
+
+          margem:
+            String(margemSeguranca),
+        });
+
+      const resposta = await fetch(
+        `/api/relatorios/ressuprimento-qs?${params.toString()}`
+      );
+
+      const json =
+        await resposta.json();
+
+      if (!resposta.ok) {
+        setErroRessuprimento(
+          json.error ||
+            'Não foi possível calcular o ressuprimento QS.'
+        );
+
+        return;
+      }
+
+      setRessuprimento(json);
+    } catch {
+      setErroRessuprimento(
+        'Não foi possível calcular o ressuprimento QS.'
+      );
+    } finally {
+      setCarregandoRessuprimento(false);
+    }
+  }
+
   useEffect(() => {
-    carregar();
+    carregarQDAA();
+    carregarRessuprimento();
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  function abrirReferencia(
+    item: any
+  ) {
+    setGeneroReferencia(item);
+
+    setTipoReferencia(
+      item.referenciaInicial?.tipo ||
+        'BIMESTRAL'
+    );
+
+    setQuantidadeReferencia(
+      item.referenciaInicial
+        ? String(
+            item.referenciaInicial
+              .quantidade
+          )
+        : ''
+    );
+
+    setObservacaoReferencia(
+      item.referenciaInicial
+        ?.observacao || ''
+    );
+
+    setMensagemReferencia('');
+    setErroReferencia('');
+  }
+
+  function fecharReferencia() {
+    setGeneroReferencia(null);
+    setQuantidadeReferencia('');
+    setObservacaoReferencia('');
+    setMensagemReferencia('');
+    setErroReferencia('');
+  }
+
+  async function salvarReferencia() {
+    if (!generoReferencia) {
+      return;
+    }
+
+    const quantidade = Number(
+      quantidadeReferencia.replace(
+        ',',
+        '.'
+      )
+    );
+
+    if (
+      !Number.isFinite(quantidade) ||
+      quantidade <= 0
+    ) {
+      setErroReferencia(
+        'Informe uma quantidade maior que zero.'
+      );
+
+      return;
+    }
+
+    setErroReferencia('');
+    setMensagemReferencia('');
+    setSalvandoReferencia(true);
+
+    try {
+      const resposta = await fetch(
+        '/api/relatorios/referencia-consumo-qs',
+        {
+          method: 'POST',
+
+          headers: {
+            'Content-Type':
+              'application/json',
+          },
+
+          body: JSON.stringify({
+            generoId:
+              generoReferencia.generoId,
+
+            tipo:
+              tipoReferencia,
+
+            quantidade,
+
+            observacao:
+              observacaoReferencia.trim() ||
+              null,
+          }),
+        }
+      );
+
+      const json =
+        await resposta.json();
+
+      if (!resposta.ok) {
+        setErroReferencia(
+          json.error ||
+            'Não foi possível salvar a referência.'
+        );
+
+        return;
+      }
+
+      setMensagemReferencia(
+        json.mensagem ||
+          'Referência registrada.'
+      );
+
+      /*
+       * Recalcula imediatamente o
+       * ressuprimento.
+       */
+      await carregarRessuprimento();
+
+      setTimeout(() => {
+        fecharReferencia();
+      }, 800);
+    } catch {
+      setErroReferencia(
+        'Não foi possível salvar a referência.'
+      );
+    } finally {
+      setSalvandoReferencia(false);
+    }
+  }
+
   const nomeMes =
     meses.find(
-      (item) => item.valor === mes
+      (item) =>
+        item.valor === mes
     )?.nome || '';
 
   return (
     <>
+      {/* ======================================
+          QDAA
+      ====================================== */}
+
       <div className="card">
         <h2>Apoio ao QDAA</h2>
 
         <p className="muted">
           Consolidação mensal dos gêneros
-          classificados como QS e recebidos pela
-          cadeia de suprimento.
+          classificados como QS e recebidos
+          pela cadeia de suprimento.
         </p>
 
         <div className="grid">
@@ -102,18 +392,26 @@ export default function QDAAClient() {
               value={mes}
               onChange={(e) =>
                 setMes(
-                  Number(e.target.value)
+                  Number(
+                    e.target.value
+                  )
                 )
               }
             >
-              {meses.map((item) => (
-                <option
-                  key={item.valor}
-                  value={item.valor}
-                >
-                  {item.nome}
-                </option>
-              ))}
+              {meses.map(
+                (item) => (
+                  <option
+                    key={
+                      item.valor
+                    }
+                    value={
+                      item.valor
+                    }
+                  >
+                    {item.nome}
+                  </option>
+                )
+              )}
             </select>
           </label>
 
@@ -127,7 +425,9 @@ export default function QDAAClient() {
               value={ano}
               onChange={(e) =>
                 setAno(
-                  Number(e.target.value)
+                  Number(
+                    e.target.value
+                  )
                 )
               }
             />
@@ -142,8 +442,12 @@ export default function QDAAClient() {
         >
           <button
             className="btn"
-            onClick={carregar}
-            disabled={carregando}
+            onClick={
+              carregarQDAA
+            }
+            disabled={
+              carregando
+            }
           >
             {carregando
               ? 'Gerando...'
@@ -168,12 +472,14 @@ export default function QDAAClient() {
             <div className="grid">
               <div>
                 <span className="muted">
-                  Gêneros QS cadastrados
+                  Gêneros QS
+                  cadastrados
                 </span>
 
                 <div className="big">
                   {
-                    dados.estatisticas
+                    dados
+                      .estatisticas
                       .generosCadastrados
                   }
                 </div>
@@ -186,7 +492,8 @@ export default function QDAAClient() {
 
                 <div className="big">
                   {
-                    dados.estatisticas
+                    dados
+                      .estatisticas
                       .generosComMovimento
                   }
                 </div>
@@ -199,7 +506,8 @@ export default function QDAAClient() {
 
                 <div className="big">
                   {
-                    dados.estatisticas
+                    dados
+                      .estatisticas
                       .generosSemMovimento
                   }
                 </div>
@@ -209,122 +517,89 @@ export default function QDAAClient() {
 
           <div className="card">
             <h2>
-              Controle mensal por gênero QS
+              Controle mensal por
+              gênero QS
             </h2>
 
             <p className="muted">
-              Estoque inicial + entradas +
-              devoluções − consumo − perdas ±
-              correções = estoque final.
+              Estoque inicial +
+              entradas + devoluções −
+              consumo − perdas ±
+              correções = estoque
+              final.
             </p>
 
-            {dados.itens.length === 0 ? (
+            {dados.itens.length ===
+            0 ? (
               <p className="muted">
-                Nenhum gênero QS cadastrado.
+                Nenhum gênero QS
+                cadastrado.
               </p>
             ) : (
               <div
                 style={{
-                  overflowX: 'auto',
+                  overflowX:
+                    'auto',
+
                   marginTop: 16,
                 }}
               >
                 <table
                   style={{
                     width: '100%',
+
                     borderCollapse:
                       'collapse',
+
                     minWidth: 900,
                   }}
                 >
                   <thead>
                     <tr>
-                      <th
-                        style={{
-                          textAlign: 'left',
-                          padding: 10,
-                        }}
-                      >
-                        Gênero
-                      </th>
+                      {[
+                        'Gênero',
+                        'Unid.',
+                        'Estoque inicial',
+                        'Entradas',
+                        'Devoluções',
+                        'Consumo',
+                        'Perdas',
+                        'Ajustes',
+                        'Estoque final',
+                      ].map(
+                        (
+                          titulo
+                        ) => (
+                          <th
+                            key={
+                              titulo
+                            }
+                            style={{
+                              textAlign:
+                                titulo ===
+                                  'Gênero' ||
+                                titulo ===
+                                  'Unid.'
+                                  ? 'left'
+                                  : 'right',
 
-                      <th
-                        style={{
-                          textAlign: 'left',
-                          padding: 10,
-                        }}
-                      >
-                        Unid.
-                      </th>
-
-                      <th
-                        style={{
-                          textAlign: 'right',
-                          padding: 10,
-                        }}
-                      >
-                        Estoque inicial
-                      </th>
-
-                      <th
-                        style={{
-                          textAlign: 'right',
-                          padding: 10,
-                        }}
-                      >
-                        Entradas
-                      </th>
-
-                      <th
-                        style={{
-                          textAlign: 'right',
-                          padding: 10,
-                        }}
-                      >
-                        Devoluções
-                      </th>
-
-                      <th
-                        style={{
-                          textAlign: 'right',
-                          padding: 10,
-                        }}
-                      >
-                        Consumo
-                      </th>
-
-                      <th
-                        style={{
-                          textAlign: 'right',
-                          padding: 10,
-                        }}
-                      >
-                        Perdas
-                      </th>
-
-                      <th
-                        style={{
-                          textAlign: 'right',
-                          padding: 10,
-                        }}
-                      >
-                        Ajustes
-                      </th>
-
-                      <th
-                        style={{
-                          textAlign: 'right',
-                          padding: 10,
-                        }}
-                      >
-                        Estoque final
-                      </th>
+                              padding: 10,
+                            }}
+                          >
+                            {
+                              titulo
+                            }
+                          </th>
+                        )
+                      )}
                     </tr>
                   </thead>
 
                   <tbody>
                     {dados.itens.map(
-                      (item: any) => (
+                      (
+                        item: any
+                      ) => (
                         <tr
                           key={
                             item.generoId
@@ -340,7 +615,9 @@ export default function QDAAClient() {
                             }}
                           >
                             <strong>
-                              {item.genero}
+                              {
+                                item.genero
+                              }
                             </strong>
                           </td>
 
@@ -349,96 +626,40 @@ export default function QDAAClient() {
                               padding: 10,
                             }}
                           >
-                            {item.unidade}
+                            {
+                              item.unidade
+                            }
                           </td>
 
-                          <td
-                            style={{
-                              padding: 10,
-                              textAlign:
-                                'right',
-                            }}
-                          >
-                            {formatarNumero(
-                              item.estoqueInicial
-                            )}
-                          </td>
-
-                          <td
-                            style={{
-                              padding: 10,
-                              textAlign:
-                                'right',
-                            }}
-                          >
-                            {formatarNumero(
-                              item.recebimentos
-                            )}
-                          </td>
-
-                          <td
-                            style={{
-                              padding: 10,
-                              textAlign:
-                                'right',
-                            }}
-                          >
-                            {formatarNumero(
-                              item.devolucoes
-                            )}
-                          </td>
-
-                          <td
-                            style={{
-                              padding: 10,
-                              textAlign:
-                                'right',
-                            }}
-                          >
-                            <strong>
-                              {formatarNumero(
-                                item.consumo
-                              )}
-                            </strong>
-                          </td>
-
-                          <td
-                            style={{
-                              padding: 10,
-                              textAlign:
-                                'right',
-                            }}
-                          >
-                            {formatarNumero(
-                              item.perdas
-                            )}
-                          </td>
-
-                          <td
-                            style={{
-                              padding: 10,
-                              textAlign:
-                                'right',
-                            }}
-                          >
-                            {formatarNumero(
-                              item.correcoes
-                            )}
-                          </td>
-
-                          <td
-                            style={{
-                              padding: 10,
-                              textAlign:
-                                'right',
-                            }}
-                          >
-                            <strong>
-                              {formatarNumero(
-                                item.estoqueFinalCalculado
-                              )}
-                            </strong>
-                          </td>
+                          {[
+                            item.estoqueInicial,
+                            item.recebimentos,
+                            item.devolucoes,
+                            item.consumo,
+                            item.perdas,
+                            item.correcoes,
+                            item.estoqueFinalCalculado,
+                          ].map(
+                            (
+                              valor,
+                              index
+                            ) => (
+                              <td
+                                key={
+                                  index
+                                }
+                                style={{
+                                  padding: 10,
+                                  textAlign:
+                                    'right',
+                                }}
+                              >
+                                {formatarNumero(
+                                  valor
+                                )}
+                              </td>
+                            )
+                          )}
                         </tr>
                       )
                     )}
@@ -447,105 +668,585 @@ export default function QDAAClient() {
               </div>
             )}
           </div>
+        </>
+      )}
 
+      {/* ======================================
+          RESSUPRIMENTO QS
+      ====================================== */}
+
+      <div className="card">
+        <h2>
+          Planejamento do Ressuprimento QS
+        </h2>
+
+        <p>
+          Estimativa dos quantitativos para o
+          próximo ciclo de ressuprimento da
+          cadeia de suprimento.
+        </p>
+
+        <p className="muted">
+          O cálculo utiliza o histórico de
+          consumo do EstoqueAprov. Quando ainda
+          não houver histórico, poderá ser
+          informada uma referência inicial
+          mensal ou bimestral.
+        </p>
+
+        <div className="grid">
+          <label>
+            Histórico utilizado
+
+            <select
+              value={
+                mesesHistorico
+              }
+              onChange={(e) =>
+                setMesesHistorico(
+                  Number(
+                    e.target.value
+                  )
+                )
+              }
+            >
+              <option value={1}>
+                1 mês
+              </option>
+
+              <option value={2}>
+                2 meses
+              </option>
+
+              <option value={3}>
+                3 meses
+              </option>
+
+              <option value={6}>
+                6 meses
+              </option>
+            </select>
+          </label>
+
+          <label>
+            Próximo ciclo
+
+            <select
+              value={
+                mesesCiclo
+              }
+              onChange={(e) =>
+                setMesesCiclo(
+                  Number(
+                    e.target.value
+                  )
+                )
+              }
+            >
+              <option value={1}>
+                1 mês
+              </option>
+
+              <option value={2}>
+                2 meses
+              </option>
+
+              <option value={3}>
+                3 meses
+              </option>
+            </select>
+          </label>
+
+          <label>
+            Margem de segurança (%)
+
+            <input
+              type="number"
+              min="0"
+              max="100"
+              step="1"
+              value={
+                margemSeguranca
+              }
+              onChange={(e) =>
+                setMargemSeguranca(
+                  Number(
+                    e.target.value
+                  )
+                )
+              }
+            />
+          </label>
+        </div>
+
+        <div
+          className="actions"
+          style={{
+            marginTop: 14,
+          }}
+        >
+          <button
+            className="btn"
+            onClick={
+              carregarRessuprimento
+            }
+            disabled={
+              carregandoRessuprimento
+            }
+          >
+            {carregandoRessuprimento
+              ? 'Calculando...'
+              : 'Calcular ressuprimento'}
+          </button>
+        </div>
+
+        {erroRessuprimento && (
+          <div className="error">
+            {erroRessuprimento}
+          </div>
+        )}
+      </div>
+
+      {ressuprimento && (
+        <>
           <div className="card">
             <h2>
-              Totais por unidade de medida
+              Situação da base de cálculo
             </h2>
 
-            <p className="muted">
-              Os totais são separados para não
-              somar kg, litros e unidades entre
-              si.
-            </p>
+            <div className="grid">
+              <div>
+                <span className="muted">
+                  Histórico do sistema
+                </span>
 
-            {dados.totaisPorUnidade.map(
-              (item: any) => (
-                <div
-                  className="card"
-                  key={item.unidade}
-                >
-                  <h3>
-                    Unidade: {item.unidade}
-                  </h3>
-
-                  <div className="grid">
-                    <div>
-                      <span className="muted">
-                        Estoque inicial
-                      </span>
-
-                      <div className="big">
-                        {formatarNumero(
-                          item.estoqueInicial
-                        )}
-                      </div>
-                    </div>
-
-                    <div>
-                      <span className="muted">
-                        Entradas
-                      </span>
-
-                      <div className="big">
-                        {formatarNumero(
-                          item.recebimentos
-                        )}
-                      </div>
-                    </div>
-
-                    <div>
-                      <span className="muted">
-                        Consumo
-                      </span>
-
-                      <div className="big">
-                        {formatarNumero(
-                          item.consumo
-                        )}
-                      </div>
-                    </div>
-
-                    <div>
-                      <span className="muted">
-                        Estoque final
-                      </span>
-
-                      <div className="big">
-                        {formatarNumero(
-                          item.estoqueFinalCalculado
-                        )}
-                      </div>
-                    </div>
-                  </div>
+                <div className="big">
+                  {
+                    ressuprimento
+                      .estatisticas
+                      .usandoHistoricoEstoqueAprov
+                  }
                 </div>
-              )
-            )}
+              </div>
+
+              <div>
+                <span className="muted">
+                  Referência inicial
+                </span>
+
+                <div className="big">
+                  {
+                    ressuprimento
+                      .estatisticas
+                      .usandoReferenciaInicial
+                  }
+                </div>
+              </div>
+
+              <div>
+                <span className="muted">
+                  Sem base de cálculo
+                </span>
+
+                <div className="big">
+                  {
+                    ressuprimento
+                      .estatisticas
+                      .semBaseCalculo
+                  }
+                </div>
+              </div>
+            </div>
+
+            <p className="muted">
+              Período histórico:{' '}
+              {
+                ressuprimento
+                  .parametros
+                  .inicioHistorico
+              }{' '}
+              a{' '}
+              {
+                ressuprimento
+                  .parametros
+                  .fimHistorico
+              }
+              .
+            </p>
           </div>
 
           <div className="card">
             <h2>
-              Ressuprimento QS
+              Necessidade por gênero QS
             </h2>
 
-            <p>
-              O QDAA é mensal. O histórico de
-              consumo QS será utilizado pelo
-              EstoqueAprov para auxiliar o
-              planejamento do ressuprimento
-              bimestral realizado na segunda
-              quinzena.
+            <p className="muted">
+              Projeção + segurança − estoque
+              disponível − previsto para
+              receber.
             </p>
 
-            <p className="muted">
-              Nesta etapa o sistema apresenta os
-              dados consolidados. A sugestão de
-              quantitativos para o próximo
-              ressuprimento será acrescentada na
-              próxima evolução do módulo.
-            </p>
+            <div
+              style={{
+                overflowX: 'auto',
+                marginTop: 16,
+              }}
+            >
+              <table
+                style={{
+                  width: '100%',
+                  borderCollapse:
+                    'collapse',
+                  minWidth: 1150,
+                }}
+              >
+                <thead>
+                  <tr>
+                    {[
+                      'Gênero',
+                      'Unid.',
+                      'Origem da média',
+                      'Média mensal',
+                      'Projeção',
+                      'Segurança',
+                      'Estoque atual',
+                      'Prev. receber',
+                      'Sugestão',
+                      'Ação',
+                    ].map(
+                      (titulo) => (
+                        <th
+                          key={titulo}
+                          style={{
+                            padding: 10,
+
+                            textAlign:
+                              [
+                                'Gênero',
+                                'Unid.',
+                                'Origem da média',
+                                'Ação',
+                              ].includes(
+                                titulo
+                              )
+                                ? 'left'
+                                : 'right',
+                          }}
+                        >
+                          {titulo}
+                        </th>
+                      )
+                    )}
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {ressuprimento.itens.map(
+                    (item: any) => (
+                      <tr
+                        key={
+                          item.generoId
+                        }
+                        style={{
+                          borderTop:
+                            '1px solid rgba(255,255,255,0.12)',
+                        }}
+                      >
+                        <td
+                          style={{
+                            padding: 10,
+                          }}
+                        >
+                          <strong>
+                            {item.genero}
+                          </strong>
+                        </td>
+
+                        <td
+                          style={{
+                            padding: 10,
+                          }}
+                        >
+                          {item.unidade}
+                        </td>
+
+                        <td
+                          style={{
+                            padding: 10,
+                          }}
+                        >
+                          {origemTexto(
+                            item.origemMedia
+                          )}
+                        </td>
+
+                        <td
+                          style={{
+                            padding: 10,
+                            textAlign:
+                              'right',
+                          }}
+                        >
+                          {formatarNumero(
+                            item.mediaMensalUtilizada
+                          )}
+                        </td>
+
+                        <td
+                          style={{
+                            padding: 10,
+                            textAlign:
+                              'right',
+                          }}
+                        >
+                          {formatarNumero(
+                            item.consumoProjetado
+                          )}
+                        </td>
+
+                        <td
+                          style={{
+                            padding: 10,
+                            textAlign:
+                              'right',
+                          }}
+                        >
+                          {formatarNumero(
+                            item.estoqueSeguranca
+                          )}
+                        </td>
+
+                        <td
+                          style={{
+                            padding: 10,
+                            textAlign:
+                              'right',
+                          }}
+                        >
+                          {formatarNumero(
+                            item.estoqueDisponivel
+                          )}
+                        </td>
+
+                        <td
+                          style={{
+                            padding: 10,
+                            textAlign:
+                              'right',
+                          }}
+                        >
+                          {formatarNumero(
+                            item.previstoReceber
+                          )}
+                        </td>
+
+                        <td
+                          style={{
+                            padding: 10,
+                            textAlign:
+                              'right',
+                          }}
+                        >
+                          <strong>
+                            {formatarNumero(
+                              item.quantidadeSugerida
+                            )}
+                          </strong>
+                        </td>
+
+                        <td
+                          style={{
+                            padding: 10,
+                          }}
+                        >
+                          <button
+                            type="button"
+                            className="btn"
+                            onClick={() =>
+                              abrirReferencia(
+                                item
+                              )
+                            }
+                          >
+                            {item.possuiReferenciaInicial
+                              ? 'Alterar referência'
+                              : 'Informar referência'}
+                          </button>
+                        </td>
+                      </tr>
+                    )
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </>
+      )}
+
+      {/* ======================================
+          REFERÊNCIA INICIAL
+      ====================================== */}
+
+      {generoReferencia && (
+        <div className="card">
+          <h2>
+            Referência inicial —{' '}
+            {generoReferencia.genero}
+          </h2>
+
+          <p>
+            Informe o consumo conhecido antes
+            da implantação do EstoqueAprov.
+          </p>
+
+          <p className="muted">
+            Esta referência ficará registrada
+            com responsável e data. Quando o
+            sistema possuir histórico real de
+            consumo, o histórico do
+            EstoqueAprov terá prioridade no
+            cálculo.
+          </p>
+
+          <div className="grid">
+            <label>
+              Tipo de referência
+
+              <select
+                value={
+                  tipoReferencia
+                }
+                onChange={(e) =>
+                  setTipoReferencia(
+                    e.target.value as
+                      | 'MENSAL'
+                      | 'BIMESTRAL'
+                  )
+                }
+              >
+                <option value="MENSAL">
+                  Consumo médio mensal
+                </option>
+
+                <option value="BIMESTRAL">
+                  Consumo bimestral
+                </option>
+              </select>
+            </label>
+
+            <label>
+              Quantidade (
+              {
+                generoReferencia.unidade
+              }
+              )
+
+              <input
+                type="text"
+                inputMode="decimal"
+                value={
+                  quantidadeReferencia
+                }
+                onChange={(e) =>
+                  setQuantidadeReferencia(
+                    e.target.value
+                  )
+                }
+                placeholder="Ex.: 800"
+              />
+            </label>
+          </div>
+
+          {tipoReferencia ===
+            'BIMESTRAL' &&
+            Number(
+              quantidadeReferencia.replace(
+                ',',
+                '.'
+              )
+            ) > 0 && (
+              <p className="muted">
+                Média mensal equivalente:{' '}
+                <strong>
+                  {formatarNumero(
+                    Number(
+                      quantidadeReferencia.replace(
+                        ',',
+                        '.'
+                      )
+                    ) / 2
+                  )}{' '}
+                  {
+                    generoReferencia.unidade
+                  }
+                  /mês
+                </strong>
+              </p>
+            )}
+
+          <label>
+            Observação
+
+            <textarea
+              value={
+                observacaoReferencia
+              }
+              onChange={(e) =>
+                setObservacaoReferencia(
+                  e.target.value
+                )
+              }
+              placeholder="Ex.: referência baseada no controle anterior da OM."
+            />
+          </label>
+
+          {erroReferencia && (
+            <div className="error">
+              {erroReferencia}
+            </div>
+          )}
+
+          {mensagemReferencia && (
+            <div className="success">
+              {mensagemReferencia}
+            </div>
+          )}
+
+          <div
+            className="actions"
+            style={{
+              marginTop: 14,
+            }}
+          >
+            <button
+              className="btn"
+              type="button"
+              onClick={
+                salvarReferencia
+              }
+              disabled={
+                salvandoReferencia
+              }
+            >
+              {salvandoReferencia
+                ? 'Salvando...'
+                : 'Salvar referência'}
+            </button>
+
+            <button
+              className="btn"
+              type="button"
+              onClick={
+                fecharReferencia
+              }
+              disabled={
+                salvandoReferencia
+              }
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
       )}
     </>
   );
