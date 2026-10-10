@@ -34,6 +34,23 @@ function formatarNumero(valor: unknown) {
   );
 }
 
+function numeroCampo(valor: string) {
+  const convertido = Number(
+    valor.replace(',', '.')
+  );
+
+  return Number.isFinite(convertido)
+    ? convertido
+    : null;
+}
+
+function diferente(
+  a: number,
+  b: number
+) {
+  return Math.abs(a - b) > 0.0005;
+}
+
 function origemTexto(origem: string) {
   if (
     origem ===
@@ -51,6 +68,11 @@ function origemTexto(origem: string) {
 
   return 'Sem base de cálculo';
 }
+
+type DecisaoPlanejamento = {
+  quantidade: string;
+  justificativa: string;
+};
 
 export default function QDAAClient() {
   const hoje = new Date();
@@ -116,6 +138,56 @@ export default function QDAAClient() {
 
   /*
    * =====================================================
+   * DECISÃO DO PLANEJAMENTO
+   * =====================================================
+   */
+
+  const [
+    decisoes,
+    setDecisoes,
+  ] = useState<
+    Record<
+      string,
+      DecisaoPlanejamento
+    >
+  >({});
+
+  const [
+    planejamentoId,
+    setPlanejamentoId,
+  ] = useState<string | null>(
+    null
+  );
+
+  const [
+    statusPlanejamento,
+    setStatusPlanejamento,
+  ] = useState<
+    'NOVO' | 'RASCUNHO' | 'FINALIZADO'
+  >('NOVO');
+
+  const [
+    observacaoPlanejamento,
+    setObservacaoPlanejamento,
+  ] = useState('');
+
+  const [
+    salvandoPlanejamento,
+    setSalvandoPlanejamento,
+  ] = useState(false);
+
+  const [
+    erroPlanejamento,
+    setErroPlanejamento,
+  ] = useState('');
+
+  const [
+    mensagemPlanejamento,
+    setMensagemPlanejamento,
+  ] = useState('');
+
+  /*
+   * =====================================================
    * REFERÊNCIA INICIAL
    * =====================================================
    */
@@ -157,6 +229,12 @@ export default function QDAAClient() {
     setErroReferencia,
   ] = useState('');
 
+  /*
+   * =====================================================
+   * QDAA
+   * =====================================================
+   */
+
   async function carregarQDAA() {
     setErro('');
     setCarregando(true);
@@ -188,8 +266,16 @@ export default function QDAAClient() {
     }
   }
 
+  /*
+   * =====================================================
+   * RESSUPRIMENTO
+   * =====================================================
+   */
+
   async function carregarRessuprimento() {
     setErroRessuprimento('');
+    setErroPlanejamento('');
+    setMensagemPlanejamento('');
     setCarregandoRessuprimento(true);
 
     try {
@@ -222,6 +308,42 @@ export default function QDAAClient() {
       }
 
       setRessuprimento(json);
+
+      /*
+       * Novo cálculo = novo planejamento.
+       *
+       * Cada quantidade planejada começa
+       * igual à sugestão do EstoqueAprov.
+       */
+      const novasDecisoes: Record<
+        string,
+        DecisaoPlanejamento
+      > = {};
+
+      for (const item of json.itens) {
+        if (
+          item.quantidadeSugerida !==
+          null
+        ) {
+          novasDecisoes[
+            item.generoId
+          ] = {
+            quantidade: String(
+              item.quantidadeSugerida
+            ),
+
+            justificativa: '',
+          };
+        }
+      }
+
+      setDecisoes(
+        novasDecisoes
+      );
+
+      setPlanejamentoId(null);
+      setStatusPlanejamento('NOVO');
+      setObservacaoPlanejamento('');
     } catch {
       setErroRessuprimento(
         'Não foi possível calcular o ressuprimento QS.'
@@ -231,12 +353,11 @@ export default function QDAAClient() {
     }
   }
 
-  useEffect(() => {
-    carregarQDAA();
-    carregarRessuprimento();
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  /*
+   * =====================================================
+   * REFERÊNCIA INICIAL
+   * =====================================================
+   */
 
   function abrirReferencia(
     item: any
@@ -279,15 +400,13 @@ export default function QDAAClient() {
       return;
     }
 
-    const quantidade = Number(
-      quantidadeReferencia.replace(
-        ',',
-        '.'
-      )
-    );
+    const quantidade =
+      numeroCampo(
+        quantidadeReferencia
+      );
 
     if (
-      !Number.isFinite(quantidade) ||
+      quantidade === null ||
       quantidade <= 0
     ) {
       setErroReferencia(
@@ -345,10 +464,6 @@ export default function QDAAClient() {
           'Referência registrada.'
       );
 
-      /*
-       * Recalcula imediatamente o
-       * ressuprimento.
-       */
       await carregarRessuprimento();
 
       setTimeout(() => {
@@ -363,11 +478,302 @@ export default function QDAAClient() {
     }
   }
 
+  /*
+   * =====================================================
+   * EDIÇÃO DA QUANTIDADE PLANEJADA
+   * =====================================================
+   */
+
+  function alterarQuantidade(
+    generoId: string,
+    valor: string
+  ) {
+    setDecisoes(
+      (atual) => ({
+        ...atual,
+
+        [generoId]: {
+          quantidade: valor,
+
+          justificativa:
+            atual[generoId]
+              ?.justificativa || '',
+        },
+      })
+    );
+
+    setMensagemPlanejamento('');
+    setErroPlanejamento('');
+  }
+
+  function alterarJustificativa(
+    generoId: string,
+    valor: string
+  ) {
+    setDecisoes(
+      (atual) => ({
+        ...atual,
+
+        [generoId]: {
+          quantidade:
+            atual[generoId]
+              ?.quantidade || '',
+
+          justificativa: valor,
+        },
+      })
+    );
+
+    setMensagemPlanejamento('');
+    setErroPlanejamento('');
+  }
+
+  /*
+   * =====================================================
+   * SALVAR / FINALIZAR
+   * =====================================================
+   */
+
+  async function salvarPlanejamento(
+    finalizar: boolean
+  ) {
+    if (!ressuprimento) {
+      return;
+    }
+
+    const itensCalculados =
+      ressuprimento.itens.filter(
+        (item: any) =>
+          item.quantidadeSugerida !==
+            null &&
+          item.mediaMensalUtilizada !==
+            null &&
+          item.consumoProjetado !==
+            null &&
+          item.estoqueSeguranca !==
+            null
+      );
+
+    if (
+      itensCalculados.length === 0
+    ) {
+      setErroPlanejamento(
+        'Para salvar o planejamento, informe primeiro a referência de consumo dos gêneros QS sem base de cálculo.'
+      );
+
+      return;
+    }
+
+    /*
+     * Para FINALIZAR, nenhum gênero QS pode
+     * permanecer sem base de cálculo.
+     */
+    if (
+      finalizar &&
+      ressuprimento.itens.some(
+        (item: any) =>
+          item.quantidadeSugerida ===
+          null
+      )
+    ) {
+      setErroPlanejamento(
+        'Para finalizar o planejamento, ainda existem gêneros QS sem histórico ou referência inicial de consumo.'
+      );
+
+      return;
+    }
+
+    const itens: any[] = [];
+
+    for (
+      const item of itensCalculados
+    ) {
+      const decisao =
+        decisoes[item.generoId];
+
+      const quantidadePlanejada =
+        numeroCampo(
+          decisao?.quantidade || ''
+        );
+
+      if (
+        quantidadePlanejada ===
+          null ||
+        quantidadePlanejada < 0
+      ) {
+        setErroPlanejamento(
+          `Informe uma quantidade planejada válida para ${item.genero}.`
+        );
+
+        return;
+      }
+
+      const alterado =
+        diferente(
+          quantidadePlanejada,
+          Number(
+            item.quantidadeSugerida
+          )
+        );
+
+      const justificativa =
+        decisao?.justificativa
+          ?.trim() || '';
+
+      if (
+        alterado &&
+        !justificativa
+      ) {
+        setErroPlanejamento(
+          `A quantidade planejada de ${item.genero} foi alterada. Informe a justificativa.`
+        );
+
+        return;
+      }
+
+      itens.push({
+        generoId:
+          item.generoId,
+
+        origemMedia:
+          item.origemMedia,
+
+        mediaMensalUtilizada:
+          Number(
+            item.mediaMensalUtilizada
+          ),
+
+        consumoProjetado:
+          Number(
+            item.consumoProjetado
+          ),
+
+        estoqueSeguranca:
+          Number(
+            item.estoqueSeguranca
+          ),
+
+        estoqueDisponivel:
+          Number(
+            item.estoqueDisponivel
+          ),
+
+        previstoReceber:
+          Number(
+            item.previstoReceber || 0
+          ),
+
+        quantidadeSugerida:
+          Number(
+            item.quantidadeSugerida
+          ),
+
+        quantidadePlanejada,
+
+        justificativaAlteracao:
+          alterado
+            ? justificativa
+            : null,
+      });
+    }
+
+    if (
+      finalizar &&
+      !window.confirm(
+        'Confirma a finalização do Planejamento de Ressuprimento QS? Após finalizar, este planejamento ficará preservado no histórico e não poderá ser alterado.'
+      )
+    ) {
+      return;
+    }
+
+    setErroPlanejamento('');
+    setMensagemPlanejamento('');
+    setSalvandoPlanejamento(true);
+
+    try {
+      const resposta = await fetch(
+        '/api/relatorios/planejamento-ressuprimento-qs',
+        {
+          method: 'POST',
+
+          headers: {
+            'Content-Type':
+              'application/json',
+          },
+
+          body: JSON.stringify({
+            planejamentoId,
+
+            mesesHistorico,
+
+            mesesCiclo,
+
+            margemSegurancaPercent:
+              margemSeguranca,
+
+            observacao:
+              observacaoPlanejamento.trim() ||
+              null,
+
+            finalizar,
+
+            itens,
+          }),
+        }
+      );
+
+      const json =
+        await resposta.json();
+
+      if (!resposta.ok) {
+        setErroPlanejamento(
+          json.error ||
+            'Não foi possível salvar o planejamento.'
+        );
+
+        return;
+      }
+
+      setPlanejamentoId(
+        json.planejamentoId
+      );
+
+      setStatusPlanejamento(
+        json.status
+      );
+
+      setMensagemPlanejamento(
+        json.mensagem ||
+          'Planejamento registrado.'
+      );
+    } catch {
+      setErroPlanejamento(
+        'Não foi possível salvar o planejamento de Ressuprimento QS.'
+      );
+    } finally {
+      setSalvandoPlanejamento(false);
+    }
+  }
+
+  useEffect(() => {
+    carregarQDAA();
+    carregarRessuprimento();
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const nomeMes =
     meses.find(
       (item) =>
         item.valor === mes
     )?.nome || '';
+
+  const quantidadeSemBase =
+    ressuprimento?.itens?.filter(
+      (item: any) =>
+        item.quantidadeSugerida ===
+        null
+    ).length || 0;
 
   return (
     <>
@@ -472,14 +878,12 @@ export default function QDAAClient() {
             <div className="grid">
               <div>
                 <span className="muted">
-                  Gêneros QS
-                  cadastrados
+                  Gêneros QS cadastrados
                 </span>
 
                 <div className="big">
                   {
-                    dados
-                      .estatisticas
+                    dados.estatisticas
                       .generosCadastrados
                   }
                 </div>
@@ -492,8 +896,7 @@ export default function QDAAClient() {
 
                 <div className="big">
                   {
-                    dados
-                      .estatisticas
+                    dados.estatisticas
                       .generosComMovimento
                   }
                 </div>
@@ -506,8 +909,7 @@ export default function QDAAClient() {
 
                 <div className="big">
                   {
-                    dados
-                      .estatisticas
+                    dados.estatisticas
                       .generosSemMovimento
                   }
                 </div>
@@ -517,40 +919,32 @@ export default function QDAAClient() {
 
           <div className="card">
             <h2>
-              Controle mensal por
-              gênero QS
+              Controle mensal por gênero QS
             </h2>
 
             <p className="muted">
-              Estoque inicial +
-              entradas + devoluções −
-              consumo − perdas ±
-              correções = estoque
-              final.
+              Estoque inicial + entradas +
+              devoluções − consumo − perdas ±
+              correções = estoque final.
             </p>
 
             {dados.itens.length ===
             0 ? (
               <p className="muted">
-                Nenhum gênero QS
-                cadastrado.
+                Nenhum gênero QS cadastrado.
               </p>
             ) : (
               <div
                 style={{
-                  overflowX:
-                    'auto',
-
+                  overflowX: 'auto',
                   marginTop: 16,
                 }}
               >
                 <table
                   style={{
                     width: '100%',
-
                     borderCollapse:
                       'collapse',
-
                     minWidth: 900,
                   }}
                 >
@@ -567,9 +961,7 @@ export default function QDAAClient() {
                         'Ajustes',
                         'Estoque final',
                       ].map(
-                        (
-                          titulo
-                        ) => (
+                        (titulo) => (
                           <th
                             key={
                               titulo
@@ -582,13 +974,10 @@ export default function QDAAClient() {
                                   'Unid.'
                                   ? 'left'
                                   : 'right',
-
                               padding: 10,
                             }}
                           >
-                            {
-                              titulo
-                            }
+                            {titulo}
                           </th>
                         )
                       )}
@@ -672,7 +1061,7 @@ export default function QDAAClient() {
       )}
 
       {/* ======================================
-          RESSUPRIMENTO QS
+          CONFIGURAÇÃO DO RESSUPRIMENTO
       ====================================== */}
 
       <div className="card">
@@ -687,11 +1076,11 @@ export default function QDAAClient() {
         </p>
 
         <p className="muted">
-          O cálculo utiliza o histórico de
-          consumo do EstoqueAprov. Quando ainda
-          não houver histórico, poderá ser
-          informada uma referência inicial
-          mensal ou bimestral.
+          O EstoqueAprov utiliza o histórico
+          real de consumo. Na ausência de
+          histórico, poderá ser utilizada uma
+          referência inicial informada pelo
+          Administrador.
         </p>
 
         <div className="grid">
@@ -701,6 +1090,10 @@ export default function QDAAClient() {
             <select
               value={
                 mesesHistorico
+              }
+              disabled={
+                statusPlanejamento ===
+                'FINALIZADO'
               }
               onChange={(e) =>
                 setMesesHistorico(
@@ -735,6 +1128,10 @@ export default function QDAAClient() {
               value={
                 mesesCiclo
               }
+              disabled={
+                statusPlanejamento ===
+                'FINALIZADO'
+              }
               onChange={(e) =>
                 setMesesCiclo(
                   Number(
@@ -768,6 +1165,10 @@ export default function QDAAClient() {
               value={
                 margemSeguranca
               }
+              disabled={
+                statusPlanejamento ===
+                'FINALIZADO'
+              }
               onChange={(e) =>
                 setMargemSeguranca(
                   Number(
@@ -791,12 +1192,14 @@ export default function QDAAClient() {
               carregarRessuprimento
             }
             disabled={
-              carregandoRessuprimento
+              carregandoRessuprimento ||
+              statusPlanejamento ===
+                'FINALIZADO'
             }
           >
             {carregandoRessuprimento
               ? 'Calculando...'
-              : 'Calcular ressuprimento'}
+              : 'Calcular / recalcular'}
           </button>
         </div>
 
@@ -806,6 +1209,10 @@ export default function QDAAClient() {
           </div>
         )}
       </div>
+
+      {/* ======================================
+          RESULTADO DO RESSUPRIMENTO
+      ====================================== */}
 
       {ressuprimento && (
         <>
@@ -873,6 +1280,34 @@ export default function QDAAClient() {
               }
               .
             </p>
+
+            {quantidadeSemBase >
+              0 && (
+              <div
+                className="card"
+                style={{
+                  border:
+                    '1px solid #facc15',
+                }}
+              >
+                <strong>
+                  ⚠ Base de cálculo incompleta
+                </strong>
+
+                <p>
+                  {quantidadeSemBase}{' '}
+                  gênero(s) QS ainda não
+                  possuem histórico nem
+                  referência inicial.
+                </p>
+
+                <p className="muted">
+                  Informe a referência desses
+                  gêneros antes de finalizar o
+                  planejamento.
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="card">
@@ -881,9 +1316,10 @@ export default function QDAAClient() {
             </h2>
 
             <p className="muted">
-              Projeção + segurança − estoque
-              disponível − previsto para
-              receber.
+              Quantidade sugerida = consumo
+              projetado + estoque de segurança
+              − estoque disponível − quantidade
+              prevista para receber.
             </p>
 
             <div
@@ -897,7 +1333,7 @@ export default function QDAAClient() {
                   width: '100%',
                   borderCollapse:
                     'collapse',
-                  minWidth: 1150,
+                  minWidth: 1450,
                 }}
               >
                 <thead>
@@ -905,27 +1341,29 @@ export default function QDAAClient() {
                     {[
                       'Gênero',
                       'Unid.',
-                      'Origem da média',
-                      'Média mensal',
+                      'Base',
+                      'Média/mês',
                       'Projeção',
                       'Segurança',
-                      'Estoque atual',
+                      'Estoque',
                       'Prev. receber',
-                      'Sugestão',
-                      'Ação',
+                      'Sugerido',
+                      'Planejado',
+                      'Justificativa',
+                      'Referência',
                     ].map(
                       (titulo) => (
                         <th
                           key={titulo}
                           style={{
                             padding: 10,
-
                             textAlign:
                               [
                                 'Gênero',
                                 'Unid.',
-                                'Origem da média',
-                                'Ação',
+                                'Base',
+                                'Justificativa',
+                                'Referência',
                               ].includes(
                                 titulo
                               )
@@ -942,143 +1380,392 @@ export default function QDAAClient() {
 
                 <tbody>
                   {ressuprimento.itens.map(
-                    (item: any) => (
-                      <tr
-                        key={
+                    (item: any) => {
+                      const decisao =
+                        decisoes[
                           item.generoId
-                        }
-                        style={{
-                          borderTop:
-                            '1px solid rgba(255,255,255,0.12)',
-                        }}
-                      >
-                        <td
-                          style={{
-                            padding: 10,
-                          }}
-                        >
-                          <strong>
-                            {item.genero}
-                          </strong>
-                        </td>
+                        ];
 
-                        <td
-                          style={{
-                            padding: 10,
-                          }}
-                        >
-                          {item.unidade}
-                        </td>
+                      const planejado =
+                        numeroCampo(
+                          decisao
+                            ?.quantidade ||
+                            ''
+                        );
 
-                        <td
-                          style={{
-                            padding: 10,
-                          }}
-                        >
-                          {origemTexto(
-                            item.origemMedia
-                          )}
-                        </td>
+                      const foiAlterado =
+                        planejado !==
+                          null &&
+                        item.quantidadeSugerida !==
+                          null &&
+                        diferente(
+                          planejado,
+                          Number(
+                            item.quantidadeSugerida
+                          )
+                        );
 
-                        <td
+                      return (
+                        <tr
+                          key={
+                            item.generoId
+                          }
                           style={{
-                            padding: 10,
-                            textAlign:
-                              'right',
+                            borderTop:
+                              '1px solid rgba(255,255,255,0.12)',
                           }}
                         >
-                          {formatarNumero(
-                            item.mediaMensalUtilizada
-                          )}
-                        </td>
-
-                        <td
-                          style={{
-                            padding: 10,
-                            textAlign:
-                              'right',
-                          }}
-                        >
-                          {formatarNumero(
-                            item.consumoProjetado
-                          )}
-                        </td>
-
-                        <td
-                          style={{
-                            padding: 10,
-                            textAlign:
-                              'right',
-                          }}
-                        >
-                          {formatarNumero(
-                            item.estoqueSeguranca
-                          )}
-                        </td>
-
-                        <td
-                          style={{
-                            padding: 10,
-                            textAlign:
-                              'right',
-                          }}
-                        >
-                          {formatarNumero(
-                            item.estoqueDisponivel
-                          )}
-                        </td>
-
-                        <td
-                          style={{
-                            padding: 10,
-                            textAlign:
-                              'right',
-                          }}
-                        >
-                          {formatarNumero(
-                            item.previstoReceber
-                          )}
-                        </td>
-
-                        <td
-                          style={{
-                            padding: 10,
-                            textAlign:
-                              'right',
-                          }}
-                        >
-                          <strong>
-                            {formatarNumero(
-                              item.quantidadeSugerida
-                            )}
-                          </strong>
-                        </td>
-
-                        <td
-                          style={{
-                            padding: 10,
-                          }}
-                        >
-                          <button
-                            type="button"
-                            className="btn"
-                            onClick={() =>
-                              abrirReferencia(
-                                item
-                              )
-                            }
+                          <td
+                            style={{
+                              padding: 10,
+                            }}
                           >
-                            {item.possuiReferenciaInicial
-                              ? 'Alterar referência'
-                              : 'Informar referência'}
-                          </button>
-                        </td>
-                      </tr>
-                    )
+                            <strong>
+                              {
+                                item.genero
+                              }
+                            </strong>
+                          </td>
+
+                          <td
+                            style={{
+                              padding: 10,
+                            }}
+                          >
+                            {
+                              item.unidade
+                            }
+                          </td>
+
+                          <td
+                            style={{
+                              padding: 10,
+                            }}
+                          >
+                            {origemTexto(
+                              item.origemMedia
+                            )}
+                          </td>
+
+                          <td
+                            style={{
+                              padding: 10,
+                              textAlign:
+                                'right',
+                            }}
+                          >
+                            {formatarNumero(
+                              item.mediaMensalUtilizada
+                            )}
+                          </td>
+
+                          <td
+                            style={{
+                              padding: 10,
+                              textAlign:
+                                'right',
+                            }}
+                          >
+                            {formatarNumero(
+                              item.consumoProjetado
+                            )}
+                          </td>
+
+                          <td
+                            style={{
+                              padding: 10,
+                              textAlign:
+                                'right',
+                            }}
+                          >
+                            {formatarNumero(
+                              item.estoqueSeguranca
+                            )}
+                          </td>
+
+                          <td
+                            style={{
+                              padding: 10,
+                              textAlign:
+                                'right',
+                            }}
+                          >
+                            {formatarNumero(
+                              item.estoqueDisponivel
+                            )}
+                          </td>
+
+                          <td
+                            style={{
+                              padding: 10,
+                              textAlign:
+                                'right',
+                            }}
+                          >
+                            {formatarNumero(
+                              item.previstoReceber
+                            )}
+                          </td>
+
+                          <td
+                            style={{
+                              padding: 10,
+                              textAlign:
+                                'right',
+                            }}
+                          >
+                            <strong>
+                              {formatarNumero(
+                                item.quantidadeSugerida
+                              )}
+                            </strong>
+                          </td>
+
+                          <td
+                            style={{
+                              padding: 10,
+                              minWidth: 130,
+                            }}
+                          >
+                            {item.quantidadeSugerida ===
+                            null ? (
+                              <span className="muted">
+                                —
+                              </span>
+                            ) : (
+                              <input
+                                type="text"
+                                inputMode="decimal"
+                                value={
+                                  decisao
+                                    ?.quantidade ||
+                                  ''
+                                }
+                                disabled={
+                                  statusPlanejamento ===
+                                  'FINALIZADO'
+                                }
+                                onChange={(
+                                  e
+                                ) =>
+                                  alterarQuantidade(
+                                    item.generoId,
+                                    e.target
+                                      .value
+                                  )
+                                }
+                              />
+                            )}
+                          </td>
+
+                          <td
+                            style={{
+                              padding: 10,
+                              minWidth: 240,
+                            }}
+                          >
+                            {foiAlterado ? (
+                              <input
+                                type="text"
+                                value={
+                                  decisao
+                                    ?.justificativa ||
+                                  ''
+                                }
+                                disabled={
+                                  statusPlanejamento ===
+                                  'FINALIZADO'
+                                }
+                                onChange={(
+                                  e
+                                ) =>
+                                  alterarJustificativa(
+                                    item.generoId,
+                                    e.target
+                                      .value
+                                  )
+                                }
+                                placeholder="Obrigatória"
+                              />
+                            ) : (
+                              <span className="muted">
+                                {item.quantidadeSugerida ===
+                                null
+                                  ? 'Sem base'
+                                  : 'Não necessária'}
+                              </span>
+                            )}
+                          </td>
+
+                          <td
+                            style={{
+                              padding: 10,
+                              minWidth: 170,
+                            }}
+                          >
+                            <button
+                              type="button"
+                              className="btn"
+                              disabled={
+                                statusPlanejamento ===
+                                'FINALIZADO'
+                              }
+                              onClick={() =>
+                                abrirReferencia(
+                                  item
+                                )
+                              }
+                            >
+                              {item.possuiReferenciaInicial
+                                ? 'Alterar referência'
+                                : 'Informar referência'}
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    }
                   )}
                 </tbody>
               </table>
             </div>
+          </div>
+
+          {/* ==================================
+              DECISÃO ADMINISTRATIVA
+          ================================== */}
+
+          <div className="card">
+            <h2>
+              Decisão do Ressuprimento QS
+            </h2>
+
+            <p>
+              Revise os quantitativos antes de
+              finalizar. A quantidade planejada
+              pode ser diferente da sugestão do
+              EstoqueAprov, desde que seja
+              registrada a justificativa.
+            </p>
+
+            <label>
+              Observação geral do planejamento
+
+              <textarea
+                value={
+                  observacaoPlanejamento
+                }
+                disabled={
+                  statusPlanejamento ===
+                  'FINALIZADO'
+                }
+                onChange={(e) =>
+                  setObservacaoPlanejamento(
+                    e.target.value
+                  )
+                }
+                placeholder="Ex.: previsão de exercício, aumento de efetivo, missão extraordinária ou outra consideração operacional."
+              />
+            </label>
+
+            <div
+              style={{
+                marginTop: 14,
+              }}
+            >
+              <strong>
+                Situação:{' '}
+                {statusPlanejamento ===
+                'NOVO'
+                  ? 'Novo planejamento'
+                  : statusPlanejamento ===
+                      'RASCUNHO'
+                    ? 'Rascunho salvo'
+                    : 'Planejamento finalizado'}
+              </strong>
+            </div>
+
+            {planejamentoId && (
+              <p className="muted">
+                Identificação do planejamento:{' '}
+                {planejamentoId}
+              </p>
+            )}
+
+            {erroPlanejamento && (
+              <div className="error">
+                {erroPlanejamento}
+              </div>
+            )}
+
+            {mensagemPlanejamento && (
+              <div className="success">
+                {
+                  mensagemPlanejamento
+                }
+              </div>
+            )}
+
+            {statusPlanejamento !==
+              'FINALIZADO' && (
+              <div
+                className="actions"
+                style={{
+                  marginTop: 14,
+                }}
+              >
+                <button
+                  type="button"
+                  className="btn"
+                  disabled={
+                    salvandoPlanejamento
+                  }
+                  onClick={() =>
+                    salvarPlanejamento(
+                      false
+                    )
+                  }
+                >
+                  {salvandoPlanejamento
+                    ? 'Salvando...'
+                    : 'Salvar rascunho'}
+                </button>
+
+                <button
+                  type="button"
+                  className="btn"
+                  disabled={
+                    salvandoPlanejamento ||
+                    quantidadeSemBase > 0
+                  }
+                  onClick={() =>
+                    salvarPlanejamento(
+                      true
+                    )
+                  }
+                >
+                  Finalizar planejamento
+                </button>
+              </div>
+            )}
+
+            {quantidadeSemBase >
+              0 && (
+              <p className="muted">
+                Para finalizar, informe a
+                referência inicial dos gêneros
+                que ainda estão sem base de
+                cálculo.
+              </p>
+            )}
+
+            {statusPlanejamento ===
+              'FINALIZADO' && (
+              <div className="success">
+                ✓ Planejamento finalizado. Os
+                dados e a memória do cálculo
+                foram preservados no histórico.
+              </div>
+            )}
           </div>
         </>
       )}
@@ -1100,12 +1787,11 @@ export default function QDAAClient() {
           </p>
 
           <p className="muted">
-            Esta referência ficará registrada
-            com responsável e data. Quando o
-            sistema possuir histórico real de
-            consumo, o histórico do
-            EstoqueAprov terá prioridade no
-            cálculo.
+            A referência ficará registrada com
+            responsável e data. Quando houver
+            histórico real suficiente no
+            EstoqueAprov, o histórico do
+            sistema será utilizado no cálculo.
           </p>
 
           <div className="grid">
@@ -1159,20 +1845,16 @@ export default function QDAAClient() {
 
           {tipoReferencia ===
             'BIMESTRAL' &&
-            Number(
-              quantidadeReferencia.replace(
-                ',',
-                '.'
-              )
-            ) > 0 && (
+            (numeroCampo(
+              quantidadeReferencia
+            ) || 0) > 0 && (
               <p className="muted">
                 Média mensal equivalente:{' '}
                 <strong>
                   {formatarNumero(
                     Number(
-                      quantidadeReferencia.replace(
-                        ',',
-                        '.'
+                      numeroCampo(
+                        quantidadeReferencia
                       )
                     ) / 2
                   )}{' '}
@@ -1208,7 +1890,9 @@ export default function QDAAClient() {
 
           {mensagemReferencia && (
             <div className="success">
-              {mensagemReferencia}
+              {
+                mensagemReferencia
+              }
             </div>
           )}
 
