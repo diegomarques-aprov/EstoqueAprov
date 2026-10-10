@@ -29,28 +29,34 @@ enum TipoReferenciaConsumoQS {
   BIMESTRAL
 }
 
+enum StatusPlanejamentoRessuprimentoQS {
+  RASCUNHO
+  FINALIZADO
+}
+
 model Usuario {
-  id                      String                     @id @default(cuid())
-  nome                    String
-  postoGraduacao          String?
-  funcao                  String?
-  login                   String                     @unique
-  senhaHash               String
-  perfil                  PerfilSistema              @default(GRADUADO_SERVICO)
-  situacao                Situacao                   @default(ATIVO)
-  ultimoAcesso            DateTime?
-  criadoEm                DateTime                   @default(now())
-  atualizadoEm            DateTime                   @updatedAt
-  generosCriados          Genero[]                   @relation("GeneroCriador")
-  auditorias              Auditoria[]
-  recebimentos            Recebimento[]              @relation("RecebimentoCriador")
-  movimentacoesEstoque    MovimentacaoEstoque[]      @relation("MovUsuario")
-  saidas                  Saida[]                    @relation("SaidaCriador")
-  arranchamentos          Arranchamento[]            @relation("ArranchamentoUsuario")
-  referenciasConsumoQS    ReferenciaConsumoQS[]      @relation("ReferenciaConsumoQSUsuario")
-  recursosQR              RecursoQR[]                @relation("RecursoQRCriador")
-  movimentosFinanceirosQR MovimentacaoFinanceiraQR[] @relation("MovFinanceiraQRUsuario")
-  comprasQR               CompraQR[]                 @relation("CompraQRCriador")
+  id                         String                         @id @default(cuid())
+  nome                       String
+  postoGraduacao             String?
+  funcao                     String?
+  login                      String                         @unique
+  senhaHash                  String
+  perfil                     PerfilSistema                  @default(GRADUADO_SERVICO)
+  situacao                   Situacao                       @default(ATIVO)
+  ultimoAcesso               DateTime?
+  criadoEm                   DateTime                       @default(now())
+  atualizadoEm               DateTime                       @updatedAt
+  generosCriados             Genero[]                       @relation("GeneroCriador")
+  auditorias                 Auditoria[]
+  recebimentos               Recebimento[]                  @relation("RecebimentoCriador")
+  movimentacoesEstoque       MovimentacaoEstoque[]          @relation("MovUsuario")
+  saidas                     Saida[]                        @relation("SaidaCriador")
+  arranchamentos             Arranchamento[]                @relation("ArranchamentoUsuario")
+  referenciasConsumoQS       ReferenciaConsumoQS[]          @relation("ReferenciaConsumoQSUsuario")
+  planejamentosRessuprimentoQS PlanejamentoRessuprimentoQS[] @relation("PlanejamentoRessuprimentoQSUsuario")
+  recursosQR                 RecursoQR[]                    @relation("RecursoQRCriador")
+  movimentosFinanceirosQR    MovimentacaoFinanceiraQR[]     @relation("MovFinanceiraQRUsuario")
+  comprasQR                  CompraQR[]                     @relation("CompraQRCriador")
 }
 
 model LocalArmazenamento {
@@ -69,14 +75,14 @@ model LocalArmazenamento {
 }
 
 model Categoria {
-  id                     String               @id @default(cuid())
-  nome                     String               @unique
-  controlaLotePadrao       Boolean?
-  controlaValidadePadrao   Boolean?
-  localPadraoId            String?
-  localPadrao              LocalArmazenamento? @relation(fields: [localPadraoId], references: [id])
-  situacao                 Situacao             @default(ATIVO)
-  generos                  Genero[]
+  id                   String               @id @default(cuid())
+  nome                 String               @unique
+  controlaLotePadrao   Boolean?
+  controlaValidadePadrao Boolean?
+  localPadraoId        String?
+  localPadrao          LocalArmazenamento?  @relation(fields: [localPadraoId], references: [id])
+  situacao             Situacao             @default(ATIVO)
+  generos              Genero[]
 }
 
 model UnidadeMedida {
@@ -88,51 +94,96 @@ model UnidadeMedida {
 }
 
 model Genero {
-  id                       String                     @id @default(cuid())
-  nome                     String
-  classe                   ClasseGenero
-  categoriaId              String?
-  categoria                Categoria?                 @relation(fields: [categoriaId], references: [id])
-  unidadeId                String
-  unidade                  UnidadeMedida              @relation(fields: [unidadeId], references: [id])
-  controlaLote             Boolean                    @default(false)
-  controlaValidade         Boolean                    @default(false)
-  estoqueMinimo            Decimal?                   @db.Decimal(14, 3)
-  localPadraoId            String?
-  localPadrao              LocalArmazenamento?        @relation(fields: [localPadraoId], references: [id])
-  situacao                 Situacao                   @default(ATIVO)
-  criadoPorId              String
-  criadoPor                Usuario                    @relation("GeneroCriador", fields: [criadoPorId], references: [id])
-  criadoEm                 DateTime                   @default(now())
-  atualizadoEm             DateTime                   @updatedAt
-  lotes                    Lote[]
-  estoques                 EstoqueLocal[]
-  itensRecebimento         ItemRecebimento[]
-  itensSaida               ItemSaida[]
-  movimentacoesEstoque     MovimentacaoEstoque[]
-  referenciasConsumoQS     ReferenciaConsumoQS[]
-  itensCompraQR            ItemCompraQR[]
-  itensRecebimentoCompraQR ItemRecebimentoCompraQR[]
+  id                              String                            @id @default(cuid())
+  nome                            String
+  classe                          ClasseGenero
+  categoriaId                     String?
+  categoria                       Categoria?                        @relation(fields: [categoriaId], references: [id])
+  unidadeId                       String
+  unidade                         UnidadeMedida                     @relation(fields: [unidadeId], references: [id])
+  controlaLote                    Boolean                           @default(false)
+  controlaValidade                Boolean                           @default(false)
+  estoqueMinimo                   Decimal?                          @db.Decimal(14, 3)
+  localPadraoId                   String?
+  localPadrao                     LocalArmazenamento?               @relation(fields: [localPadraoId], references: [id])
+  situacao                        Situacao                          @default(ATIVO)
+  criadoPorId                     String
+  criadoPor                       Usuario                           @relation("GeneroCriador", fields: [criadoPorId], references: [id])
+  criadoEm                        DateTime                          @default(now())
+  atualizadoEm                    DateTime                          @updatedAt
+  lotes                           Lote[]
+  estoques                        EstoqueLocal[]
+  itensRecebimento                ItemRecebimento[]
+  itensSaida                      ItemSaida[]
+  movimentacoesEstoque            MovimentacaoEstoque[]
+  referenciasConsumoQS            ReferenciaConsumoQS[]
+  itensPlanejamentoRessuprimentoQS ItemPlanejamentoRessuprimentoQS[]
+  itensCompraQR                   ItemCompraQR[]
+  itensRecebimentoCompraQR        ItemRecebimentoCompraQR[]
 
   @@unique([nome, classe])
 }
 
 model ReferenciaConsumoQS {
-  id               String                  @id @default(cuid())
-  generoId         String
-  genero           Genero                  @relation(fields: [generoId], references: [id])
-  tipo             TipoReferenciaConsumoQS
-  quantidade       Decimal                 @db.Decimal(14, 3)
-  mediaMensal      Decimal                 @db.Decimal(14, 3)
-  observacao       String?
-  usuarioId        String
-  usuario          Usuario                 @relation("ReferenciaConsumoQSUsuario", fields: [usuarioId], references: [id])
-  ativo            Boolean                 @default(true)
-  criadoEm         DateTime                @default(now())
-  atualizadoEm     DateTime                @updatedAt
+  id          String                  @id @default(cuid())
+  generoId    String
+  genero      Genero                  @relation(fields: [generoId], references: [id])
+  tipo        TipoReferenciaConsumoQS
+  quantidade  Decimal                 @db.Decimal(14, 3)
+  mediaMensal Decimal                 @db.Decimal(14, 3)
+  observacao  String?
+  usuarioId   String
+  usuario     Usuario                 @relation("ReferenciaConsumoQSUsuario", fields: [usuarioId], references: [id])
+  ativo       Boolean                 @default(true)
+  criadoEm    DateTime                @default(now())
+  atualizadoEm DateTime               @updatedAt
 
   @@index([generoId])
   @@index([generoId, ativo])
+}
+
+model PlanejamentoRessuprimentoQS {
+  id                     String                            @id @default(cuid())
+  dataReferencia         DateTime
+  mesesHistorico         Int
+  mesesCiclo             Int                               @default(2)
+  margemSegurancaPercent Decimal                           @db.Decimal(5, 2)
+  status                 StatusPlanejamentoRessuprimentoQS @default(RASCUNHO)
+  observacao             String?
+  usuarioId              String
+  usuario                Usuario                           @relation("PlanejamentoRessuprimentoQSUsuario", fields: [usuarioId], references: [id])
+  criadoEm               DateTime                          @default(now())
+  atualizadoEm           DateTime                          @updatedAt
+  finalizadoEm           DateTime?
+  itens                  ItemPlanejamentoRessuprimentoQS[]
+
+  @@index([dataReferencia])
+  @@index([status])
+}
+
+model ItemPlanejamentoRessuprimentoQS {
+  id                     String                       @id @default(cuid())
+  planejamentoId         String
+  planejamento           PlanejamentoRessuprimentoQS  @relation(fields: [planejamentoId], references: [id], onDelete: Cascade)
+  generoId               String
+  genero                 Genero                       @relation(fields: [generoId], references: [id])
+
+  origemMedia            String
+  mediaMensalUtilizada   Decimal                      @db.Decimal(14, 3)
+  consumoProjetado       Decimal                      @db.Decimal(14, 3)
+  estoqueSeguranca       Decimal                      @db.Decimal(14, 3)
+  estoqueDisponivel      Decimal                      @db.Decimal(14, 3)
+  previstoReceber        Decimal                      @default(0) @db.Decimal(14, 3)
+  quantidadeSugerida     Decimal                      @db.Decimal(14, 3)
+
+  quantidadePlanejada    Decimal                      @db.Decimal(14, 3)
+  justificativaAlteracao String?
+
+  criadoEm               DateTime                     @default(now())
+  atualizadoEm           DateTime                     @updatedAt
+
+  @@unique([planejamentoId, generoId])
+  @@index([generoId])
 }
 
 model Auditoria {
@@ -254,25 +305,25 @@ model ItemSaida {
 }
 
 model MovimentacaoEstoque {
-  id             String               @id @default(cuid())
+  id             String                @id @default(cuid())
   tipo           TipoMovimentacao
   classe         ClasseOperacao
   generoId       String
-  genero         Genero               @relation(fields: [generoId], references: [id])
+  genero         Genero                @relation(fields: [generoId], references: [id])
   loteId         String?
-  lote           Lote?                @relation(fields: [loteId], references: [id])
+  lote           Lote?                 @relation(fields: [loteId], references: [id])
   localOrigemId  String?
-  localOrigem    LocalArmazenamento?  @relation("MovLocalOrigem", fields: [localOrigemId], references: [id])
+  localOrigem    LocalArmazenamento?   @relation("MovLocalOrigem", fields: [localOrigemId], references: [id])
   localDestinoId String?
-  localDestino   LocalArmazenamento?  @relation("MovLocalDestino", fields: [localDestinoId], references: [id])
-  quantidade     Decimal              @db.Decimal(14, 3)
-  valorUnitario  Decimal?             @db.Decimal(14, 4)
+  localDestino   LocalArmazenamento?   @relation("MovLocalDestino", fields: [localDestinoId], references: [id])
+  quantidade     Decimal               @db.Decimal(14, 3)
+  valorUnitario  Decimal?              @db.Decimal(14, 4)
   referenciaTipo String?
   referenciaId   String?
   observacao     String?
   usuarioId      String
-  usuario        Usuario              @relation("MovUsuario", fields: [usuarioId], references: [id])
-  criadoEm       DateTime             @default(now())
+  usuario        Usuario               @relation("MovUsuario", fields: [usuarioId], references: [id])
+  criadoEm       DateTime              @default(now())
 }
 
 model Arranchamento {
