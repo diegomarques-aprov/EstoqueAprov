@@ -20,20 +20,38 @@ export default async function Page() {
       <h1>QDAA / Ressuprimento QS</h1>
 
       <div className="card">
-        <h2>Controle da cadeia de suprimento</h2>
+        <h2>
+          Controle da cadeia de suprimento
+        </h2>
 
         <p>
-          Área destinada ao acompanhamento dos gêneros
-          classificados como QS e ao apoio ao planejamento
-          das necessidades da cadeia de suprimento.
+          Área destinada ao acompanhamento dos
+          gêneros classificados como QS e ao
+          apoio ao planejamento das necessidades
+          da cadeia de suprimento.
         </p>
 
         <p className="muted">
-          O QDAA é apurado mensalmente. O histórico de
-          consumo será utilizado para auxiliar o cálculo das
-          necessidades do próximo ciclo bimestral de
-          ressuprimento.
+          O QDAA é apurado mensalmente. O
+          histórico de consumo será utilizado
+          para auxiliar o cálculo das
+          necessidades do próximo ciclo
+          bimestral de ressuprimento.
         </p>
+
+        <div
+          className="actions"
+          style={{
+            marginTop: 14,
+          }}
+        >
+          <Link
+            className="btn"
+            href="/qdaa/historico"
+          >
+            Histórico de Ressuprimentos QS
+          </Link>
+        </div>
       </div>
 
       <QDAAClient />
