@@ -10,7 +10,10 @@ export default async function Page() {
 
   return (
     <main>
-      <Link className="back" href="/dashboard">
+      <Link
+        className="back"
+        href="/inicio"
+      >
         ← Início
       </Link>
 
