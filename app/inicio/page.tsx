@@ -33,6 +33,17 @@ function fimDoDiaUTC(data: Date) {
   );
 }
 
+const estiloAreaAdministrativa = {
+  border: '1px solid #2563eb',
+  background: 'rgba(37, 99, 235, 0.08)',
+};
+
+const estiloBotaoAzul = {
+  background: '#2563eb',
+  borderColor: '#3b82f6',
+  color: '#ffffff',
+};
+
 export default async function Inicio() {
   const u = await currentUser();
 
@@ -551,21 +562,47 @@ export default async function Inicio() {
         </div>
       </div>
 
-      {/* CONFIGURAÇÃO */}
+      {/* CONFIGURAÇÕES */}
 
-      <div className="card">
-        <h2>Configuração</h2>
+      <div
+        className="card"
+        style={estiloAreaAdministrativa}
+      >
+        <h2>Configurações</h2>
+
+        <p className="muted">
+          Defina a estrutura utilizada pelo sistema
+          para organizar e controlar o estoque.
+        </p>
 
         <div className="actions">
           <Link
             className="btn"
+            style={estiloBotaoAzul}
             href="/admin/locais"
           >
             Locais de armazenamento
           </Link>
+        </div>
+      </div>
 
+      {/* CADASTROS */}
+
+      <div
+        className="card"
+        style={estiloAreaAdministrativa}
+      >
+        <h2>Cadastros</h2>
+
+        <p className="muted">
+          Cadastre, consulte e altere os gêneros
+          utilizados pelo Aprovisionamento.
+        </p>
+
+        <div className="actions">
           <Link
-            className="btn secondary"
+            className="btn"
+            style={estiloBotaoAzul}
             href="/admin/generos"
           >
             Gêneros QS/QR
