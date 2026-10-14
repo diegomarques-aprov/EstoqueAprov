@@ -1,1 +1,111 @@
-import Link from'next/link';import{redirect}from'next/navigation';import{currentUser}from'@/lib/auth';import{prisma}from'@/lib/prisma';import AjustesClient from'@/components/AjustesClient';export default async function P(){if(!await currentUser())redirect('/login');const [r,s,l]=await Promise.all([prisma.estoqueLocal.findMany({include:{genero:{include:{unidade:true}},local:true,lote:true},orderBy:{genero:{nome:'asc'}}}),prisma.saida.findMany({include:{itens:{include:{genero:{include:{unidade:true}}}}},orderBy:{criadoEm:'desc'},take:50}),prisma.localArmazenamento.findMany({where:{situacao:'ATIVO'},orderBy:{nome:'asc'}})]);const rows=r.map(x=>({id:x.id,genero:x.genero.nome,classe:x.genero.classe,unidade:x.genero.unidade.sigla,local:x.local.nome,localId:x.localId,lote:x.lote?.numero||null,quantidade:Number(x.quantidade)}));const saidas=s.map(x=>({id:x.id,numero:x.numero,classe:x.classe,destino:x.destino,data:x.data.toISOString(),cancelada:!!x.canceladaEm,itens:x.itens.map(i=>({generoId:i.generoId,genero:i.genero.nome,unidade:i.genero.unidade.sigla,quantidade:Number(i.quantidade)}))}));return <main><Link className="back" href="/dashboard">← Dashboard</Link><h1>Ajustes e movimentações especiais</h1><AjustesClient rows={rows} saidas={saidas} locais={l.map(x=>({id:x.id,nome:x.nome}))}/></main>}
+import Link from 'next/link';
+import { redirect } from 'next/navigation';
+import { currentUser } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+import AjustesClient from '@/components/AjustesClient';
+
+export default async function Page() {
+  if (!(await currentUser())) {
+    redirect('/login');
+  }
+
+  const [estoques, saidasBanco, locaisBanco] =
+    await Promise.all([
+      prisma.estoqueLocal.findMany({
+        include: {
+          genero: {
+            include: {
+              unidade: true,
+            },
+          },
+          local: true,
+          lote: true,
+        },
+        orderBy: {
+          genero: {
+            nome: 'asc',
+          },
+        },
+      }),
+
+      prisma.saida.findMany({
+        include: {
+          itens: {
+            include: {
+              genero: {
+                include: {
+                  unidade: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: {
+          criadoEm: 'desc',
+        },
+        take: 50,
+      }),
+
+      prisma.localArmazenamento.findMany({
+        where: {
+          situacao: 'ATIVO',
+        },
+        orderBy: {
+          nome: 'asc',
+        },
+      }),
+    ]);
+
+  const rows = estoques.map((item) => ({
+    id: item.id,
+    genero: item.genero.nome,
+    classe: item.genero.classe,
+    unidade: item.genero.unidade.sigla,
+    local: item.local.nome,
+    localId: item.localId,
+    lote: item.lote?.numero || null,
+    quantidade: Number(item.quantidade),
+  }));
+
+  const saidas = saidasBanco.map((saida) => ({
+    id: saida.id,
+    numero: saida.numero,
+    classe: saida.classe,
+    destino: saida.destino,
+    data: saida.data.toISOString(),
+    cancelada: !!saida.canceladaEm,
+
+    itens: saida.itens.map((item) => ({
+      generoId: item.generoId,
+      genero: item.genero.nome,
+      unidade: item.genero.unidade.sigla,
+      quantidade: Number(item.quantidade),
+    })),
+  }));
+
+  const locais = locaisBanco.map((local) => ({
+    id: local.id,
+    nome: local.nome,
+  }));
+
+  return (
+    <main>
+      <Link
+        className="back"
+        href="/inicio"
+      >
+        ← Início
+      </Link>
+
+      <h1>
+        Ajustes e movimentações especiais
+      </h1>
+
+      <AjustesClient
+        rows={rows}
+        saidas={saidas}
+        locais={locais}
+      />
+    </main>
+  );
+}
