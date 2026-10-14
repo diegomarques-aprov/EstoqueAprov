@@ -1,1 +1,33 @@
-import Link from 'next/link';import {redirect} from 'next/navigation';import {currentUser} from '@/lib/auth';import LocaisClient from '@/components/LocaisClient';export default async function P(){const u=await currentUser();if(!u)redirect('/login');return <main><Link href="/dashboard" className="back">← Início</Link><h1>Locais de armazenamento</h1><p className="muted">Cadastre os locais reais do Aprovisionamento. Câmara de Resfriamento é o local habitual do hortifruti/FLV.</p><LocaisClient/></main>}
+import Link from 'next/link';
+import { redirect } from 'next/navigation';
+import { currentUser } from '@/lib/auth';
+import LocaisClient from '@/components/LocaisClient';
+
+export default async function Page() {
+  const usuario = await currentUser();
+
+  if (!usuario) {
+    redirect('/login');
+  }
+
+  return (
+    <main>
+      <Link
+        href="/inicio"
+        className="back"
+      >
+        ← Início
+      </Link>
+
+      <h1>Locais de armazenamento</h1>
+
+      <p className="muted">
+        Cadastre os locais reais do Aprovisionamento.
+        Câmara de Resfriamento é o local habitual do
+        hortifruti/FLV.
+      </p>
+
+      <LocaisClient />
+    </main>
+  );
+}
