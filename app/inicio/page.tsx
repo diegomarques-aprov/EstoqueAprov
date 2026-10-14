@@ -589,6 +589,14 @@ export default async function Inicio() {
           >
             Unidades de medida
           </Link>
+
+          <Link
+            className="btn"
+            style={estiloBotaoAzul}
+            href="/admin/categorias"
+          >
+            Categorias de gêneros
+          </Link>
         </div>
       </div>
 
