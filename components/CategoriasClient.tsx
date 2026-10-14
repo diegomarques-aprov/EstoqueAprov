@@ -9,6 +9,12 @@ import {
 
 type Situacao = 'ATIVO' | 'INATIVO';
 
+type Grupo = {
+  id: string;
+  nome: string;
+  situacao: Situacao;
+};
+
 type Local = {
   id: string;
   nome: string;
@@ -18,6 +24,8 @@ type Local = {
 type Categoria = {
   id: string;
   nome: string;
+  grupoId: string | null;
+  grupo?: Grupo | null;
   controlaLotePadrao: boolean | null;
   controlaValidadePadrao: boolean | null;
   localPadraoId: string | null;
@@ -32,6 +40,9 @@ export default function CategoriasClient() {
   const [categorias, setCategorias] =
     useState<Categoria[]>([]);
 
+  const [grupos, setGrupos] =
+    useState<Grupo[]>([]);
+
   const [locais, setLocais] =
     useState<Local[]>([]);
 
@@ -45,6 +56,9 @@ export default function CategoriasClient() {
     useState<Categoria | null>(null);
 
   const [nomeEdicao, setNomeEdicao] =
+    useState('');
+
+  const [grupoEdicao, setGrupoEdicao] =
     useState('');
 
   const [loteEdicao, setLoteEdicao] =
@@ -63,21 +77,23 @@ export default function CategoriasClient() {
 
   async function carregarDados() {
     try {
-      const [resCategorias, resLocais] =
-        await Promise.all([
-          fetch('/api/categorias', {
-            cache: 'no-store',
-          }),
-          fetch('/api/locais', {
-            cache: 'no-store',
-          }),
-        ]);
+      const [
+        resCategorias,
+        resGrupos,
+        resLocais,
+      ] = await Promise.all([
+        fetch('/api/categorias', {
+          cache: 'no-store',
+        }),
+        fetch('/api/grupos-generos', {
+          cache: 'no-store',
+        }),
+        fetch('/api/locais', {
+          cache: 'no-store',
+        }),
+      ]);
 
-      if (resCategorias.ok) {
-        setCategorias(
-          await resCategorias.json()
-        );
-      } else {
+      if (!resCategorias.ok) {
         const dados =
           await resCategorias.json();
 
@@ -85,11 +101,45 @@ export default function CategoriasClient() {
           dados.error ||
             'Não foi possível carregar as categorias.'
         );
+
+        return;
       }
 
-      if (resLocais.ok) {
-        setLocais(await resLocais.json());
+      if (!resGrupos.ok) {
+        const dados =
+          await resGrupos.json();
+
+        setErro(
+          dados.error ||
+            'Não foi possível carregar os grupos.'
+        );
+
+        return;
       }
+
+      if (!resLocais.ok) {
+        const dados =
+          await resLocais.json();
+
+        setErro(
+          dados.error ||
+            'Não foi possível carregar os locais.'
+        );
+
+        return;
+      }
+
+      setCategorias(
+        await resCategorias.json()
+      );
+
+      setGrupos(
+        await resGrupos.json()
+      );
+
+      setLocais(
+        await resLocais.json()
+      );
     } catch {
       setErro(
         'Não foi possível carregar os dados necessários.'
@@ -100,6 +150,17 @@ export default function CategoriasClient() {
   useEffect(() => {
     carregarDados();
   }, []);
+
+  const gruposAtivos = grupos.filter(
+    (grupo) =>
+      grupo.situacao === 'ATIVO'
+  );
+
+  const locaisAtivos = locais.filter(
+    (local) =>
+      !local.situacao ||
+      local.situacao === 'ATIVO'
+  );
 
   async function adicionar(
     ev: FormEvent<HTMLFormElement>
@@ -125,6 +186,11 @@ export default function CategoriasClient() {
             nome: String(
               dados.get('nome') || ''
             ).trim(),
+
+            grupoId:
+              String(
+                dados.get('grupoId') || ''
+              ) || null,
 
             controlaLotePadrao:
               dados.get(
@@ -154,6 +220,7 @@ export default function CategoriasClient() {
           resultado.error ||
             'Não foi possível cadastrar a categoria.'
         );
+
         return;
       }
 
@@ -177,16 +244,17 @@ export default function CategoriasClient() {
     categoria: Categoria
   ) {
     setEditando(categoria);
-
     setNomeEdicao(categoria.nome);
+    setGrupoEdicao(
+      categoria.grupoId || ''
+    );
 
     setLoteEdicao(
       categoria.controlaLotePadrao === true
     );
 
     setValidadeEdicao(
-      categoria.controlaValidadePadrao ===
-        true
+      categoria.controlaValidadePadrao === true
     );
 
     setLocalEdicao(
@@ -204,6 +272,7 @@ export default function CategoriasClient() {
   function cancelarEdicao() {
     setEditando(null);
     setNomeEdicao('');
+    setGrupoEdicao('');
     setLoteEdicao(false);
     setValidadeEdicao(false);
     setLocalEdicao('');
@@ -235,6 +304,8 @@ export default function CategoriasClient() {
           body: JSON.stringify({
             id: editando.id,
             nome: nomeEdicao.trim(),
+            grupoId:
+              grupoEdicao || null,
 
             controlaLotePadrao:
               loteEdicao,
@@ -259,11 +330,13 @@ export default function CategoriasClient() {
           resultado.error ||
             'Não foi possível alterar a categoria.'
         );
+
         return;
       }
 
       setEditando(null);
       setNomeEdicao('');
+      setGrupoEdicao('');
       setLoteEdicao(false);
       setValidadeEdicao(false);
       setLocalEdicao('');
@@ -287,9 +360,9 @@ export default function CategoriasClient() {
         <h2>Nova categoria</h2>
 
         <p className="muted">
-          A categoria pode definir padrões que serão
-          sugeridos automaticamente ao cadastrar um
-          novo gênero.
+          A categoria pertence a um grupo e pode
+          definir padrões sugeridos automaticamente
+          no cadastro dos gêneros.
         </p>
 
         <form onSubmit={adicionar}>
@@ -301,8 +374,34 @@ export default function CategoriasClient() {
             required
             autoFocus
             maxLength={80}
-            placeholder="Ex.: Carnes"
+            placeholder="Ex.: Carne Bovina"
           />
+
+          <label>Grupo de gêneros</label>
+
+          <select name="grupoId">
+            <option value="">
+              Não definido
+            </option>
+
+            {gruposAtivos.map(
+              (grupo) => (
+                <option
+                  key={grupo.id}
+                  value={grupo.id}
+                >
+                  {grupo.nome}
+                </option>
+              )
+            )}
+          </select>
+
+          {gruposAtivos.length === 0 && (
+            <p className="muted">
+              Nenhum grupo ativo cadastrado.
+              Cadastre primeiro os grupos de gêneros.
+            </p>
+          )}
 
           <div className="checks">
             <label>
@@ -331,14 +430,16 @@ export default function CategoriasClient() {
               Não definido
             </option>
 
-            {locais.map((local) => (
-              <option
-                key={local.id}
-                value={local.id}
-              >
-                {local.nome}
-              </option>
-            ))}
+            {locaisAtivos.map(
+              (local) => (
+                <option
+                  key={local.id}
+                  value={local.id}
+                >
+                  {local.nome}
+                </option>
+              )
+            )}
           </select>
 
           <button
@@ -426,6 +527,43 @@ export default function CategoriasClient() {
                           autoFocus
                         />
 
+                        <label>
+                          Grupo de gêneros
+                        </label>
+
+                        <select
+                          value={
+                            grupoEdicao
+                          }
+                          onChange={(e) =>
+                            setGrupoEdicao(
+                              e.target
+                                .value
+                            )
+                          }
+                        >
+                          <option value="">
+                            Não definido
+                          </option>
+
+                          {gruposAtivos.map(
+                            (grupo) => (
+                              <option
+                                key={
+                                  grupo.id
+                                }
+                                value={
+                                  grupo.id
+                                }
+                              >
+                                {
+                                  grupo.nome
+                                }
+                              </option>
+                            )
+                          )}
+                        </select>
+
                         <div className="checks">
                           <label>
                             <input
@@ -481,7 +619,7 @@ export default function CategoriasClient() {
                             Não definido
                           </option>
 
-                          {locais.map(
+                          {locaisAtivos.map(
                             (local) => (
                               <option
                                 key={
@@ -565,10 +703,15 @@ export default function CategoriasClient() {
                       <>
                         <div>
                           <b>
-                            {
-                              categoria.nome
-                            }
+                            {categoria.nome}
                           </b>
+
+                          <div className="muted">
+                            Grupo:{' '}
+                            {categoria.grupo
+                              ?.nome ||
+                              'Não definido'}
+                          </div>
 
                           <div className="muted">
                             Lote:{' '}
