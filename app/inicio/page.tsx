@@ -244,9 +244,7 @@ export default async function Inicio() {
           </p>
 
           <div className="row">
-            <span>
-              Refeições pendentes
-            </span>
+            <span>Refeições pendentes</span>
 
             <strong>
               {fechamentosPendentes.length}
@@ -582,6 +580,14 @@ export default async function Inicio() {
             href="/admin/locais"
           >
             Locais de armazenamento
+          </Link>
+
+          <Link
+            className="btn"
+            style={estiloBotaoAzul}
+            href="/admin/unidades"
+          >
+            Unidades de medida
           </Link>
         </div>
       </div>
