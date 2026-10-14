@@ -9,6 +9,8 @@ const cadastroSchema = z.object({
     .min(2, 'Informe o nome da categoria.')
     .max(80, 'O nome deve ter no máximo 80 caracteres.'),
 
+  grupoId: z.string().nullable().optional(),
+
   controlaLotePadrao: z.boolean().nullable().optional(),
 
   controlaValidadePadrao: z
@@ -21,9 +23,60 @@ const cadastroSchema = z.object({
 
 const alteracaoSchema = cadastroSchema.extend({
   id: z.string().min(1, 'Categoria inválida.'),
-
   situacao: z.enum(['ATIVO', 'INATIVO']),
 });
+
+async function validarGrupo(grupoId?: string | null) {
+  if (!grupoId) {
+    return null;
+  }
+
+  const grupo = await prisma.grupoGenero.findUnique({
+    where: {
+      id: grupoId,
+    },
+  });
+
+  if (!grupo || grupo.situacao !== 'ATIVO') {
+    return Response.json(
+      {
+        error:
+          'O grupo informado não existe ou está inativo.',
+      },
+      {
+        status: 400,
+      }
+    );
+  }
+
+  return null;
+}
+
+async function validarLocal(localPadraoId?: string | null) {
+  if (!localPadraoId) {
+    return null;
+  }
+
+  const local = await prisma.localArmazenamento.findUnique({
+    where: {
+      id: localPadraoId,
+    },
+  });
+
+  if (!local || local.situacao !== 'ATIVO') {
+    return Response.json(
+      {
+        error:
+          'O local habitual informado não existe ou está inativo.',
+      },
+      {
+        status: 400,
+      }
+    );
+  }
+
+  return null;
+}
 
 export async function GET() {
   const guard = await requireAdmin();
@@ -34,6 +87,7 @@ export async function GET() {
 
   const categorias = await prisma.categoria.findMany({
     include: {
+      grupo: true,
       localPadrao: true,
       _count: {
         select: {
@@ -84,30 +138,25 @@ export async function POST(request: Request) {
       );
     }
 
-    if (body.localPadraoId) {
-      const local =
-        await prisma.localArmazenamento.findUnique({
-          where: {
-            id: body.localPadraoId,
-          },
-        });
+    const erroGrupo = await validarGrupo(body.grupoId);
 
-      if (!local || local.situacao !== 'ATIVO') {
-        return Response.json(
-          {
-            error:
-              'O local habitual informado não existe ou está inativo.',
-          },
-          {
-            status: 400,
-          }
-        );
-      }
+    if (erroGrupo) {
+      return erroGrupo;
+    }
+
+    const erroLocal = await validarLocal(
+      body.localPadraoId
+    );
+
+    if (erroLocal) {
+      return erroLocal;
     }
 
     const categoria = await prisma.categoria.create({
       data: {
         nome: body.nome,
+
+        grupoId: body.grupoId || null,
 
         controlaLotePadrao:
           body.controlaLotePadrao ?? null,
@@ -121,6 +170,7 @@ export async function POST(request: Request) {
         situacao: 'ATIVO',
       },
       include: {
+        grupo: true,
         localPadrao: true,
       },
     });
@@ -219,25 +269,18 @@ export async function PUT(request: Request) {
       );
     }
 
-    if (body.localPadraoId) {
-      const local =
-        await prisma.localArmazenamento.findUnique({
-          where: {
-            id: body.localPadraoId,
-          },
-        });
+    const erroGrupo = await validarGrupo(body.grupoId);
 
-      if (!local || local.situacao !== 'ATIVO') {
-        return Response.json(
-          {
-            error:
-              'O local habitual informado não existe ou está inativo.',
-          },
-          {
-            status: 400,
-          }
-        );
-      }
+    if (erroGrupo) {
+      return erroGrupo;
+    }
+
+    const erroLocal = await validarLocal(
+      body.localPadraoId
+    );
+
+    if (erroLocal) {
+      return erroLocal;
     }
 
     if (
@@ -262,6 +305,8 @@ export async function PUT(request: Request) {
       data: {
         nome: body.nome,
 
+        grupoId: body.grupoId || null,
+
         controlaLotePadrao:
           body.controlaLotePadrao ?? null,
 
@@ -274,6 +319,7 @@ export async function PUT(request: Request) {
         situacao: body.situacao,
       },
       include: {
+        grupo: true,
         localPadrao: true,
       },
     });
