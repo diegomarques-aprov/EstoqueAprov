@@ -44,77 +44,146 @@ const estiloBotaoAzul = {
   color: '#ffffff',
 };
 
+const verdesOperacao = [
+  {
+    background: '#86efac',
+    borderColor: '#86efac',
+    color: '#052e16',
+  },
+  {
+    background: '#4ade80',
+    borderColor: '#4ade80',
+    color: '#052e16',
+  },
+  {
+    background: '#22c55e',
+    borderColor: '#22c55e',
+    color: '#052e16',
+  },
+  {
+    background: '#16a34a',
+    borderColor: '#16a34a',
+    color: '#ffffff',
+  },
+  {
+    background: '#15803d',
+    borderColor: '#15803d',
+    color: '#ffffff',
+  },
+  {
+    background: '#166534',
+    borderColor: '#166534',
+    color: '#ffffff',
+  },
+];
+
 export default async function Inicio() {
   const u = await currentUser();
 
   if (!u) redirect('/login');
 
   /*
-   * ESTOQUE
+   * ESTOQUE PARA ALERTAS
    */
   const estoques = await prisma.estoqueLocal.findMany({
-    where: { quantidade: { gt: 0 } },
+    where: {
+      quantidade: {
+        gt: 0,
+      },
+    },
     include: {
-      genero: { include: { unidade: true } },
+      genero: {
+        include: {
+          unidade: true,
+        },
+      },
       lote: true,
     },
   });
-
-  const soma = (c: 'QS' | 'QR') =>
-    estoques
-      .filter((x) => x.genero.classe === c)
-      .reduce((a, x) => a + Number(x.quantidade), 0);
 
   /*
    * ESTOQUE ABAIXO DO MÍNIMO
    */
   const baixos = estoques
     .reduce((a: any[], x) => {
-      if (x.genero.estoqueMinimo == null) return a;
+      if (x.genero.estoqueMinimo == null) {
+        return a;
+      }
 
-      let r = a.find((y) => y.id === x.generoId);
+      let r = a.find(
+        (y) => y.id === x.generoId
+      );
 
       if (!r) {
         r = {
           id: x.generoId,
           n: x.genero.nome,
           q: 0,
-          m: Number(x.genero.estoqueMinimo),
+          m: Number(
+            x.genero.estoqueMinimo
+          ),
         };
 
         a.push(r);
       }
 
       r.q += Number(x.quantidade);
+
       return a;
     }, [])
     .filter((x) => x.q < x.m);
 
   /*
-   * VALIDADE
+   * VALIDADE EM ATÉ 30 DIAS
    */
-  const lim = Date.now() + 30 * 86400000;
+  const agora = Date.now();
+  const limiteValidade =
+    agora + 30 * 86400000;
 
-  const val = estoques.filter(
+  const vencidos = estoques.filter(
     (x) =>
       x.lote?.validade &&
-      new Date(x.lote.validade).getTime() <= lim
+      new Date(
+        x.lote.validade
+      ).getTime() < agora
   );
+
+  const proximosDaValidade =
+    estoques.filter((x) => {
+      if (!x.lote?.validade) {
+        return false;
+      }
+
+      const validade = new Date(
+        x.lote.validade
+      ).getTime();
+
+      return (
+        validade >= agora &&
+        validade <= limiteValidade
+      );
+    });
 
   /*
    * DATA ATUAL
    */
   const hoje = new Date();
-  const inicioHoje = inicioDoDiaUTC(hoje);
+  const inicioHoje =
+    inicioDoDiaUTC(hoje);
 
   /*
    * ARRANCHAMENTO DO DIA SEGUINTE
    */
   const amanha = new Date();
-  amanha.setDate(amanha.getDate() + 1);
+  amanha.setDate(
+    amanha.getDate() + 1
+  );
 
-  const inicioAmanha = inicioDoDiaUTC(amanha);
-  const fimAmanha = fimDoDiaUTC(amanha);
+  const inicioAmanha =
+    inicioDoDiaUTC(amanha);
+
+  const fimAmanha =
+    fimDoDiaUTC(amanha);
 
   const arranchamentosAmanha =
     await prisma.arranchamento.findMany({
@@ -131,14 +200,16 @@ export default async function Inicio() {
 
   const totalPrevistoAmanha =
     arranchamentosAmanha.reduce(
-      (total, item) => total + item.totalPrevisto,
+      (total, item) =>
+        total + item.totalPrevisto,
       0
     );
 
   const totalPlanejamentoAmanha =
     arranchamentosAmanha.reduce(
       (total, item) =>
-        total + item.efetivoPlanejamento,
+        total +
+        item.efetivoPlanejamento,
       0
     );
 
@@ -168,8 +239,11 @@ export default async function Inicio() {
 
   const diasPendentes = Array.from(
     new Set(
-      fechamentosPendentes.map((item) =>
-        item.data.toISOString().slice(0, 10)
+      fechamentosPendentes.map(
+        (item) =>
+          item.data
+            .toISOString()
+            .slice(0, 10)
       )
     )
   );
@@ -183,9 +257,11 @@ export default async function Inicio() {
   const diaDoMes = hoje.getDate();
 
   const exibirLembreteQDAA =
-    diaDoMes >= 23 && diaDoMes <= 25;
+    diaDoMes >= 23 &&
+    diaDoMes <= 25;
 
-  const diasParaQDAA = 25 - diaDoMes;
+  const diasParaQDAA =
+    25 - diaDoMes;
 
   return (
     <main>
@@ -199,7 +275,8 @@ export default async function Inicio() {
             {u.postoGraduacao
               ? u.postoGraduacao + ' '
               : ''}
-            {u.nome} · {u.funcao || u.perfil}
+            {u.nome} ·{' '}
+            {u.funcao || u.perfil}
           </span>
         </div>
 
@@ -210,92 +287,117 @@ export default async function Inicio() {
 
       {/* FECHAMENTOS PENDENTES */}
 
-      {fechamentosPendentes.length > 0 && (
+      {fechamentosPendentes.length >
+        0 && (
         <div
           className="card"
           style={{
-            border: '1px solid #ef4444',
+            border:
+              '1px solid #ef4444',
             background:
               'rgba(239, 68, 68, 0.08)',
           }}
         >
-          <h2 style={{ marginTop: 0 }}>
-            ⚠ Fechamento Diário pendente
+          <h2
+            style={{
+              marginTop: 0,
+            }}
+          >
+            ⚠ Fechamento Diário
+            pendente
           </h2>
 
           <p>
             Existem{' '}
             <strong>
-              {quantidadeDiasPendentes}{' '}
-              {quantidadeDiasPendentes === 1
+              {
+                quantidadeDiasPendentes
+              }{' '}
+              {quantidadeDiasPendentes ===
+              1
                 ? 'dia'
                 : 'dias'}
             </strong>{' '}
-            com fechamento do efetivo alimentado
-            pendente.
+            com fechamento do efetivo
+            alimentado pendente.
           </p>
 
           <p className="muted">
-            Informe o comparecimento dos arranchados,
-            os não arranchados atendidos e a sobra
-            pesada de cada refeição. O lançamento
-            permanecerá vinculado à data real do
-            serviço.
+            Informe o comparecimento dos
+            arranchados, os não arranchados
+            atendidos e a sobra pesada de
+            cada refeição.
           </p>
 
           <div className="row">
-            <span>Refeições pendentes</span>
+            <span>
+              Refeições pendentes
+            </span>
 
             <strong>
-              {fechamentosPendentes.length}
+              {
+                fechamentosPendentes.length
+              }
             </strong>
           </div>
 
           <div
             className="actions"
-            style={{ marginTop: 14 }}
+            style={{
+              marginTop: 14,
+            }}
           >
             <Link
               className="btn"
               href="/efetivo/fechamento"
             >
-              Realizar Fechamento Diário
+              Realizar Fechamento
+              Diário
             </Link>
           </div>
         </div>
       )}
 
-      {/* ARRANCHAMENTO DO DIA SEGUINTE */}
+      {/* ARRANCHAMENTO */}
 
       {!efetivoAmanhaInformado ? (
         <div
           className="card"
           style={{
-            border: '1px solid #f59e0b',
+            border:
+              '1px solid #f59e0b',
             background:
               'rgba(245, 158, 11, 0.08)',
           }}
         >
-          <h2 style={{ marginTop: 0 }}>
+          <h2
+            style={{
+              marginTop: 0,
+            }}
+          >
             ⚠ Efetivo do dia seguinte
           </h2>
 
           <p>
-            Informe o efetivo arranchado previsto
-            para amanhã. O planejamento deve ser
-            realizado para que o saque dos gêneros
+            Informe o efetivo arranchado
+            previsto para amanhã. O
+            planejamento deve ser realizado
+            para que o saque dos gêneros
             ocorra{' '}
             <strong>
-              antes das 15:00 do dia anterior
+              antes das 15:00 do dia
+              anterior
             </strong>
             .
           </p>
 
           <p className="muted">
-            O efetivo informado será utilizado como
-            base para o planejamento das quantidades
-            de gêneros, considerando também a margem
-            de segurança definida no arranchamento.
+            O efetivo informado será
+            utilizado como base para o
+            planejamento das quantidades de
+            gêneros, considerando também a
+            margem de segurança definida no
+            arranchamento.
           </p>
 
           <Link
@@ -309,19 +411,24 @@ export default async function Inicio() {
         <div
           className="card"
           style={{
-            border: '1px solid #22c55e',
+            border:
+              '1px solid #22c55e',
             background:
               'rgba(34, 197, 94, 0.07)',
           }}
         >
-          <h2 style={{ marginTop: 0 }}>
+          <h2
+            style={{
+              marginTop: 0,
+            }}
+          >
             ✓ Efetivo do dia seguinte
           </h2>
 
           <p>
             <strong>
-              Efetivo de arranchados para o dia
-              seguinte já relacionado.
+              Efetivo de arranchados para o
+              dia seguinte já relacionado.
             </strong>
           </p>
 
@@ -331,7 +438,9 @@ export default async function Inicio() {
             </span>
 
             <strong>
-              {arranchamentosAmanha.length}
+              {
+                arranchamentosAmanha.length
+              }
             </strong>
           </div>
 
@@ -347,7 +456,8 @@ export default async function Inicio() {
 
           <div className="row">
             <span>
-              Efetivo considerado no planejamento
+              Efetivo considerado no
+              planejamento
             </span>
 
             <strong>
@@ -357,43 +467,52 @@ export default async function Inicio() {
 
           <div
             className="actions"
-            style={{ marginTop: 14 }}
+            style={{
+              marginTop: 14,
+            }}
           >
             <Link
               className="btn secondary"
               href="/efetivo"
             >
-              Consultar / alterar arranchamento
+              Consultar / alterar
+              arranchamento
             </Link>
           </div>
         </div>
       )}
 
-      {/* LEMBRETE DO QDAA */}
+      {/* QDAA */}
 
       {exibirLembreteQDAA && (
         <div
           className="card"
           style={{
-            border: '1px solid #3b82f6',
+            border:
+              '1px solid #3b82f6',
             background:
               'rgba(59, 130, 246, 0.08)',
           }}
         >
-          <h2 style={{ marginTop: 0 }}>
+          <h2
+            style={{
+              marginTop: 0,
+            }}
+          >
             📋 Lembrete QDAA
           </h2>
 
           {diaDoMes === 25 ? (
             <p>
               <strong>
-                O QDAA deve ser realizado hoje.
+                O QDAA deve ser realizado
+                hoje.
               </strong>
             </p>
           ) : (
             <p>
-              O QDAA deve ser realizado no dia 25.
-              Faltam{' '}
+              O QDAA deve ser realizado no
+              dia 25. Faltam{' '}
               <strong>
                 {diasParaQDAA}{' '}
                 {diasParaQDAA === 1
@@ -405,10 +524,11 @@ export default async function Inicio() {
           )}
 
           <p className="muted">
-            Consulte a consolidação mensal dos
-            gêneros QS e as informações de apoio ao
-            planejamento do próximo ressuprimento da
-            cadeia de suprimento.
+            Consulte a consolidação mensal
+            dos gêneros QS e as informações
+            de apoio ao planejamento do
+            próximo ressuprimento da cadeia
+            de suprimento.
           </p>
 
           <div className="actions">
@@ -416,53 +536,24 @@ export default async function Inicio() {
               className="btn secondary"
               href="/qdaa"
             >
-              Acessar QDAA / Ressuprimento QS
+              Acessar QDAA /
+              Ressuprimento QS
             </Link>
           </div>
         </div>
       )}
 
-      {/* RESUMO QS / QR */}
-
-      <div className="grid">
-        <div className="card">
-          <b>QS</b>
-
-          <div className="big">
-            {soma('QS').toLocaleString('pt-BR', {
-              maximumFractionDigits: 3,
-            })}
-          </div>
-
-          <span className="muted">
-            quantidade consolidada*
-          </span>
-        </div>
-
-        <div className="card">
-          <b>QR</b>
-
-          <div className="big">
-            {soma('QR').toLocaleString('pt-BR', {
-              maximumFractionDigits: 3,
-            })}
-          </div>
-
-          <span className="muted">
-            quantidade consolidada*
-          </span>
-        </div>
-      </div>
-
-      {/* ALERTAS DE ESTOQUE */}
+      {/* PAINEL DE SITUAÇÃO */}
 
       <div className="card">
-        <h2>Atenção</h2>
+        <h2>Painel de situação</h2>
 
         {baixos.length === 0 &&
-        val.length === 0 ? (
+        proximosDaValidade.length === 0 &&
+        vencidos.length === 0 ? (
           <p className="muted">
-            Nenhum alerta de estoque no momento.
+            Nenhuma pendência de estoque
+            no momento.
           </p>
         ) : (
           <div className="actions">
@@ -471,18 +562,38 @@ export default async function Inicio() {
                 className="btn secondary"
                 href="/relatorios"
               >
-                ⚠ {baixos.length} gênero(s) abaixo
-                do mínimo
+                ⚠ {baixos.length}{' '}
+                gênero(s) abaixo do mínimo
               </Link>
             )}
 
-            {val.length > 0 && (
+            {proximosDaValidade.length >
+              0 && (
               <Link
                 className="btn secondary"
                 href="/relatorios"
               >
-                ⏳ {val.length} lote(s) com validade
-                em até 30 dias
+                ⏳{' '}
+                {
+                  proximosDaValidade.length
+                }{' '}
+                lote(s) vencendo em até 30
+                dias
+              </Link>
+            )}
+
+            {vencidos.length > 0 && (
+              <Link
+                className="btn secondary"
+                href="/relatorios"
+                style={{
+                  borderColor:
+                    '#ef4444',
+                  color: '#ef4444',
+                }}
+              >
+                ⚠ {vencidos.length}{' '}
+                lote(s) vencido(s)
               </Link>
             )}
           </div>
@@ -497,13 +608,15 @@ export default async function Inicio() {
         <div className="actions">
           <Link
             className="btn"
+            style={verdesOperacao[0]}
             href="/estoque/inicial"
           >
             Estoque inicial
           </Link>
 
           <Link
-            className="btn secondary"
+            className="btn"
+            style={verdesOperacao[1]}
             href="/estoque"
           >
             Consultar estoque
@@ -511,48 +624,55 @@ export default async function Inicio() {
 
           <Link
             className="btn"
+            style={verdesOperacao[2]}
             href="/recebimentos"
           >
             Novo recebimento
           </Link>
 
           <Link
-            className="btn secondary"
+            className="btn"
+            style={verdesOperacao[3]}
             href="/saidas"
           >
             Saída de gêneros
           </Link>
 
           <Link
-            className="btn secondary"
+            className="btn"
+            style={verdesOperacao[4]}
             href="/ajustes"
           >
             Devoluções e ajustes
           </Link>
 
           <Link
-            className="btn secondary"
+            className="btn"
+            style={verdesOperacao[5]}
             href="/efetivo"
           >
             Efetivo alimentado
           </Link>
 
           <Link
-            className="btn secondary"
+            className="btn"
+            style={verdesOperacao[0]}
             href="/relatorios"
           >
             Relatórios
           </Link>
 
           <Link
-            className="btn secondary"
+            className="btn"
+            style={verdesOperacao[1]}
             href="/qdaa"
           >
             QDAA / Ressuprimento QS
           </Link>
 
           <Link
-            className="btn secondary"
+            className="btn"
+            style={verdesOperacao[2]}
             href="/qr/financeiro"
           >
             Recursos e Compras QR
@@ -564,13 +684,16 @@ export default async function Inicio() {
 
       <div
         className="card"
-        style={estiloAreaAdministrativa}
+        style={
+          estiloAreaAdministrativa
+        }
       >
         <h2>Configurações</h2>
 
         <p className="muted">
-          Defina a estrutura utilizada pelo sistema
-          para organizar e controlar o estoque.
+          Defina a estrutura utilizada pelo
+          sistema para organizar e controlar
+          o estoque.
         </p>
 
         <div className="actions">
@@ -593,6 +716,14 @@ export default async function Inicio() {
           <Link
             className="btn"
             style={estiloBotaoAzul}
+            href="/admin/grupos-generos"
+          >
+            Grupos de gêneros
+          </Link>
+
+          <Link
+            className="btn"
+            style={estiloBotaoAzul}
             href="/admin/categorias"
           >
             Categorias de gêneros
@@ -604,13 +735,16 @@ export default async function Inicio() {
 
       <div
         className="card"
-        style={estiloAreaAdministrativa}
+        style={
+          estiloAreaAdministrativa
+        }
       >
         <h2>Cadastros</h2>
 
         <p className="muted">
-          Cadastre, consulte e altere os gêneros
-          utilizados pelo Aprovisionamento.
+          Cadastre, consulte e altere os
+          gêneros utilizados pelo
+          Aprovisionamento.
         </p>
 
         <div className="actions">
@@ -623,12 +757,6 @@ export default async function Inicio() {
           </Link>
         </div>
       </div>
-
-      <p className="muted">
-        * QS e QR podem usar unidades diferentes; o
-        detalhamento correto por gênero/unidade está
-        na consulta de estoque.
-      </p>
 
       {/* RODAPÉ */}
 
@@ -645,9 +773,9 @@ export default async function Inicio() {
         }}
       >
         <div>
-          Desenvolvido por: 1º Sgt Diego Marques -
-          18ª Bda Inf Pan - Serviço de
-          Aprovisionamento/2026
+          Desenvolvido por: 1º Sgt Diego
+          Marques - 18ª Bda Inf Pan -
+          Serviço de Aprovisionamento/2026
         </div>
 
         <div>
@@ -656,7 +784,8 @@ export default async function Inicio() {
         </div>
 
         <div>
-          © 2026 — Todos os Direitos Reservados
+          © 2026 — Todos os Direitos
+          Reservados
         </div>
       </footer>
     </main>
