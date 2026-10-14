@@ -12,7 +12,7 @@ export default async function Page() {
     <main>
       <Link
         className="back"
-        href="/dashboard"
+        href="/inicio"
       >
         ← Início
       </Link>
