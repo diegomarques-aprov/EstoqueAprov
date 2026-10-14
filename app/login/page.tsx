@@ -1,26 +1,24 @@
 import { redirect } from 'next/navigation';
-import { prisma } from '@/lib/prisma';
 import { currentUser } from '@/lib/auth';
 import LoginForm from '@/components/LoginForm';
 
 export const dynamic = 'force-dynamic';
 
-export default async function Login() {
-  if ((await prisma.usuario.count()) === 0) {
-    redirect('/configuracao-inicial');
-  }
-
+export default async function Page() {
   if (await currentUser()) {
-    redirect('/dashboard');
+    redirect('/inicio');
   }
 
   return (
-    <main className="narrow">
-      <div className="brand">EstoqueAprov</div>
-      <p className="muted">Sistema de Controle do Estoque do Aprovisionamento</p>
-
+    <main>
       <div className="card">
-        <h1>Entrar</h1>
+        <h1>EstoqueAprov</h1>
+
+        <p className="muted">
+          Sistema de Controle de Estoque do
+          Aprovisionamento
+        </p>
+
         <LoginForm />
       </div>
     </main>
