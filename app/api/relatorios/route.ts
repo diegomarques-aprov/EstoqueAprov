@@ -1,96 +1,125 @@
 import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/guard';
 
-function dt(s: string, end = false) {
+const TIME_ZONE = 'America/Campo_Grande';
+
+function inicioUtcDoDiaLocal(data: string) {
   return new Date(
-    s.slice(0, 10) +
-      (end
-        ? 'T23:59:59.999Z'
-        : 'T00:00:00.000Z')
+    `${data.slice(0, 10)}T04:00:00.000Z`
   );
 }
 
-export async function GET(req: Request) {
-  const g = await requireAdmin();
+function fimUtcDoDiaLocal(data: string) {
+  const inicio =
+    inicioUtcDoDiaLocal(data);
 
-  if (g.error) {
-    return g.error;
+  return new Date(
+    inicio.getTime() +
+      24 * 60 * 60 * 1000 -
+      1
+  );
+}
+
+function dataHojeLocal() {
+  const partes =
+    new Intl.DateTimeFormat(
+      'en-CA',
+      {
+        timeZone: TIME_ZONE,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }
+    ).formatToParts(new Date());
+
+  const ano =
+    partes.find(
+      (p) => p.type === 'year'
+    )?.value;
+
+  const mes =
+    partes.find(
+      (p) => p.type === 'month'
+    )?.value;
+
+  const dia =
+    partes.find(
+      (p) => p.type === 'day'
+    )?.value;
+
+  return `${ano}-${mes}-${dia}`;
+}
+
+function chaveGenero(
+  generoId: string
+) {
+  return generoId;
+}
+
+export async function GET(
+  req: Request
+) {
+  const guard =
+    await requireAdmin();
+
+  if (guard.error) {
+    return guard.error;
   }
 
-  const q =
+  const parametros =
     new URL(req.url).searchParams;
 
   const hoje =
-    new Date()
-      .toISOString()
-      .slice(0, 10);
+    dataHojeLocal();
 
   const inicio =
-    q.get('inicio') || hoje;
+    parametros.get('inicio') ||
+    hoje;
 
   const fim =
-    q.get('fim') || inicio;
+    parametros.get('fim') ||
+    inicio;
 
   const classe =
-    q.get('classe');
+    parametros.get('classe');
 
-  /*
-   * Movimentações gerais continuam usando
-   * criadoEm como data do fato registrado.
-   *
-   * SAÍDAS são tratadas separadamente porque
-   * possuem uma data operacional própria
-   * em Saida.data.
-   */
-  const whereMovimentacoes: any = {
-    criadoEm: {
-      gte: dt(inicio),
-      lte: dt(fim, true),
-    },
+  const inicioPeriodo =
+    inicioUtcDoDiaLocal(inicio);
 
-    tipo: {
-      not: 'SAIDA',
-    },
-  };
+  const fimPeriodo =
+    fimUtcDoDiaLocal(fim);
 
-  if (
+  const filtroClasse =
     classe === 'QS' ||
     classe === 'QR'
-  ) {
-    whereMovimentacoes.classe =
-      classe;
-  }
-
-  const whereSaidas: any = {
-    data: {
-      gte: dt(inicio),
-      lte: dt(fim, true),
-    },
-
-    canceladaEm: null,
-  };
-
-  if (
-    classe === 'QS' ||
-    classe === 'QR'
-  ) {
-    whereSaidas.classe =
-      classe;
-  }
+      ? { classe }
+      : {};
 
   const [
-    movimentacoesGerais,
-    saidas,
+    movimentacoes,
     arranchamentos,
     estoque,
   ] = await Promise.all([
     prisma.movimentacaoEstoque.findMany({
-      where: whereMovimentacoes,
+      where: {
+        criadoEm: {
+          gte: inicioPeriodo,
+          lte: fimPeriodo,
+        },
+
+        ...filtroClasse,
+      },
 
       include: {
         genero: {
           include: {
             unidade: true,
+
+            categoria: {
+              include: {
+                grupo: true,
+              },
+            },
           },
         },
 
@@ -104,36 +133,11 @@ export async function GET(req: Request) {
       },
     }),
 
-    prisma.saida.findMany({
-      where: whereSaidas,
-
-      include: {
-        itens: {
-          include: {
-            genero: {
-              include: {
-                unidade: true,
-              },
-            },
-          },
-        },
-      },
-
-      orderBy: [
-        {
-          data: 'desc',
-        },
-        {
-          criadoEm: 'desc',
-        },
-      ],
-    }),
-
     prisma.arranchamento.findMany({
       where: {
         data: {
-          gte: dt(inicio),
-          lte: dt(fim, true),
+          gte: inicioPeriodo,
+          lte: fimPeriodo,
         },
       },
 
@@ -176,6 +180,12 @@ export async function GET(req: Request) {
         genero: {
           include: {
             unidade: true,
+
+            categoria: {
+              include: {
+                grupo: true,
+              },
+            },
           },
         },
 
@@ -186,219 +196,494 @@ export async function GET(req: Request) {
   ]);
 
   /*
-   * Monta as saídas para exibição no relatório
-   * usando a DATA OPERACIONAL da saída.
-   *
-   * O relatório usa ItemSaida para não duplicar
-   * a quantidade quando uma única saída é
-   * atendida por mais de um lote/local via PVPS.
+   * SALDO ATUAL POR GÊNERO
    */
-  const movimentacoesSaida =
-    saidas.flatMap((saida) =>
-      saida.itens.map((item) => ({
-        id: `saida-${item.id}`,
+  const saldoAtual =
+    new Map<
+      string,
+      {
+        generoId: string;
+        nome: string;
+        classe: string;
+        unidade: string;
+        categoriaId: string | null;
+        categoria: string;
+        grupoId: string | null;
+        grupo: string;
+        quantidade: number;
+      }
+    >();
 
-        tipo: 'SAIDA',
+  for (const item of estoque) {
+    const id =
+      chaveGenero(
+        item.generoId
+      );
 
-        classe: saida.classe,
+    let registro =
+      saldoAtual.get(id);
 
+    if (!registro) {
+      registro = {
         generoId:
           item.generoId,
 
-        genero:
-          item.genero,
+        nome:
+          item.genero.nome,
 
-        loteId: null,
-        lote: null,
+        classe:
+          item.genero.classe,
 
-        localOrigemId: null,
-        localOrigem: null,
+        unidade:
+          item.genero.unidade
+            .sigla,
 
-        localDestinoId: null,
-        localDestino: null,
+        categoriaId:
+          item.genero.categoria
+            ?.id || null,
 
-        quantidade:
-          Number(
-            item.quantidade
-          ),
+        categoria:
+          item.genero.categoria
+            ?.nome ||
+          'Sem categoria',
 
-        valorUnitario: null,
+        grupoId:
+          item.genero.categoria
+            ?.grupo?.id ||
+          null,
 
-        referenciaTipo:
-          'Saida',
+        grupo:
+          item.genero.categoria
+            ?.grupo?.nome ||
+          'Sem grupo',
 
-        referenciaId:
-          saida.id,
+        quantidade: 0,
+      };
 
-        observacao:
-          saida.observacao,
+      saldoAtual.set(
+        id,
+        registro
+      );
+    }
 
-        /*
-         * Mantemos criadoEm para compatibilidade
-         * com o cliente, mas aqui ele representa
-         * a data operacional para fins do relatório.
-         */
-        criadoEm:
-          saida.data,
-      }))
-    );
+    registro.quantidade +=
+      Number(
+        item.quantidade
+      );
+  }
 
-  const movimentacoesGeraisNormalizadas =
-    movimentacoesGerais.map(
-      (item) => ({
-        ...item,
+  /*
+   * MOVIMENTAÇÕES AGRUPADAS POR GÊNERO.
+   *
+   * Não somamos gêneros diferentes,
+   * mesmo quando possuem a mesma unidade.
+   */
+  const porGenero =
+    new Map<
+      string,
+      {
+        generoId: string;
+        nome: string;
+        classe: string;
+        unidade: string;
+        categoriaId: string | null;
+        categoria: string;
+        grupoId: string | null;
+        grupo: string;
 
-        quantidade:
-          Number(
-            item.quantidade
-          ),
+        saldoInicial: number;
+        recebimentos: number;
+        saidas: number;
+        devolucoes: number;
+        perdas: number;
+        correcoes: number;
+        transferencias: number;
+        saldoAtual: number;
 
-        valorUnitario:
-          item.valorUnitario !=
-          null
-            ? Number(
-                item.valorUnitario
-              )
-            : null,
-      })
-    );
+        movimentacoes: {
+          id: string;
+          tipo: string;
+          quantidade: number;
+          dataHora: Date;
+          lote: string | null;
+          localOrigem: string | null;
+          localDestino: string | null;
+          observacao: string | null;
+        }[];
+      }
+    >();
 
-  const movimentacoes = [
-    ...movimentacoesGeraisNormalizadas,
-    ...movimentacoesSaida,
-  ].sort(
-    (a, b) =>
-      new Date(
-        b.criadoEm
-      ).getTime() -
-      new Date(
-        a.criadoEm
-      ).getTime()
-  );
+  function obterGenero(
+    movimento: (typeof movimentacoes)[number]
+  ) {
+    const id =
+      chaveGenero(
+        movimento.generoId
+      );
 
-  const resumo: Record<
-    string,
-    number
-  > = {
-    SALDO_INICIAL: 0,
-    RECEBIMENTO: 0,
-    SAIDA: 0,
-    DEVOLUCAO: 0,
-    PERDA: 0,
-    CORRECAO: 0,
-    TRANSFERENCIA: 0,
-  };
+    let registro =
+      porGenero.get(id);
+
+    if (!registro) {
+      const saldo =
+        saldoAtual.get(id);
+
+      registro = {
+        generoId:
+          movimento.generoId,
+
+        nome:
+          movimento.genero.nome,
+
+        classe:
+          movimento.genero.classe,
+
+        unidade:
+          movimento.genero.unidade
+            .sigla,
+
+        categoriaId:
+          movimento.genero
+            .categoria?.id ||
+          saldo?.categoriaId ||
+          null,
+
+        categoria:
+          movimento.genero
+            .categoria?.nome ||
+          saldo?.categoria ||
+          'Sem categoria',
+
+        grupoId:
+          movimento.genero
+            .categoria?.grupo
+            ?.id ||
+          saldo?.grupoId ||
+          null,
+
+        grupo:
+          movimento.genero
+            .categoria?.grupo
+            ?.nome ||
+          saldo?.grupo ||
+          'Sem grupo',
+
+        saldoInicial: 0,
+        recebimentos: 0,
+        saidas: 0,
+        devolucoes: 0,
+        perdas: 0,
+        correcoes: 0,
+        transferencias: 0,
+
+        saldoAtual:
+          saldo?.quantidade ||
+          0,
+
+        movimentacoes: [],
+      };
+
+      porGenero.set(
+        id,
+        registro
+      );
+    }
+
+    return registro;
+  }
 
   for (
     const movimento of movimentacoes
   ) {
-    if (
-      resumo[
-        movimento.tipo
-      ] !== undefined
-    ) {
-      resumo[
-        movimento.tipo
-      ] += Number(
+    const registro =
+      obterGenero(
+        movimento
+      );
+
+    const quantidade =
+      Number(
         movimento.quantidade
+      );
+
+    switch (
+      movimento.tipo
+    ) {
+      case 'SALDO_INICIAL':
+        registro.saldoInicial +=
+          quantidade;
+        break;
+
+      case 'RECEBIMENTO':
+        registro.recebimentos +=
+          quantidade;
+        break;
+
+      case 'SAIDA':
+        registro.saidas +=
+          quantidade;
+        break;
+
+      case 'DEVOLUCAO':
+        registro.devolucoes +=
+          quantidade;
+        break;
+
+      case 'PERDA':
+        registro.perdas +=
+          quantidade;
+        break;
+
+      case 'CORRECAO':
+        registro.correcoes +=
+          quantidade;
+        break;
+
+      case 'TRANSFERENCIA':
+        registro.transferencias +=
+          quantidade;
+        break;
+    }
+
+    registro.movimentacoes.push({
+      id: movimento.id,
+
+      tipo:
+        movimento.tipo,
+
+      quantidade,
+
+      /*
+       * Este é o instante REAL do
+       * lançamento/saída física.
+       */
+      dataHora:
+        movimento.criadoEm,
+
+      lote:
+        movimento.lote
+          ?.numero ||
+        null,
+
+      localOrigem:
+        movimento.localOrigem
+          ?.nome ||
+        null,
+
+      localDestino:
+        movimento.localDestino
+          ?.nome ||
+        null,
+
+      observacao:
+        movimento.observacao ||
+        null,
+    });
+  }
+
+  /*
+   * Inclui gêneros que possuem estoque
+   * atual mesmo que não tenham tido
+   * movimentação no período.
+   */
+  for (
+    const saldo of saldoAtual.values()
+  ) {
+    if (
+      !porGenero.has(
+        saldo.generoId
+      )
+    ) {
+      porGenero.set(
+        saldo.generoId,
+        {
+          generoId:
+            saldo.generoId,
+
+          nome:
+            saldo.nome,
+
+          classe:
+            saldo.classe,
+
+          unidade:
+            saldo.unidade,
+
+          categoriaId:
+            saldo.categoriaId,
+
+          categoria:
+            saldo.categoria,
+
+          grupoId:
+            saldo.grupoId,
+
+          grupo:
+            saldo.grupo,
+
+          saldoInicial: 0,
+          recebimentos: 0,
+          saidas: 0,
+          devolucoes: 0,
+          perdas: 0,
+          correcoes: 0,
+          transferencias: 0,
+
+          saldoAtual:
+            saldo.quantidade,
+
+          movimentacoes: [],
+        }
       );
     }
   }
 
-  const estoqueBaixo = estoque
-    .filter(
-      (item) =>
-        item.genero
-          .estoqueMinimo != null
-    )
-    .reduce(
-      (
-        acumulado: any[],
-        item
-      ) => {
-        let registro =
-          acumulado.find(
-            (x) =>
-              x.id ===
-              item.generoId
-          );
+  const generos =
+    Array.from(
+      porGenero.values()
+    ).sort((a, b) => {
+      const grupo =
+        a.grupo.localeCompare(
+          b.grupo,
+          'pt-BR'
+        );
 
-        if (!registro) {
-          registro = {
-            id: item.generoId,
+      if (grupo !== 0) {
+        return grupo;
+      }
 
-            nome:
-              item.genero.nome,
+      const categoria =
+        a.categoria.localeCompare(
+          b.categoria,
+          'pt-BR'
+        );
 
-            unidade:
-              item.genero
-                .unidade.sigla,
+      if (
+        categoria !== 0
+      ) {
+        return categoria;
+      }
 
-            qtd: 0,
+      return a.nome.localeCompare(
+        b.nome,
+        'pt-BR'
+      );
+    });
 
-            min: Number(
-              item.genero
-                .estoqueMinimo
-            ),
-          };
+  /*
+   * ALERTA DE ESTOQUE BAIXO
+   */
+  const estoqueBaixo =
+    estoque
+      .filter(
+        (item) =>
+          item.genero
+            .estoqueMinimo !=
+          null
+      )
+      .reduce(
+        (
+          acumulado: any[],
+          item
+        ) => {
+          let registro =
+            acumulado.find(
+              (x) =>
+                x.id ===
+                item.generoId
+            );
 
-          acumulado.push(
-            registro
-          );
-        }
+          if (!registro) {
+            registro = {
+              id:
+                item.generoId,
 
-        registro.qtd +=
-          Number(
-            item.quantidade
-          );
+              nome:
+                item.genero
+                  .nome,
 
-        return acumulado;
-      },
-      []
-    )
-    .filter(
-      (item) =>
-        item.qtd <
-        item.min
-    );
+              unidade:
+                item.genero
+                  .unidade
+                  .sigla,
 
+              qtd: 0,
+
+              min: Number(
+                item.genero
+                  .estoqueMinimo
+              ),
+            };
+
+            acumulado.push(
+              registro
+            );
+          }
+
+          registro.qtd +=
+            Number(
+              item.quantidade
+            );
+
+          return acumulado;
+        },
+        []
+      )
+      .filter(
+        (item) =>
+          item.qtd <
+          item.min
+      );
+
+  /*
+   * ALERTAS DE VALIDADE
+   */
   const agora =
     Date.now();
 
   const limite =
     agora +
-    30 * 86400000;
+    30 *
+      24 *
+      60 *
+      60 *
+      1000;
 
-  const validade = estoque
-    .filter(
-      (item) =>
-        item.lote
-          ?.validade &&
-        new Date(
-          item.lote.validade
-        ).getTime() <=
-          limite
-    )
-    .map((item) => ({
-      genero:
-        item.genero.nome,
+  const validade =
+    estoque
+      .filter(
+        (item) =>
+          item.lote
+            ?.validade &&
+          new Date(
+            item.lote.validade
+          ).getTime() <=
+            limite
+      )
+      .map((item) => ({
+        genero:
+          item.genero.nome,
 
-      lote:
-        item.lote?.numero,
+        lote:
+          item.lote
+            ?.numero,
 
-      validade:
-        item.lote?.validade,
+        validade:
+          item.lote
+            ?.validade,
 
-      quantidade:
-        Number(
-          item.quantidade
-        ),
+        quantidade:
+          Number(
+            item.quantidade
+          ),
 
-      unidade:
-        item.genero
-          .unidade.sigla,
-    }));
+        unidade:
+          item.genero
+            .unidade.sigla,
+      }));
 
+  /*
+   * ARRANCHAMENTO
+   */
   const efetivos =
     arranchamentos.map(
       (item) => ({
@@ -443,8 +728,7 @@ export async function GET(req: Request) {
           item.totalAtendido,
 
         sobraKg:
-          item.sobraKg !=
-          null
+          item.sobraKg != null
             ? Number(
                 item.sobraKg
               )
@@ -461,6 +745,40 @@ export async function GET(req: Request) {
       })
     );
 
+  /*
+   * Mantemos os campos antigos nesta
+   * versão para não quebrar PDF/Excel
+   * enquanto modernizamos a interface.
+   */
+  const resumo: Record<
+    string,
+    number
+  > = {
+    SALDO_INICIAL: 0,
+    RECEBIMENTO: 0,
+    SAIDA: 0,
+    DEVOLUCAO: 0,
+    PERDA: 0,
+    CORRECAO: 0,
+    TRANSFERENCIA: 0,
+  };
+
+  for (
+    const movimento of movimentacoes
+  ) {
+    if (
+      resumo[
+        movimento.tipo
+      ] !== undefined
+    ) {
+      resumo[
+        movimento.tipo
+      ] += Number(
+        movimento.quantidade
+      );
+    }
+  }
+
   return Response.json({
     inicio,
     fim,
@@ -469,9 +787,32 @@ export async function GET(req: Request) {
       classe ||
       'TODOS',
 
+    timeZone:
+      TIME_ZONE,
+
     resumo,
 
-    movimentacoes,
+    movimentacoes:
+      movimentacoes.map(
+        (item) => ({
+          ...item,
+
+          quantidade:
+            Number(
+              item.quantidade
+            ),
+
+          valorUnitario:
+            item.valorUnitario !=
+            null
+              ? Number(
+                  item.valorUnitario
+                )
+              : null,
+        })
+      ),
+
+    generos,
 
     efetivos,
 
