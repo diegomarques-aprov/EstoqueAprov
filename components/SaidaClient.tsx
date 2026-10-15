@@ -52,6 +52,10 @@ const destinos = [
   ['ALMOCO', 'Almoço'],
   ['JANTAR', 'Jantar'],
   ['CEIA', 'Ceia'],
+  [
+    'SERVICO_DIA_SEGUINTE',
+    'Serviço do dia seguinte',
+  ],
   ['OUTRO', 'Outro'],
 ] as const;
 
@@ -91,23 +95,26 @@ export default function SaidaClient() {
     useState(false);
 
   async function carregar() {
-    const [respostaGeneros, respostaEstoque] =
-      await Promise.all([
-        fetch(
-          '/api/generos?classe=' +
-            classe,
-          {
-            cache: 'no-store',
-          }
-        ),
-        fetch(
-          '/api/estoque?classe=' +
-            classe,
-          {
-            cache: 'no-store',
-          }
-        ),
-      ]);
+    const [
+      respostaGeneros,
+      respostaEstoque,
+    ] = await Promise.all([
+      fetch(
+        '/api/generos?classe=' +
+          classe,
+        {
+          cache: 'no-store',
+        }
+      ),
+
+      fetch(
+        '/api/estoque?classe=' +
+          classe,
+        {
+          cache: 'no-store',
+        }
+      ),
+    ]);
 
     const dadosGeneros =
       await respostaGeneros.json();
@@ -127,7 +134,9 @@ export default function SaidaClient() {
     > = {};
 
     if (Array.isArray(dadosEstoque)) {
-      for (const x of dadosEstoque as E[]) {
+      for (
+        const x of dadosEstoque as E[]
+      ) {
         novosSaldos[x.generoId] =
           (novosSaldos[
             x.generoId
@@ -165,12 +174,18 @@ export default function SaidaClient() {
       Grupo
     >();
 
-    for (const genero of generosDisponiveis) {
+    for (
+      const genero of
+        generosDisponiveis
+    ) {
       const grupo =
         genero.categoria?.grupo;
 
       if (grupo) {
-        mapa.set(grupo.id, grupo);
+        mapa.set(
+          grupo.id,
+          grupo
+        );
       }
     }
 
@@ -195,7 +210,10 @@ export default function SaidaClient() {
       }
     >();
 
-    for (const genero of generosDisponiveis) {
+    for (
+      const genero of
+        generosDisponiveis
+    ) {
       const categoria =
         genero.categoria;
 
@@ -204,10 +222,13 @@ export default function SaidaClient() {
         categoria.grupo?.id ===
           grupoId
       ) {
-        mapa.set(categoria.id, {
-          id: categoria.id,
-          nome: categoria.nome,
-        });
+        mapa.set(
+          categoria.id,
+          {
+            id: categoria.id,
+            nome: categoria.nome,
+          }
+        );
       }
     }
 
@@ -364,15 +385,18 @@ export default function SaidaClient() {
       );
 
       const quantidade =
-        Number(item.quantidade);
+        Number(
+          item.quantidade
+        );
 
       if (!(quantidade > 0)) {
         return `${genero.nome}: informe uma quantidade válida.`;
       }
 
       const disponivel =
-        saldos[item.generoId] ||
-        0;
+        saldos[
+          item.generoId
+        ] || 0;
 
       if (
         quantidade >
@@ -394,7 +418,8 @@ export default function SaidaClient() {
   }
 
   async function confirmar() {
-    const erro = validar();
+    const erro =
+      validar();
 
     if (erro) {
       setMsg(erro);
@@ -416,27 +441,29 @@ export default function SaidaClient() {
                 'application/json',
             },
 
-            body: JSON.stringify({
-              classe,
-              destino,
-              data,
+            body:
+              JSON.stringify({
+                classe,
+                destino,
+                data,
 
-              observacao:
-                observacao ||
-                undefined,
+                observacao:
+                  observacao ||
+                  undefined,
 
-              itens: itens.map(
-                (item) => ({
-                  generoId:
-                    item.generoId,
+                itens:
+                  itens.map(
+                    (item) => ({
+                      generoId:
+                        item.generoId,
 
-                  quantidade:
-                    Number(
-                      item.quantidade
-                    ),
-                })
-              ),
-            }),
+                      quantidade:
+                        Number(
+                          item.quantidade
+                        ),
+                    })
+                  ),
+              }),
           }
         );
 
@@ -520,7 +547,9 @@ export default function SaidaClient() {
       )}
 
       <div className="card">
-        <h2>Destino da saída</h2>
+        <h2>
+          Destino da saída
+        </h2>
 
         <div className="grid">
           <label>
@@ -532,14 +561,23 @@ export default function SaidaClient() {
                 setDestino(
                   e.target.value
                 );
-                setRevisar(false);
+                setRevisar(
+                  false
+                );
               }}
             >
               {destinos.map(
-                ([valor, nome]) => (
+                ([
+                  valor,
+                  nome,
+                ]) => (
                   <option
-                    value={valor}
-                    key={valor}
+                    value={
+                      valor
+                    }
+                    key={
+                      valor
+                    }
                   >
                     {nome}
                   </option>
@@ -558,22 +596,41 @@ export default function SaidaClient() {
                 setData(
                   e.target.value
                 );
-                setRevisar(false);
+                setRevisar(
+                  false
+                );
               }}
             />
           </label>
         </div>
 
+        {destino ===
+          'SERVICO_DIA_SEGUINTE' && (
+          <p className="muted">
+            Esta opção identifica
+            apenas a finalidade da
+            saída. A data e a hora da
+            movimentação serão
+            registradas no momento
+            real em que o material
+            sair do estoque.
+          </p>
+        )}
+
         <label>
           Observação
 
           <input
-            value={observacao}
+            value={
+              observacao
+            }
             onChange={(e) => {
               setObservacao(
                 e.target.value
               );
-              setRevisar(false);
+              setRevisar(
+                false
+              );
             }}
           />
         </label>
@@ -594,7 +651,9 @@ export default function SaidaClient() {
                 ]
               );
 
-              setRevisar(false);
+              setRevisar(
+                false
+              );
             }}
           >
             + Adicionar gênero
@@ -602,7 +661,10 @@ export default function SaidaClient() {
         </div>
 
         {itens.map(
-          (item, indice) => {
+          (
+            item,
+            indice
+          ) => {
             const genero =
               generoSelecionado(
                 item.generoId
@@ -621,12 +683,15 @@ export default function SaidaClient() {
             return (
               <div
                 className="itembox"
-                key={indice}
+                key={
+                  indice
+                }
               >
                 <div className="top">
                   <b>
                     Item{' '}
-                    {indice + 1}
+                    {indice +
+                      1}
                   </b>
 
                   {itens.length >
@@ -636,7 +701,9 @@ export default function SaidaClient() {
                       type="button"
                       onClick={() => {
                         setItens(
-                          (atuais) =>
+                          (
+                            atuais
+                          ) =>
                             atuais.filter(
                               (
                                 _,
@@ -665,10 +732,13 @@ export default function SaidaClient() {
                       value={
                         item.grupoId
                       }
-                      onChange={(e) =>
+                      onChange={(
+                        e
+                      ) =>
                         alterarGrupo(
                           indice,
-                          e.target
+                          e
+                            .target
                             .value
                         )
                       }
@@ -678,7 +748,9 @@ export default function SaidaClient() {
                       </option>
 
                       {grupos.map(
-                        (grupo) => (
+                        (
+                          grupo
+                        ) => (
                           <option
                             key={
                               grupo.id
@@ -706,10 +778,13 @@ export default function SaidaClient() {
                       disabled={
                         !item.grupoId
                       }
-                      onChange={(e) =>
+                      onChange={(
+                        e
+                      ) =>
                         alterarCategoria(
                           indice,
-                          e.target
+                          e
+                            .target
                             .value
                         )
                       }
@@ -753,10 +828,13 @@ export default function SaidaClient() {
                       disabled={
                         !item.categoriaId
                       }
-                      onChange={(e) =>
+                      onChange={(
+                        e
+                      ) =>
                         alterarGenero(
                           indice,
-                          e.target
+                          e
+                            .target
                             .value
                         )
                       }
@@ -818,10 +896,13 @@ export default function SaidaClient() {
                       disabled={
                         !genero
                       }
-                      onChange={(e) =>
+                      onChange={(
+                        e
+                      ) =>
                         alterarQuantidade(
                           indice,
-                          e.target
+                          e
+                            .target
                             .value
                         )
                       }
@@ -835,17 +916,21 @@ export default function SaidaClient() {
                     {(
                       saldos[
                         genero.id
-                      ] || 0
+                      ] ||
+                      0
                     ).toLocaleString(
                       'pt-BR'
                     )}{' '}
                     {
-                      genero.unidade
+                      genero
+                        .unidade
                         .sigla
                     }
-                    . O sistema utilizará
-                    primeiro o lote válido
-                    com vencimento mais
+                    . O sistema
+                    utilizará
+                    primeiro o lote
+                    válido com
+                    vencimento mais
                     próximo (PVPS).
                   </span>
                 )}
@@ -884,7 +969,9 @@ export default function SaidaClient() {
                   validar();
 
                 if (erro) {
-                  setMsg(erro);
+                  setMsg(
+                    erro
+                  );
                 } else {
                   setMsg('');
                   setRevisar(
@@ -901,7 +988,9 @@ export default function SaidaClient() {
                 className="linkbtn"
                 type="button"
                 onClick={() =>
-                  setRevisar(false)
+                  setRevisar(
+                    false
+                  )
                 }
               >
                 Voltar e editar
@@ -910,8 +999,12 @@ export default function SaidaClient() {
               <button
                 className="btn"
                 type="button"
-                disabled={busy}
-                onClick={confirmar}
+                disabled={
+                  busy
+                }
+                onClick={
+                  confirmar
+                }
               >
                 {busy
                   ? 'Confirmando...'
@@ -929,16 +1022,21 @@ export default function SaidaClient() {
           >
             <p className="muted">
               Confira destino,
-              gêneros e quantidades.
-              A confirmação fará a
+              gêneros e
+              quantidades. A
+              confirmação fará a
               baixa automática do
-              estoque seguindo o PVPS
-              e registrará os lotes e
-              locais utilizados.
+              estoque seguindo o
+              PVPS e registrará os
+              lotes e locais
+              utilizados.
             </p>
 
             {itens.map(
-              (item, indice) => {
+              (
+                item,
+                indice
+              ) => {
                 const genero =
                   generoSelecionado(
                     item.generoId
@@ -956,7 +1054,9 @@ export default function SaidaClient() {
                     }
                   >
                     <span>
-                      {indice + 1}.{' '}
+                      {indice +
+                        1}
+                      .{' '}
                       {
                         genero
                           .categoria
@@ -982,7 +1082,8 @@ export default function SaidaClient() {
                         'pt-BR'
                       )}{' '}
                       {
-                        genero.unidade
+                        genero
+                          .unidade
                           .sigla
                       }
                     </strong>
