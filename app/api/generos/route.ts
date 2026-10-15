@@ -120,7 +120,12 @@ export async function GET(req: Request) {
       },
 
       include: {
-        categoria: true,
+        categoria: {
+          include: {
+            grupo: true,
+          },
+        },
+
         unidade: true,
         localPadrao: true,
       },
