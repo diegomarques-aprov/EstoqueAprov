@@ -560,37 +560,28 @@ export default function EstoqueClient() {
                                   item
                                 ) => (
                                   <div
-                                    className="row"
                                     key={
                                       item.id
                                     }
                                     style={{
                                       padding:
-                                        '6px 0',
+                                        '7px 0',
+                                      borderTop:
+                                        '1px solid rgba(255,255,255,0.10)',
+                                      borderBottom:
+                                        '1px solid rgba(255,255,255,0.10)',
                                     }}
                                   >
-                                    <span>
-                                      {formatarQuantidade(
-                                        Number(
-                                          item.quantidade
-                                        )
-                                      )}{' '}
-                                      {
-                                        item
-                                          .genero
-                                          .unidade
-                                          .sigla
-                                      }{' '}
-                                      ·{' '}
+                                    <div>
                                       {
                                         item
                                           .local
                                           .nome
                                       }
-                                    </span>
+                                    </div>
 
                                     {item.lote ? (
-                                      <span className="muted">
+                                      <div className="muted">
                                         Lote{' '}
                                         {
                                           item
@@ -606,11 +597,11 @@ export default function EstoqueClient() {
                                               'pt-BR'
                                             )}`
                                           : ''}
-                                      </span>
+                                      </div>
                                     ) : (
-                                      <span className="muted">
+                                      <div className="muted">
                                         Sem lote
-                                      </span>
+                                      </div>
                                     )}
                                   </div>
                                 )
