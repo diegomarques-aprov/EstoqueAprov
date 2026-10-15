@@ -732,6 +732,17 @@ export default async function Inicio() {
           >
             Categorias de gêneros
           </Link>
+
+          {u.perfil ===
+            'ADMIN_PRINCIPAL' && (
+            <Link
+              className="btn"
+              style={estiloBotaoAzul}
+              href="/admin/usuarios"
+            >
+              Usuários e permissões
+            </Link>
+          )}
         </div>
       </div>
 
