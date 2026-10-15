@@ -1,3 +1,4 @@
+import { ClasseOperacao } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/guard';
 
@@ -80,20 +81,22 @@ export async function GET(
     parametros.get('fim') ||
     inicio;
 
-  const classe =
+  const classeParametro =
     parametros.get('classe');
+
+  const classe:
+    | ClasseOperacao
+    | null =
+    classeParametro === 'QS' ||
+    classeParametro === 'QR'
+      ? classeParametro
+      : null;
 
   const inicioPeriodo =
     inicioUtcDoDiaLocal(inicio);
 
   const fimPeriodo =
     fimUtcDoDiaLocal(fim);
-
-  const filtroClasse =
-    classe === 'QS' ||
-    classe === 'QR'
-      ? { classe }
-      : {};
 
   const [
     movimentacoes,
@@ -107,7 +110,9 @@ export async function GET(
           lte: fimPeriodo,
         },
 
-        ...filtroClasse,
+        ...(classe
+          ? { classe }
+          : {}),
       },
 
       include: {
@@ -169,8 +174,7 @@ export async function GET(
         genero: {
           situacao: 'ATIVO',
 
-          ...(classe === 'QS' ||
-          classe === 'QR'
+          ...(classe
             ? { classe }
             : {}),
         },
@@ -195,9 +199,6 @@ export async function GET(
     }),
   ]);
 
-  /*
-   * SALDO ATUAL POR GÊNERO
-   */
   const saldoAtual =
     new Map<
       string,
@@ -272,12 +273,6 @@ export async function GET(
       );
   }
 
-  /*
-   * MOVIMENTAÇÕES AGRUPADAS POR GÊNERO.
-   *
-   * Não somamos gêneros diferentes,
-   * mesmo quando possuem a mesma unidade.
-   */
   const porGenero =
     new Map<
       string,
@@ -452,10 +447,6 @@ export async function GET(
 
       quantidade,
 
-      /*
-       * Este é o instante REAL do
-       * lançamento/saída física.
-       */
       dataHora:
         movimento.criadoEm,
 
@@ -480,11 +471,6 @@ export async function GET(
     });
   }
 
-  /*
-   * Inclui gêneros que possuem estoque
-   * atual mesmo que não tenham tido
-   * movimentação no período.
-   */
   for (
     const saldo of saldoAtual.values()
   ) {
@@ -569,9 +555,6 @@ export async function GET(
       );
     });
 
-  /*
-   * ALERTA DE ESTOQUE BAIXO
-   */
   const estoqueBaixo =
     estoque
       .filter(
@@ -634,9 +617,6 @@ export async function GET(
           item.min
       );
 
-  /*
-   * ALERTAS DE VALIDADE
-   */
   const agora =
     Date.now();
 
@@ -681,9 +661,6 @@ export async function GET(
             .unidade.sigla,
       }));
 
-  /*
-   * ARRANCHAMENTO
-   */
   const efetivos =
     arranchamentos.map(
       (item) => ({
@@ -745,11 +722,6 @@ export async function GET(
       })
     );
 
-  /*
-   * Mantemos os campos antigos nesta
-   * versão para não quebrar PDF/Excel
-   * enquanto modernizamos a interface.
-   */
   const resumo: Record<
     string,
     number
