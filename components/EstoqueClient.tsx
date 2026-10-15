@@ -386,36 +386,35 @@ export default function EstoqueClient() {
               key={grupo.id}
             >
               <div
-                className="row"
                 style={{
-                  alignItems: 'center',
                   borderBottom:
                     '2px solid rgba(34, 197, 94, 0.35)',
                   paddingBottom: 12,
                   marginBottom: 16,
+                  textAlign: 'center',
+                  width: '100%',
                 }}
               >
-                <div>
-                  <h2
-                    style={{
-                      margin: 0,
-                    }}
-                  >
-                    {grupo.nome}
-                  </h2>
+                <h2
+                  style={{
+                    margin: 0,
+                    textAlign: 'center',
+                  }}
+                >
+                  {grupo.nome}
+                </h2>
 
-                  <span className="muted">
-                    Grupo de gêneros
-                  </span>
-                </div>
-
-                <strong>
+                <div
+                  style={{
+                    marginTop: 5,
+                    fontWeight: 700,
+                    textAlign: 'center',
+                  }}
+                >
                   <TextoTotais
-                    itens={
-                      grupo.itens
-                    }
+                    itens={grupo.itens}
                   />
-                </strong>
+                </div>
               </div>
 
               {categoriasOrdenadas.map(
