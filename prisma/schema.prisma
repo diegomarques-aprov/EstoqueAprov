@@ -291,6 +291,7 @@ enum DestinoSaida {
   ALMOCO
   JANTAR
   CEIA
+  SERVICO_DIA_SEGUINTE
   OUTRO
 }
 
