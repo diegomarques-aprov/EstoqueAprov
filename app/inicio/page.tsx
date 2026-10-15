@@ -80,124 +80,181 @@ const verdesOperacao = [
 export default async function Inicio() {
   const u = await currentUser();
 
-  if (!u) redirect('/login');
+  if (!u) {
+    redirect('/login');
+  }
 
   /*
-   * ESTOQUE PARA ALERTAS
-   */
-  const estoques = await prisma.estoqueLocal.findMany({
-    where: {
-      quantidade: {
-        gt: 0,
-      },
-    },
-    include: {
-      genero: {
-        include: {
-          unidade: true,
-        },
-      },
-      lote: true,
-    },
-  });
-
-  /*
-   * ESTOQUE ABAIXO DO MÍNIMO
-   */
-  const baixos = estoques
-    .reduce((a: any[], x) => {
-      if (x.genero.estoqueMinimo == null) {
-        return a;
-      }
-
-      let r = a.find(
-        (y) => y.id === x.generoId
-      );
-
-      if (!r) {
-        r = {
-          id: x.generoId,
-          n: x.genero.nome,
-          q: 0,
-          m: Number(
-            x.genero.estoqueMinimo
-          ),
-        };
-
-        a.push(r);
-      }
-
-      r.q += Number(x.quantidade);
-
-      return a;
-    }, [])
-    .filter((x) => x.q < x.m);
-
-  /*
-   * VALIDADE EM ATÉ 30 DIAS
-   */
-  const agora = Date.now();
-  const limiteValidade =
-    agora + 30 * 86400000;
-
-  const vencidos = estoques.filter(
-    (x) =>
-      x.lote?.validade &&
-      new Date(
-        x.lote.validade
-      ).getTime() < agora
-  );
-
-  const proximosDaValidade =
-    estoques.filter((x) => {
-      if (!x.lote?.validade) {
-        return false;
-      }
-
-      const validade = new Date(
-        x.lote.validade
-      ).getTime();
-
-      return (
-        validade >= agora &&
-        validade <= limiteValidade
-      );
-    });
-
-  /*
-   * DATA ATUAL
+   * DATAS
    */
   const hoje = new Date();
-  const inicioHoje =
-    inicioDoDiaUTC(hoje);
+  const inicioHoje = inicioDoDiaUTC(hoje);
+
+  const amanha = new Date(hoje);
+  amanha.setDate(amanha.getDate() + 1);
+
+  const inicioAmanha = inicioDoDiaUTC(amanha);
+  const fimAmanha = fimDoDiaUTC(amanha);
 
   /*
-   * ARRANCHAMENTO DO DIA SEGUINTE
+   * CONSULTAS PRINCIPAIS
+   *
+   * São independentes e executadas em paralelo
+   * para não bloquear a abertura do Início
+   * uma após a outra.
    */
-  const amanha = new Date();
-  amanha.setDate(
-    amanha.getDate() + 1
-  );
+  const [
+    estoques,
+    arranchamentosAmanha,
+    fechamentosPendentes,
+  ] = await Promise.all([
+    prisma.estoqueLocal.findMany({
+      where: {
+        quantidade: {
+          gt: 0,
+        },
+      },
+      select: {
+        generoId: true,
+        quantidade: true,
 
-  const inicioAmanha =
-    inicioDoDiaUTC(amanha);
+        genero: {
+          select: {
+            nome: true,
+            estoqueMinimo: true,
+          },
+        },
 
-  const fimAmanha =
-    fimDoDiaUTC(amanha);
+        lote: {
+          select: {
+            validade: true,
+          },
+        },
+      },
+    }),
 
-  const arranchamentosAmanha =
-    await prisma.arranchamento.findMany({
+    prisma.arranchamento.findMany({
       where: {
         data: {
           gte: inicioAmanha,
           lte: fimAmanha,
         },
       },
+      select: {
+        totalPrevisto: true,
+        efetivoPlanejamento: true,
+        refeicao: true,
+      },
       orderBy: {
         refeicao: 'asc',
       },
-    });
+    }),
 
+    prisma.arranchamento.findMany({
+      where: {
+        data: {
+          lt: inicioHoje,
+        },
+        fechamentoRealizadoEm: null,
+      },
+      select: {
+        data: true,
+        refeicao: true,
+      },
+      orderBy: [
+        {
+          data: 'asc',
+        },
+        {
+          refeicao: 'asc',
+        },
+      ],
+    }),
+  ]);
+
+  /*
+   * ESTOQUE ABAIXO DO MÍNIMO
+   */
+  const saldosPorGenero = new Map<
+    string,
+    {
+      nome: string;
+      quantidade: number;
+      minimo: number;
+    }
+  >();
+
+  for (const estoque of estoques) {
+    if (
+      estoque.genero.estoqueMinimo == null
+    ) {
+      continue;
+    }
+
+    const atual = saldosPorGenero.get(
+      estoque.generoId
+    );
+
+    if (atual) {
+      atual.quantidade += Number(
+        estoque.quantidade
+      );
+    } else {
+      saldosPorGenero.set(
+        estoque.generoId,
+        {
+          nome: estoque.genero.nome,
+          quantidade: Number(
+            estoque.quantidade
+          ),
+          minimo: Number(
+            estoque.genero.estoqueMinimo
+          ),
+        }
+      );
+    }
+  }
+
+  const baixos = Array.from(
+    saldosPorGenero.values()
+  ).filter(
+    (item) =>
+      item.quantidade < item.minimo
+  );
+
+  /*
+   * VALIDADES
+   */
+  const agora = hoje.getTime();
+
+  const limiteValidade =
+    agora + 30 * 86400000;
+
+  let quantidadeVencidos = 0;
+  let quantidadeProximosDaValidade = 0;
+
+  for (const estoque of estoques) {
+    if (!estoque.lote?.validade) {
+      continue;
+    }
+
+    const validade = new Date(
+      estoque.lote.validade
+    ).getTime();
+
+    if (validade < agora) {
+      quantidadeVencidos += 1;
+      continue;
+    }
+
+    if (validade <= limiteValidade) {
+      quantidadeProximosDaValidade += 1;
+    }
+  }
+
+  /*
+   * ARRANCHAMENTO DO DIA SEGUINTE
+   */
   const totalPrevistoAmanha =
     arranchamentosAmanha.reduce(
       (total, item) =>
@@ -219,40 +276,17 @@ export default async function Inicio() {
   /*
    * FECHAMENTOS PENDENTES
    */
-  const fechamentosPendentes =
-    await prisma.arranchamento.findMany({
-      where: {
-        data: {
-          lt: inicioHoje,
-        },
-        fechamentoRealizadoEm: null,
-      },
-      orderBy: [
-        {
-          data: 'asc',
-        },
-        {
-          refeicao: 'asc',
-        },
-      ],
-    });
-
-  const diasPendentes = Array.from(
-    new Set(
-      fechamentosPendentes.map(
-        (item) =>
-          item.data
-            .toISOString()
-            .slice(0, 10)
-      )
+  const diasPendentes = new Set(
+    fechamentosPendentes.map((item) =>
+      item.data.toISOString().slice(0, 10)
     )
   );
 
   const quantidadeDiasPendentes =
-    diasPendentes.length;
+    diasPendentes.size;
 
   /*
-   * LEMBRETE MENSAL DO QDAA
+   * LEMBRETE QDAA
    */
   const diaDoMes = hoje.getDate();
 
@@ -273,7 +307,7 @@ export default async function Inicio() {
 
           <span className="muted">
             {u.postoGraduacao
-              ? u.postoGraduacao + ' '
+              ? `${u.postoGraduacao} `
               : ''}
             {u.nome} ·{' '}
             {u.funcao || u.perfil}
@@ -298,21 +332,14 @@ export default async function Inicio() {
               'rgba(239, 68, 68, 0.08)',
           }}
         >
-          <h2
-            style={{
-              marginTop: 0,
-            }}
-          >
-            ⚠ Fechamento Diário
-            pendente
+          <h2 style={{ marginTop: 0 }}>
+            ⚠ Fechamento Diário pendente
           </h2>
 
           <p>
             Existem{' '}
             <strong>
-              {
-                quantidadeDiasPendentes
-              }{' '}
+              {quantidadeDiasPendentes}{' '}
               {quantidadeDiasPendentes ===
               1
                 ? 'dia'
@@ -335,24 +362,19 @@ export default async function Inicio() {
             </span>
 
             <strong>
-              {
-                fechamentosPendentes.length
-              }
+              {fechamentosPendentes.length}
             </strong>
           </div>
 
           <div
             className="actions"
-            style={{
-              marginTop: 14,
-            }}
+            style={{ marginTop: 14 }}
           >
             <Link
               className="btn"
               href="/efetivo/fechamento"
             >
-              Realizar Fechamento
-              Diário
+              Realizar Fechamento Diário
             </Link>
           </div>
         </div>
@@ -370,11 +392,7 @@ export default async function Inicio() {
               'rgba(245, 158, 11, 0.08)',
           }}
         >
-          <h2
-            style={{
-              marginTop: 0,
-            }}
-          >
+          <h2 style={{ marginTop: 0 }}>
             ⚠ Efetivo do dia seguinte
           </h2>
 
@@ -417,11 +435,7 @@ export default async function Inicio() {
               'rgba(34, 197, 94, 0.07)',
           }}
         >
-          <h2
-            style={{
-              marginTop: 0,
-            }}
-          >
+          <h2 style={{ marginTop: 0 }}>
             ✓ Efetivo do dia seguinte
           </h2>
 
@@ -438,9 +452,7 @@ export default async function Inicio() {
             </span>
 
             <strong>
-              {
-                arranchamentosAmanha.length
-              }
+              {arranchamentosAmanha.length}
             </strong>
           </div>
 
@@ -467,9 +479,7 @@ export default async function Inicio() {
 
           <div
             className="actions"
-            style={{
-              marginTop: 14,
-            }}
+            style={{ marginTop: 14 }}
           >
             <Link
               className="btn secondary"
@@ -494,11 +504,7 @@ export default async function Inicio() {
               'rgba(59, 130, 246, 0.08)',
           }}
         >
-          <h2
-            style={{
-              marginTop: 0,
-            }}
-          >
+          <h2 style={{ marginTop: 0 }}>
             📋 Lembrete QDAA
           </h2>
 
@@ -549,8 +555,8 @@ export default async function Inicio() {
         <h2>Painel de situação</h2>
 
         {baixos.length === 0 &&
-        proximosDaValidade.length === 0 &&
-        vencidos.length === 0 ? (
+        quantidadeProximosDaValidade === 0 &&
+        quantidadeVencidos === 0 ? (
           <p className="muted">
             Nenhuma pendência de estoque
             no momento.
@@ -567,7 +573,7 @@ export default async function Inicio() {
               </Link>
             )}
 
-            {proximosDaValidade.length >
+            {quantidadeProximosDaValidade >
               0 && (
               <Link
                 className="btn secondary"
@@ -575,14 +581,14 @@ export default async function Inicio() {
               >
                 ⏳{' '}
                 {
-                  proximosDaValidade.length
+                  quantidadeProximosDaValidade
                 }{' '}
                 lote(s) vencendo em até 30
                 dias
               </Link>
             )}
 
-            {vencidos.length > 0 && (
+            {quantidadeVencidos > 0 && (
               <Link
                 className="btn secondary"
                 href="/relatorios"
@@ -592,7 +598,7 @@ export default async function Inicio() {
                   color: '#ef4444',
                 }}
               >
-                ⚠ {vencidos.length}{' '}
+                ⚠ {quantidadeVencidos}{' '}
                 lote(s) vencido(s)
               </Link>
             )}
@@ -684,9 +690,7 @@ export default async function Inicio() {
 
       <div
         className="card"
-        style={
-          estiloAreaAdministrativa
-        }
+        style={estiloAreaAdministrativa}
       >
         <h2>Configurações</h2>
 
@@ -735,9 +739,7 @@ export default async function Inicio() {
 
       <div
         className="card"
-        style={
-          estiloAreaAdministrativa
-        }
+        style={estiloAreaAdministrativa}
       >
         <h2>Cadastros</h2>
 
