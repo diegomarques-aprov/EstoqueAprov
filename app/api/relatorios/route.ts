@@ -1,4 +1,8 @@
-import { ClasseOperacao } from '@prisma/client';
+import {
+  ClasseOperacao,
+  DestinoSaida,
+} from '@prisma/client';
+
 import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/guard';
 
@@ -11,8 +15,7 @@ function inicioUtcDoDiaLocal(data: string) {
 }
 
 function fimUtcDoDiaLocal(data: string) {
-  const inicio =
-    inicioUtcDoDiaLocal(data);
+  const inicio = inicioUtcDoDiaLocal(data);
 
   return new Date(
     inicio.getTime() +
@@ -22,46 +25,80 @@ function fimUtcDoDiaLocal(data: string) {
 }
 
 function dataHojeLocal() {
-  const partes =
-    new Intl.DateTimeFormat(
-      'en-CA',
-      {
-        timeZone: TIME_ZONE,
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-      }
-    ).formatToParts(new Date());
+  const partes = new Intl.DateTimeFormat(
+    'en-CA',
+    {
+      timeZone: TIME_ZONE,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }
+  ).formatToParts(new Date());
 
-  const ano =
-    partes.find(
-      (p) => p.type === 'year'
-    )?.value;
+  const ano = partes.find(
+    (p) => p.type === 'year'
+  )?.value;
 
-  const mes =
-    partes.find(
-      (p) => p.type === 'month'
-    )?.value;
+  const mes = partes.find(
+    (p) => p.type === 'month'
+  )?.value;
 
-  const dia =
-    partes.find(
-      (p) => p.type === 'day'
-    )?.value;
+  const dia = partes.find(
+    (p) => p.type === 'day'
+  )?.value;
 
   return `${ano}-${mes}-${dia}`;
 }
 
-function chaveGenero(
-  generoId: string
-) {
-  return generoId;
+function dataLocalISO(data: Date) {
+  const partes = new Intl.DateTimeFormat(
+    'en-CA',
+    {
+      timeZone: TIME_ZONE,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }
+  ).formatToParts(data);
+
+  const ano = partes.find(
+    (p) => p.type === 'year'
+  )?.value;
+
+  const mes = partes.find(
+    (p) => p.type === 'month'
+  )?.value;
+
+  const dia = partes.find(
+    (p) => p.type === 'day'
+  )?.value;
+
+  return `${ano}-${mes}-${dia}`;
 }
 
-export async function GET(
-  req: Request
-) {
-  const guard =
-    await requireAdmin();
+function nomeRefeicao(destino: DestinoSaida) {
+  const nomes: Record<DestinoSaida, string> = {
+    CAFE_DA_MANHA: 'Café da manhã',
+    ALMOCO: 'Almoço',
+    JANTAR: 'Jantar',
+    CEIA: 'Ceia',
+    SERVICO_DIA_SEGUINTE:
+      'Serviço do dia seguinte',
+    OUTRO: 'Outro',
+  };
+
+  return nomes[destino];
+}
+
+function tipoServico(destino: DestinoSaida) {
+  return destino ===
+    'SERVICO_DIA_SEGUINTE'
+    ? 'dia seguinte'
+    : 'mesmo dia';
+}
+
+export async function GET(req: Request) {
+  const guard = await requireAdmin();
 
   if (guard.error) {
     return guard.error;
@@ -70,16 +107,13 @@ export async function GET(
   const parametros =
     new URL(req.url).searchParams;
 
-  const hoje =
-    dataHojeLocal();
+  const hoje = dataHojeLocal();
 
   const inicio =
-    parametros.get('inicio') ||
-    hoje;
+    parametros.get('inicio') || hoje;
 
   const fim =
-    parametros.get('fim') ||
-    inicio;
+    parametros.get('fim') || inicio;
 
   const classeParametro =
     parametros.get('classe');
@@ -102,6 +136,8 @@ export async function GET(
     movimentacoes,
     arranchamentos,
     estoque,
+    generosAtivos,
+    saidasFisicas,
   ] = await Promise.all([
     prisma.movimentacaoEstoque.findMany({
       where: {
@@ -134,7 +170,7 @@ export async function GET(
       },
 
       orderBy: {
-        criadoEm: 'desc',
+        criadoEm: 'asc',
       },
     }),
 
@@ -167,10 +203,6 @@ export async function GET(
 
     prisma.estoqueLocal.findMany({
       where: {
-        quantidade: {
-          gt: 0,
-        },
-
         genero: {
           situacao: 'ATIVO',
 
@@ -197,82 +229,113 @@ export async function GET(
         lote: true,
       },
     }),
+
+    prisma.genero.findMany({
+      where: {
+        situacao: 'ATIVO',
+
+        ...(classe
+          ? { classe }
+          : {}),
+      },
+
+      include: {
+        unidade: true,
+
+        categoria: {
+          include: {
+            grupo: true,
+          },
+        },
+      },
+
+      orderBy: {
+        nome: 'asc',
+      },
+    }),
+
+    prisma.saida.findMany({
+      where: {
+        criadoEm: {
+          gte: inicioPeriodo,
+          lte: fimPeriodo,
+        },
+
+        canceladaEm: null,
+
+        ...(classe
+          ? { classe }
+          : {}),
+      },
+
+      select: {
+        id: true,
+        numero: true,
+        destino: true,
+        criadoEm: true,
+        observacao: true,
+      },
+
+      orderBy: {
+        criadoEm: 'asc',
+      },
+    }),
   ]);
 
-  const saldoAtual =
-    new Map<
-      string,
-      {
-        generoId: string;
-        nome: string;
-        classe: string;
-        unidade: string;
-        categoriaId: string | null;
-        categoria: string;
-        grupoId: string | null;
-        grupo: string;
-        quantidade: number;
-      }
-    >();
+  /*
+   * POSIÇÃO ATUAL DO ESTOQUE
+   *
+   * Todos os gêneros ativos são incluídos,
+   * inclusive os que estão com saldo zero.
+   */
+  const saldoPorGenero =
+    new Map<string, number>();
 
   for (const item of estoque) {
-    const id =
-      chaveGenero(
+    saldoPorGenero.set(
+      item.generoId,
+      (saldoPorGenero.get(
         item.generoId
-      );
-
-    let registro =
-      saldoAtual.get(id);
-
-    if (!registro) {
-      registro = {
-        generoId:
-          item.generoId,
-
-        nome:
-          item.genero.nome,
-
-        classe:
-          item.genero.classe,
-
-        unidade:
-          item.genero.unidade
-            .sigla,
-
-        categoriaId:
-          item.genero.categoria
-            ?.id || null,
-
-        categoria:
-          item.genero.categoria
-            ?.nome ||
-          'Sem categoria',
-
-        grupoId:
-          item.genero.categoria
-            ?.grupo?.id ||
-          null,
-
-        grupo:
-          item.genero.categoria
-            ?.grupo?.nome ||
-          'Sem grupo',
-
-        quantidade: 0,
-      };
-
-      saldoAtual.set(
-        id,
-        registro
-      );
-    }
-
-    registro.quantidade +=
-      Number(
-        item.quantidade
-      );
+      ) || 0) +
+        Number(item.quantidade)
+    );
   }
 
+  const posicaoEstoque =
+    generosAtivos.map((genero) => ({
+      generoId: genero.id,
+      nome: genero.nome,
+      classe: genero.classe,
+      unidade: genero.unidade.sigla,
+
+      categoriaId:
+        genero.categoria?.id || null,
+
+      categoria:
+        genero.categoria?.nome ||
+        'Sem categoria',
+
+      grupoId:
+        genero.categoria?.grupo?.id ||
+        null,
+
+      grupo:
+        genero.categoria?.grupo?.nome ||
+        'Sem grupo',
+
+      estoqueMinimo:
+        genero.estoqueMinimo != null
+          ? Number(genero.estoqueMinimo)
+          : null,
+
+      quantidade:
+        saldoPorGenero.get(genero.id) ||
+        0,
+    }));
+
+  /*
+   * RESUMO POR GÊNERO
+   */
   const porGenero =
     new Map<
       string,
@@ -308,21 +371,51 @@ export async function GET(
       }
     >();
 
-  function obterGenero(
-    movimento: (typeof movimentacoes)[number]
-  ) {
-    const id =
-      chaveGenero(
+  for (const genero of generosAtivos) {
+    porGenero.set(genero.id, {
+      generoId: genero.id,
+      nome: genero.nome,
+      classe: genero.classe,
+      unidade: genero.unidade.sigla,
+
+      categoriaId:
+        genero.categoria?.id || null,
+
+      categoria:
+        genero.categoria?.nome ||
+        'Sem categoria',
+
+      grupoId:
+        genero.categoria?.grupo?.id ||
+        null,
+
+      grupo:
+        genero.categoria?.grupo?.nome ||
+        'Sem grupo',
+
+      saldoInicial: 0,
+      recebimentos: 0,
+      saidas: 0,
+      devolucoes: 0,
+      perdas: 0,
+      correcoes: 0,
+      transferencias: 0,
+
+      saldoAtual:
+        saldoPorGenero.get(genero.id) ||
+        0,
+
+      movimentacoes: [],
+    });
+  }
+
+  for (const movimento of movimentacoes) {
+    let registro =
+      porGenero.get(
         movimento.generoId
       );
 
-    let registro =
-      porGenero.get(id);
-
     if (!registro) {
-      const saldo =
-        saldoAtual.get(id);
-
       registro = {
         generoId:
           movimento.generoId,
@@ -338,29 +431,21 @@ export async function GET(
             .sigla,
 
         categoriaId:
-          movimento.genero
-            .categoria?.id ||
-          saldo?.categoriaId ||
-          null,
+          movimento.genero.categoria
+            ?.id || null,
 
         categoria:
-          movimento.genero
-            .categoria?.nome ||
-          saldo?.categoria ||
+          movimento.genero.categoria
+            ?.nome ||
           'Sem categoria',
 
         grupoId:
-          movimento.genero
-            .categoria?.grupo
-            ?.id ||
-          saldo?.grupoId ||
-          null,
+          movimento.genero.categoria
+            ?.grupo?.id || null,
 
         grupo:
-          movimento.genero
-            .categoria?.grupo
-            ?.nome ||
-          saldo?.grupo ||
+          movimento.genero.categoria
+            ?.grupo?.nome ||
           'Sem grupo',
 
         saldoInicial: 0,
@@ -372,37 +457,23 @@ export async function GET(
         transferencias: 0,
 
         saldoAtual:
-          saldo?.quantidade ||
-          0,
+          saldoPorGenero.get(
+            movimento.generoId
+          ) || 0,
 
         movimentacoes: [],
       };
 
       porGenero.set(
-        id,
+        movimento.generoId,
         registro
       );
     }
 
-    return registro;
-  }
-
-  for (
-    const movimento of movimentacoes
-  ) {
-    const registro =
-      obterGenero(
-        movimento
-      );
-
     const quantidade =
-      Number(
-        movimento.quantidade
-      );
+      Number(movimento.quantidade);
 
-    switch (
-      movimento.tipo
-    ) {
+    switch (movimento.tipo) {
       case 'SALDO_INICIAL':
         registro.saldoInicial +=
           quantidade;
@@ -441,28 +512,20 @@ export async function GET(
 
     registro.movimentacoes.push({
       id: movimento.id,
-
-      tipo:
-        movimento.tipo,
-
+      tipo: movimento.tipo,
       quantidade,
-
-      dataHora:
-        movimento.criadoEm,
+      dataHora: movimento.criadoEm,
 
       lote:
-        movimento.lote
-          ?.numero ||
+        movimento.lote?.numero ||
         null,
 
       localOrigem:
-        movimento.localOrigem
-          ?.nome ||
+        movimento.localOrigem?.nome ||
         null,
 
       localDestino:
-        movimento.localDestino
-          ?.nome ||
+        movimento.localDestino?.nome ||
         null,
 
       observacao:
@@ -471,154 +534,308 @@ export async function GET(
     });
   }
 
-  for (
-    const saldo of saldoAtual.values()
-  ) {
-    if (
-      !porGenero.has(
-        saldo.generoId
-      )
-    ) {
-      porGenero.set(
-        saldo.generoId,
-        {
-          generoId:
-            saldo.generoId,
-
-          nome:
-            saldo.nome,
-
-          classe:
-            saldo.classe,
-
-          unidade:
-            saldo.unidade,
-
-          categoriaId:
-            saldo.categoriaId,
-
-          categoria:
-            saldo.categoria,
-
-          grupoId:
-            saldo.grupoId,
-
-          grupo:
-            saldo.grupo,
-
-          saldoInicial: 0,
-          recebimentos: 0,
-          saidas: 0,
-          devolucoes: 0,
-          perdas: 0,
-          correcoes: 0,
-          transferencias: 0,
-
-          saldoAtual:
-            saldo.quantidade,
-
-          movimentacoes: [],
-        }
+  const generos = Array.from(
+    porGenero.values()
+  ).sort((a, b) => {
+    const grupo =
+      a.grupo.localeCompare(
+        b.grupo,
+        'pt-BR'
       );
+
+    if (grupo !== 0) {
+      return grupo;
+    }
+
+    const categoria =
+      a.categoria.localeCompare(
+        b.categoria,
+        'pt-BR'
+      );
+
+    if (categoria !== 0) {
+      return categoria;
+    }
+
+    return a.nome.localeCompare(
+      b.nome,
+      'pt-BR'
+    );
+  });
+
+  /*
+   * MOVIMENTAÇÕES DETALHADAS
+   */
+  const movimentosDetalhados =
+    movimentacoes.map((item) => ({
+      id: item.id,
+      tipo: item.tipo,
+      classe: item.classe,
+
+      generoId:
+        item.generoId,
+
+      genero:
+        item.genero.nome,
+
+      grupo:
+        item.genero.categoria?.grupo
+          ?.nome ||
+        'Sem grupo',
+
+      categoria:
+        item.genero.categoria?.nome ||
+        'Sem categoria',
+
+      quantidade:
+        Number(item.quantidade),
+
+      unidade:
+        item.genero.unidade.sigla,
+
+      dataHora:
+        item.criadoEm,
+
+      lote:
+        item.lote?.numero || null,
+
+      localOrigem:
+        item.localOrigem?.nome ||
+        null,
+
+      localDestino:
+        item.localDestino?.nome ||
+        null,
+
+      observacao:
+        item.observacao || null,
+    }));
+
+  const entradas =
+    movimentosDetalhados.filter(
+      (item) =>
+        item.tipo ===
+        'RECEBIMENTO'
+    );
+
+  const saidas =
+    movimentosDetalhados.filter(
+      (item) =>
+        item.tipo === 'SAIDA'
+    );
+
+  const devolucoes =
+    movimentosDetalhados.filter(
+      (item) =>
+        item.tipo === 'DEVOLUCAO'
+    );
+
+  /*
+   * EFETIVO POR REFEIÇÃO
+   */
+  const efetivos =
+    arranchamentos.map((item) => ({
+      id: item.id,
+      data: item.data,
+      refeicao: item.refeicao,
+
+      oficiaisStenSgt:
+        item.oficiaisStenSgt,
+
+      cabosSoldados:
+        item.cabosSoldados,
+
+      outrosPrevistos:
+        item.outrosPrevistos,
+
+      quantidade:
+        item.totalPrevisto,
+
+      totalPrevisto:
+        item.totalPrevisto,
+
+      margemSegurancaPercent:
+        Number(
+          item.margemSegurancaPercent
+        ),
+
+      efetivoPlanejamento:
+        item.efetivoPlanejamento,
+
+      efetivoAlimentado:
+        item.arranchadosCompareceram,
+
+      arranchadosCompareceram:
+        item.arranchadosCompareceram,
+
+      faltas:
+        item.faltas,
+
+      militaresDeFora:
+        item.naoArranchadosAtendidos,
+
+      naoArranchadosAtendidos:
+        item.naoArranchadosAtendidos,
+
+      totalAtendido:
+        item.totalAtendido,
+
+      sobraKg:
+        item.sobraKg != null
+          ? Number(item.sobraKg)
+          : null,
+
+      fechamentoRealizadoEm:
+        item.fechamentoRealizadoEm,
+
+      observacao:
+        item.observacao,
+
+      usuario:
+        item.usuario,
+    }));
+
+  const resumoEfetivo = {
+    refeicoes:
+      efetivos.length,
+
+    efetivoPrevisto:
+      efetivos.reduce(
+        (total, item) =>
+          total +
+          item.totalPrevisto,
+        0
+      ),
+
+    efetivoAlimentado:
+      efetivos.reduce(
+        (total, item) =>
+          total +
+          (item.efetivoAlimentado ??
+            0),
+        0
+      ),
+
+    faltas:
+      efetivos.reduce(
+        (total, item) =>
+          total +
+          (item.faltas ?? 0),
+        0
+      ),
+
+    militaresDeFora:
+      efetivos.reduce(
+        (total, item) =>
+          total +
+          item.militaresDeFora,
+        0
+      ),
+
+    totalAtendido:
+      efetivos.reduce(
+        (total, item) =>
+          total +
+          (item.totalAtendido ??
+            0),
+        0
+      ),
+
+    sobraKg:
+      efetivos.reduce(
+        (total, item) =>
+          total +
+          (item.sobraKg ?? 0),
+        0
+      ),
+  };
+
+  /*
+   * REFEIÇÕES RELACIONADAS ÀS SAÍDAS FÍSICAS
+   *
+   * Uma refeição é contada apenas uma vez por
+   * data local + destino.
+   */
+  const refeicoesMap =
+    new Map<
+      string,
+      {
+        data: string;
+        destino: DestinoSaida;
+        nome: string;
+        referencia: string;
+      }
+    >();
+
+  for (const saida of saidasFisicas) {
+    const data =
+      dataLocalISO(
+        saida.criadoEm
+      );
+
+    const chave =
+      `${data}|${saida.destino}`;
+
+    if (!refeicoesMap.has(chave)) {
+      refeicoesMap.set(chave, {
+        data,
+        destino:
+          saida.destino,
+
+        nome:
+          nomeRefeicao(
+            saida.destino
+          ),
+
+        referencia:
+          tipoServico(
+            saida.destino
+          ),
+      });
     }
   }
 
-  const generos =
+  const refeicoesRelacionadas =
     Array.from(
-      porGenero.values()
-    ).sort((a, b) => {
-      const grupo =
-        a.grupo.localeCompare(
-          b.grupo,
-          'pt-BR'
-        );
+      refeicoesMap.values()
+    );
 
-      if (grupo !== 0) {
-        return grupo;
-      }
-
-      const categoria =
-        a.categoria.localeCompare(
-          b.categoria,
-          'pt-BR'
-        );
-
-      if (
-        categoria !== 0
-      ) {
-        return categoria;
-      }
-
-      return a.nome.localeCompare(
-        b.nome,
-        'pt-BR'
-      );
-    });
-
+  /*
+   * ALERTAS DE ESTOQUE
+   *
+   * Sempre serão retornados.
+   * Incluem também gênero com saldo zero.
+   */
   const estoqueBaixo =
-    estoque
+    posicaoEstoque
       .filter(
         (item) =>
-          item.genero
-            .estoqueMinimo !=
-          null
+          item.estoqueMinimo !=
+            null &&
+          item.quantidade <
+            item.estoqueMinimo
       )
-      .reduce(
-        (
-          acumulado: any[],
-          item
-        ) => {
-          let registro =
-            acumulado.find(
-              (x) =>
-                x.id ===
-                item.generoId
-            );
+      .map((item) => ({
+        id:
+          item.generoId,
 
-          if (!registro) {
-            registro = {
-              id:
-                item.generoId,
+        nome:
+          item.nome,
 
-              nome:
-                item.genero
-                  .nome,
+        unidade:
+          item.unidade,
 
-              unidade:
-                item.genero
-                  .unidade
-                  .sigla,
+        qtd:
+          item.quantidade,
 
-              qtd: 0,
+        min:
+          item.estoqueMinimo,
 
-              min: Number(
-                item.genero
-                  .estoqueMinimo
-              ),
-            };
+        zerado:
+          item.quantidade <= 0,
+      }));
 
-            acumulado.push(
-              registro
-            );
-          }
-
-          registro.qtd +=
-            Number(
-              item.quantidade
-            );
-
-          return acumulado;
-        },
-        []
-      )
-      .filter(
-        (item) =>
-          item.qtd <
-          item.min
-      );
-
-  const agora =
-    Date.now();
+  const agora = Date.now();
 
   const limite =
     agora +
@@ -632,96 +849,52 @@ export async function GET(
     estoque
       .filter(
         (item) =>
-          item.lote
-            ?.validade &&
+          Number(
+            item.quantidade
+          ) > 0 &&
+          item.lote?.validade &&
           new Date(
             item.lote.validade
           ).getTime() <=
             limite
       )
-      .map((item) => ({
-        genero:
-          item.genero.nome,
+      .map((item) => {
+        const validade =
+          item.lote!.validade!;
 
-        lote:
-          item.lote
-            ?.numero,
+        return {
+          genero:
+            item.genero.nome,
 
-        validade:
-          item.lote
-            ?.validade,
+          lote:
+            item.lote?.numero,
 
-        quantidade:
-          Number(
-            item.quantidade
-          ),
+          validade,
 
-        unidade:
-          item.genero
-            .unidade.sigla,
-      }));
+          quantidade:
+            Number(
+              item.quantidade
+            ),
 
-  const efetivos =
-    arranchamentos.map(
-      (item) => ({
-        id: item.id,
+          unidade:
+            item.genero.unidade
+              .sigla,
 
-        data:
-          item.data,
+          vencido:
+            new Date(
+              validade
+            ).getTime() <
+            agora,
+        };
+      });
 
-        refeicao:
-          item.refeicao,
-
-        oficiaisStenSgt:
-          item.oficiaisStenSgt,
-
-        cabosSoldados:
-          item.cabosSoldados,
-
-        outrosPrevistos:
-          item.outrosPrevistos,
-
-        quantidade:
-          item.totalPrevisto,
-
-        totalPrevisto:
-          item.totalPrevisto,
-
-        margemSegurancaPercent:
-          Number(
-            item.margemSegurancaPercent
-          ),
-
-        efetivoPlanejamento:
-          item.efetivoPlanejamento,
-
-        arranchadosCompareceram:
-          item.arranchadosCompareceram,
-
-        naoArranchadosAtendidos:
-          item.naoArranchadosAtendidos,
-
-        totalAtendido:
-          item.totalAtendido,
-
-        sobraKg:
-          item.sobraKg != null
-            ? Number(
-                item.sobraKg
-              )
-            : null,
-
-        fechamentoRealizadoEm:
-          item.fechamentoRealizadoEm,
-
-        observacao:
-          item.observacao,
-
-        usuario:
-          item.usuario,
-      })
-    );
-
+  /*
+   * RESUMO DAS MOVIMENTAÇÕES
+   *
+   * Mantido para compatibilidade com a tela atual.
+   * Os totais não devem ser somados entre unidades
+   * diferentes na apresentação.
+   */
   const resumo: Record<
     string,
     number
@@ -735,9 +908,7 @@ export async function GET(
     TRANSFERENCIA: 0,
   };
 
-  for (
-    const movimento of movimentacoes
-  ) {
+  for (const movimento of movimentacoes) {
     if (
       resumo[
         movimento.tipo
@@ -756,35 +927,27 @@ export async function GET(
     fim,
 
     classe:
-      classe ||
-      'TODOS',
+      classe || 'TODOS',
 
     timeZone:
       TIME_ZONE,
 
     resumo,
 
+    resumoEfetivo,
+
+    refeicoesRelacionadas,
+
+    entradas,
+    saidas,
+    devolucoes,
+
     movimentacoes:
-      movimentacoes.map(
-        (item) => ({
-          ...item,
-
-          quantidade:
-            Number(
-              item.quantidade
-            ),
-
-          valorUnitario:
-            item.valorUnitario !=
-            null
-              ? Number(
-                  item.valorUnitario
-                )
-              : null,
-        })
-      ),
+      movimentosDetalhados,
 
     generos,
+
+    posicaoEstoque,
 
     efetivos,
 
@@ -794,5 +957,14 @@ export async function GET(
     estoqueBaixo,
 
     validade,
+
+    alertas: {
+      estoqueBaixo,
+      validade,
+
+      total:
+        estoqueBaixo.length +
+        validade.length,
+    },
   });
 }
