@@ -166,6 +166,11 @@ export async function GET(
     );
   }
 
+  /*
+   * O Serviço do dia seguinte é
+   * retirado fisicamente no dia
+   * anterior.
+   */
   const inicioSaidas =
     adicionarDias(
       inicio,
@@ -299,20 +304,48 @@ export async function GET(
    * =====================================================
    * EFETIVO REAL POR DIA
    * =====================================================
+   *
+   * IMPORTANTE:
+   *
+   * Não exigimos mais obrigatoriamente
+   * Café + Almoço + Jantar + Ceia.
+   *
+   * Um dia é considerado fechado quando
+   * existe pelo menos uma refeição
+   * cadastrada para aquele dia e TODAS
+   * as refeições cadastradas estão
+   * fechadas.
+   *
+   * Assim:
+   *
+   * 1 refeição realizada e fechada = dia fechado
+   * 2 refeições realizadas e fechadas = dia fechado
+   * 4 refeições realizadas e fechadas = dia fechado
+   *
+   * Se existir refeição cadastrada ainda
+   * sem fechamento, o dia permanece
+   * pendente.
    */
 
   type EfetivoDia = {
     data: string;
+
+    refeicoesPrevistas: number;
+
     refeicoesFechadas: number;
+
     totalAtendido: number;
+
     completo: boolean;
 
     detalhes: Array<{
       refeicao: string;
       refeicaoNome: string;
+
       totalAtendido:
         | number
         | null;
+
       fechada: boolean;
     }>;
   };
@@ -336,9 +369,15 @@ export async function GET(
       data,
       {
         data,
+
+        refeicoesPrevistas: 0,
+
         refeicoesFechadas: 0,
+
         totalAtendido: 0,
+
         completo: false,
+
         detalhes: [],
       }
     );
@@ -361,6 +400,15 @@ export async function GET(
     if (!dia) {
       continue;
     }
+
+    /*
+     * A existência do registro de
+     * Arranchamento representa uma
+     * refeição prevista/realizada
+     * naquele dia.
+     */
+    dia.refeicoesPrevistas +=
+      1;
 
     const fechada =
       Boolean(
@@ -404,20 +452,22 @@ export async function GET(
     });
   }
 
+  /*
+   * O dia fica completo quando:
+   *
+   * - existe ao menos uma refeição;
+   * - todas as refeições cadastradas
+   *   para aquele dia foram fechadas.
+   */
   for (
     const dia of
       efetivoPorDia.values()
   ) {
     dia.completo =
-      REFEICOES.every(
-        (refeicao) =>
-          dia.detalhes.some(
-            (item) =>
-              item.refeicao ===
-                refeicao &&
-              item.fechada
-          )
-      );
+      dia.refeicoesPrevistas >
+        0 &&
+      dia.refeicoesFechadas ===
+        dia.refeicoesPrevistas;
   }
 
   /*
@@ -445,6 +495,7 @@ export async function GET(
 
     devolvidoPorSaidaGenero.set(
       chave,
+
       (
         devolvidoPorSaidaGenero.get(
           chave
@@ -458,14 +509,17 @@ export async function GET(
 
   /*
    * =====================================================
-   * REGISTROS INDIVIDUAIS DOS SAQUES
+   * REGISTROS INDIVIDUAIS
    * =====================================================
    */
 
   type Registro = {
     saidaId: string;
+
     numeroSaida: number;
+
     dataSaque: string;
+
     dataAlimentacao: string;
 
     tipo:
@@ -473,16 +527,23 @@ export async function GET(
       | 'COMPLEMENTAR';
 
     destino: string;
+
     destinoNome: string;
 
     generoId: string;
+
     genero: string;
+
     grupo: string;
+
     categoria: string;
+
     unidade: string;
 
     quantidadeSaida: number;
+
     quantidadeDevolvida: number;
+
     quantidadeLiquida: number;
 
     totalAtendido:
@@ -536,6 +597,12 @@ export async function GET(
       tipo =
         'COMPLEMENTAR';
     } else {
+      /*
+       * OUTRO não entra no consumo
+       * por efetivo porque não existe
+       * relação segura com uma
+       * refeição.
+       */
       continue;
     }
 
@@ -567,17 +634,23 @@ export async function GET(
         );
 
       /*
-       * Se não houver devolução,
-       * o valor será naturalmente 0.
+       * Se não houve devolução,
+       * será zero.
        */
       const quantidadeDevolvida =
         devolvidoPorSaidaGenero.get(
           chaveDevolucao
         ) || 0;
 
+      /*
+       * Consumo líquido:
+       *
+       * saída - devolução
+       */
       const quantidadeLiquida =
         Math.max(
           0,
+
           quantidadeSaida -
             quantidadeDevolvida
         );
@@ -589,6 +662,15 @@ export async function GET(
       let efetivoFechado =
         false;
 
+      /*
+       * =========================================
+       * SAQUE PRINCIPAL
+       * =========================================
+       *
+       * Serviço do dia seguinte:
+       * utiliza a soma das refeições
+       * realizadas e fechadas daquele dia.
+       */
       if (
         tipo === 'PRINCIPAL'
       ) {
@@ -602,6 +684,14 @@ export async function GET(
             true;
         }
       } else {
+        /*
+         * =======================================
+         * SAQUE COMPLEMENTAR
+         * =======================================
+         *
+         * Utiliza somente o efetivo da
+         * refeição correspondente.
+         */
         const refeicao =
           efetivoDia
             ?.detalhes.find(
@@ -708,33 +798,27 @@ export async function GET(
 
   /*
    * =====================================================
-   * CONSOLIDAÇÃO POR GÊNERO + DIA
+   * CONSUMO POR GÊNERO + DIA
    * =====================================================
    *
-   * Primeiro consolidamos tudo que saiu
-   * para o mesmo gênero no mesmo dia de
-   * alimentação.
+   * Principal + complementações
+   * - devoluções, quando houver.
    *
-   * Exemplo:
-   *
-   * Serviço do dia seguinte = 20 Kg
-   * Complemento almoço      =  3 Kg
-   * Devolução               =  2 Kg
-   *
-   * Consumo líquido = 21 Kg
-   *
-   * O consumo se soma.
-   * O efetivo do mesmo serviço não deve
-   * ser multiplicado pela quantidade de
-   * saques realizados.
+   * O efetivo daquele serviço entra
+   * somente uma vez para o gênero.
    */
 
   type ConsumoDiaGenero = {
     generoId: string;
+
     genero: string;
+
     grupo: string;
+
     categoria: string;
+
     unidade: string;
+
     dataAlimentacao: string;
 
     quantidadeLiquida: number;
@@ -809,6 +893,13 @@ export async function GET(
       );
     }
 
+    /*
+     * Soma principal e
+     * complementações.
+     *
+     * As devoluções já foram
+     * descontadas anteriormente.
+     */
     item.quantidadeLiquida +=
       registro.quantidadeLiquida;
   }
@@ -817,10 +908,6 @@ export async function GET(
    * =====================================================
    * CONSOLIDAÇÃO HISTÓRICA POR GÊNERO
    * =====================================================
-   *
-   * Agora cada gênero contribui apenas
-   * uma vez por dia com o efetivo daquele
-   * serviço.
    */
 
   const consolidado =
@@ -828,9 +915,13 @@ export async function GET(
       string,
       {
         generoId: string;
+
         genero: string;
+
         grupo: string;
+
         categoria: string;
+
         unidade: string;
 
         quantidadeLiquida: number;
@@ -891,16 +982,12 @@ export async function GET(
       );
     }
 
-    /*
-     * Soma todo o consumo do gênero
-     * naquele serviço.
-     */
     item.quantidadeLiquida +=
       registro.quantidadeLiquida;
 
     /*
-     * Soma o efetivo apenas uma vez
-     * para aquele gênero naquele dia.
+     * Uma vez por gênero por
+     * serviço/dia.
      */
     item.atendimentosRelacionados +=
       registro.totalAtendido;
@@ -951,6 +1038,9 @@ export async function GET(
       data:
         dia.data,
 
+      refeicoesPrevistas:
+        dia.refeicoesPrevistas,
+
       refeicoesFechadas:
         dia.refeicoesFechadas,
 
@@ -968,6 +1058,21 @@ export async function GET(
     dias.filter(
       (dia) =>
         dia.completo
+    ).length;
+
+  const diasComMovimento =
+    dias.filter(
+      (dia) =>
+        dia.refeicoesPrevistas >
+        0
+    ).length;
+
+  const diasPendentes =
+    dias.filter(
+      (dia) =>
+        dia.refeicoesPrevistas >
+          0 &&
+        !dia.completo
     ).length;
 
   const registrosSemEfetivo =
@@ -990,7 +1095,10 @@ export async function GET(
         'SERVICO_DIA_SEGUINTE',
 
       regraSaquePrincipal:
-        'O saque principal realizado no dia anterior é relacionado à soma dos atendimentos de Café da manhã, Almoço, Jantar e Ceia do dia seguinte.',
+        'O saque principal realizado no dia anterior é relacionado à soma dos atendimentos das refeições efetivamente registradas e fechadas no dia seguinte.',
+
+      regraFechamento:
+        'O dia é considerado fechado quando existe ao menos uma refeição cadastrada e todas as refeições cadastradas para aquele dia possuem fechamento.',
 
       saquesComplementares: [
         'CAFE_DA_MANHA',
@@ -1016,11 +1124,18 @@ export async function GET(
       diasAnalisados:
         dias.length,
 
+      diasComMovimento,
+
       diasCompletos,
 
+      diasPendentes,
+
+      /*
+       * Mantido para compatibilidade
+       * com o componente atual.
+       */
       diasIncompletos:
-        dias.length -
-        diasCompletos,
+        diasPendentes,
 
       registrosRelacionados:
         registros.length,
