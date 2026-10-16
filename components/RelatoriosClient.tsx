@@ -1,15 +1,25 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
-const TIME_ZONE = 'America/Campo_Grande';
+const TIME_ZONE =
+  'America/Campo_Grande';
 
-const nomesRefeicao: Record<string, string> = {
-  CAFE_DA_MANHA: 'Café da manhã',
+const nomesRefeicao: Record<
+  string,
+  string
+> = {
+  CAFE_DA_MANHA:
+    'Café da manhã',
   ALMOCO: 'Almoço',
   JANTAR: 'Jantar',
   CEIA: 'Ceia',
-  SERVICO_DIA_SEGUINTE: 'Serviço do dia seguinte',
+  SERVICO_DIA_SEGUINTE:
+    'Serviço do dia seguinte',
   OUTRO: 'Outro',
 };
 
@@ -22,79 +32,281 @@ type OpcoesRelatorio = {
   estoque: boolean;
 };
 
-const opcoesIniciais: OpcoesRelatorio = {
-  efetivo: true,
-  refeicoes: true,
-  entradas: true,
-  saidas: true,
-  devolucoes: true,
-  estoque: true,
-};
+const opcoesIniciais: OpcoesRelatorio =
+  {
+    efetivo: true,
+    refeicoes: true,
+    entradas: true,
+    saidas: true,
+    devolucoes: true,
+    estoque: true,
+  };
 
 function dataHojeLocal() {
-  const partes = new Intl.DateTimeFormat('en-CA', {
-    timeZone: TIME_ZONE,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).formatToParts(new Date());
+  const partes =
+    new Intl.DateTimeFormat(
+      'en-CA',
+      {
+        timeZone:
+          TIME_ZONE,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }
+    ).formatToParts(
+      new Date()
+    );
 
   const ano =
-    partes.find((p) => p.type === 'year')?.value || '';
+    partes.find(
+      (p) =>
+        p.type === 'year'
+    )?.value || '';
 
   const mes =
-    partes.find((p) => p.type === 'month')?.value || '';
+    partes.find(
+      (p) =>
+        p.type === 'month'
+    )?.value || '';
 
   const dia =
-    partes.find((p) => p.type === 'day')?.value || '';
+    partes.find(
+      (p) =>
+        p.type === 'day'
+    )?.value || '';
 
   return `${ano}-${mes}-${dia}`;
 }
 
-function formatarData(valor: string) {
-  if (!valor) return '—';
+function formatarData(
+  valor: string
+) {
+  if (!valor) {
+    return '—';
+  }
 
-  const data = valor.slice(0, 10);
-  const [ano, mes, dia] = data.split('-');
+  const data =
+    valor.slice(0, 10);
 
-  if (!ano || !mes || !dia) {
+  const [
+    ano,
+    mes,
+    dia,
+  ] = data.split('-');
+
+  if (
+    !ano ||
+    !mes ||
+    !dia
+  ) {
     return valor;
   }
 
   return `${dia}/${mes}/${ano}`;
 }
 
-function formatarDataHora(valor: string) {
-  if (!valor) return '—';
+function formatarDataHora(
+  valor: string
+) {
+  if (!valor) {
+    return '—';
+  }
 
-  return new Intl.DateTimeFormat('pt-BR', {
-    timeZone: TIME_ZONE,
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).format(new Date(valor));
+  return new Intl.DateTimeFormat(
+    'pt-BR',
+    {
+      timeZone:
+        TIME_ZONE,
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    }
+  ).format(
+    new Date(valor)
+  );
 }
 
-function formatarNumero(valor: number | null | undefined) {
-  return Number(valor || 0).toLocaleString('pt-BR', {
-    maximumFractionDigits: 3,
-  });
+function formatarNumero(
+  valor:
+    | number
+    | null
+    | undefined
+) {
+  return Number(
+    valor || 0
+  ).toLocaleString(
+    'pt-BR',
+    {
+      maximumFractionDigits:
+        3,
+    }
+  );
 }
 
-function parametrosOpcoes(opcoes: OpcoesRelatorio) {
-  const p = new URLSearchParams();
+function parametrosOpcoes(
+  opcoes: OpcoesRelatorio
+) {
+  const p =
+    new URLSearchParams();
 
-  if (opcoes.efetivo) p.set('efetivo', '1');
-  if (opcoes.refeicoes) p.set('refeicoes', '1');
-  if (opcoes.entradas) p.set('entradas', '1');
-  if (opcoes.saidas) p.set('saidas', '1');
-  if (opcoes.devolucoes) p.set('devolucoes', '1');
-  if (opcoes.estoque) p.set('estoque', '1');
+  /*
+   * Enviamos 1 e 0.
+   *
+   * Assim PDF e Excel sabem
+   * exatamente quais seções
+   * foram selecionadas.
+   */
+  p.set(
+    'efetivo',
+    opcoes.efetivo
+      ? '1'
+      : '0'
+  );
+
+  p.set(
+    'refeicoes',
+    opcoes.refeicoes
+      ? '1'
+      : '0'
+  );
+
+  p.set(
+    'entradas',
+    opcoes.entradas
+      ? '1'
+      : '0'
+  );
+
+  p.set(
+    'saidas',
+    opcoes.saidas
+      ? '1'
+      : '0'
+  );
+
+  p.set(
+    'devolucoes',
+    opcoes.devolucoes
+      ? '1'
+      : '0'
+  );
+
+  p.set(
+    'estoque',
+    opcoes.estoque
+      ? '1'
+      : '0'
+  );
 
   return p;
+}
+
+function somarPorUnidade(
+  itens: any[]
+) {
+  const totais =
+    new Map<
+      string,
+      number
+    >();
+
+  for (
+    const item of itens
+  ) {
+    const unidade =
+      item.unidade ||
+      'Sem unidade';
+
+    totais.set(
+      unidade,
+      (totais.get(
+        unidade
+      ) || 0) +
+        Number(
+          item.quantidade ||
+            0
+        )
+    );
+  }
+
+  return Array.from(
+    totais.entries()
+  )
+    .sort((a, b) =>
+      a[0].localeCompare(
+        b[0],
+        'pt-BR'
+      )
+    )
+    .map(
+      ([
+        unidade,
+        quantidade,
+      ]) => ({
+        unidade,
+        quantidade,
+      })
+    );
+}
+
+function TotaisPorUnidade({
+  titulo,
+  totais,
+}: {
+  titulo: string;
+  totais: {
+    unidade: string;
+    quantidade: number;
+  }[];
+}) {
+  if (
+    totais.length === 0
+  ) {
+    return null;
+  }
+
+  return (
+    <div
+      style={{
+        marginTop: 10,
+        paddingTop: 10,
+        borderTop:
+          '1px solid rgba(255,255,255,.10)',
+      }}
+    >
+      <strong>
+        {titulo}
+      </strong>
+
+      <div
+        style={{
+          display: 'flex',
+          gap: 12,
+          flexWrap: 'wrap',
+          marginTop: 6,
+        }}
+      >
+        {totais.map(
+          (total) => (
+            <span
+              key={
+                total.unidade
+              }
+              className="muted"
+            >
+              {formatarNumero(
+                total.quantidade
+              )}{' '}
+              {total.unidade}
+            </span>
+          )
+        )}
+      </div>
+    </div>
+  );
 }
 
 function TabelaMovimentos({
@@ -108,76 +320,167 @@ function TabelaMovimentos({
 }) {
   return (
     <div className="card">
-      <h2>{titulo}</h2>
+      <h2>
+        {titulo}
+      </h2>
 
-      {itens.length === 0 ? (
+      {itens.length ===
+      0 ? (
         <p className="muted">
-          Nenhum registro no período selecionado.
+          Nenhum registro no
+          período selecionado.
         </p>
       ) : (
         <div
           style={{
-            overflowX: 'auto',
+            overflowX:
+              'auto',
           }}
         >
           <table
             style={{
               width: '100%',
-              borderCollapse: 'collapse',
-              minWidth: 850,
+              borderCollapse:
+                'collapse',
+              minWidth:
+                mostrarDestino
+                  ? 1050
+                  : 850,
             }}
           >
             <thead>
               <tr>
-                <th style={th}>Gênero</th>
-                <th style={th}>Grupo</th>
-                <th style={th}>Categoria</th>
-                <th style={th}>Classe</th>
-                <th style={th}>Quantidade</th>
-                <th style={th}>Data / hora</th>
+                <th style={th}>
+                  Gênero
+                </th>
+
+                <th style={th}>
+                  Grupo
+                </th>
+
+                <th style={th}>
+                  Categoria
+                </th>
+
+                <th style={th}>
+                  Classe
+                </th>
+
+                <th style={th}>
+                  Quantidade
+                </th>
+
+                <th style={th}>
+                  Data / hora
+                </th>
 
                 {mostrarDestino && (
-                  <th style={th}>Finalidade</th>
+                  <>
+                    <th
+                      style={th}
+                    >
+                      Finalidade
+                    </th>
+
+                    <th
+                      style={th}
+                    >
+                      Referência
+                    </th>
+                  </>
                 )}
               </tr>
             </thead>
 
             <tbody>
-              {itens.map((item) => (
-                <tr key={item.id}>
-                  <td style={td}>
-                    <strong>{item.genero}</strong>
-                  </td>
-
-                  <td style={td}>{item.grupo}</td>
-
-                  <td style={td}>{item.categoria}</td>
-
-                  <td style={td}>{item.classe}</td>
-
-                  <td style={td}>
-                    <strong>
-                      {formatarNumero(item.quantidade)}{' '}
-                      {item.unidade}
-                    </strong>
-                  </td>
-
-                  <td style={td}>
-                    {formatarDataHora(item.dataHora)}
-                  </td>
-
-                  {mostrarDestino && (
-                    <td style={td}>
-                      {item.observacao
-                        ? item.observacao.replace(
-                            /^Destino:\s*/i,
-                            ''
-                          )
-                        : '—'}
+              {itens.map(
+                (item) => (
+                  <tr
+                    key={
+                      item.id
+                    }
+                  >
+                    <td
+                      style={td}
+                    >
+                      <strong>
+                        {
+                          item.genero
+                        }
+                      </strong>
                     </td>
-                  )}
-                </tr>
-              ))}
+
+                    <td
+                      style={td}
+                    >
+                      {
+                        item.grupo
+                      }
+                    </td>
+
+                    <td
+                      style={td}
+                    >
+                      {
+                        item.categoria
+                      }
+                    </td>
+
+                    <td
+                      style={td}
+                    >
+                      {
+                        item.classe
+                      }
+                    </td>
+
+                    <td
+                      style={td}
+                    >
+                      <strong>
+                        {formatarNumero(
+                          item.quantidade
+                        )}{' '}
+                        {
+                          item.unidade
+                        }
+                      </strong>
+                    </td>
+
+                    <td
+                      style={td}
+                    >
+                      {formatarDataHora(
+                        item.dataHora
+                      )}
+                    </td>
+
+                    {mostrarDestino && (
+                      <>
+                        <td
+                          style={
+                            td
+                          }
+                        >
+                          <strong>
+                            {item.destinoNome ||
+                              '—'}
+                          </strong>
+                        </td>
+
+                        <td
+                          style={
+                            td
+                          }
+                        >
+                          {item.referenciaServico ||
+                            '—'}
+                        </td>
+                      </>
+                    )}
+                  </tr>
+                )
+              )}
             </tbody>
           </table>
         </div>
@@ -186,89 +489,165 @@ function TabelaMovimentos({
   );
 }
 
-const th: React.CSSProperties = {
-  textAlign: 'left',
-  padding: '10px 8px',
-  borderBottom: '1px solid rgba(255,255,255,.18)',
-  whiteSpace: 'nowrap',
-};
+const th: React.CSSProperties =
+  {
+    textAlign:
+      'left',
 
-const td: React.CSSProperties = {
-  padding: '10px 8px',
-  borderBottom: '1px solid rgba(255,255,255,.08)',
-  verticalAlign: 'top',
-};
+    padding:
+      '10px 8px',
+
+    borderBottom:
+      '1px solid rgba(255,255,255,.18)',
+
+    whiteSpace:
+      'nowrap',
+  };
+
+const td: React.CSSProperties =
+  {
+    padding:
+      '10px 8px',
+
+    borderBottom:
+      '1px solid rgba(255,255,255,.08)',
+
+    verticalAlign:
+      'top',
+  };
 
 export default function RelatoriosClient() {
-  const hoje = dataHojeLocal();
+  const hoje =
+    dataHojeLocal();
 
-  const [inicio, setInicio] = useState(hoje);
-  const [fim, setFim] = useState(hoje);
-  const [classe, setClasse] = useState('TODOS');
+  const [
+    inicio,
+    setInicio,
+  ] = useState(
+    hoje
+  );
 
-  const [opcoes, setOpcoes] =
-    useState<OpcoesRelatorio>(opcoesIniciais);
+  const [
+    fim,
+    setFim,
+  ] = useState(
+    hoje
+  );
 
-  const [dados, setDados] = useState<any>(null);
+  const [
+    classe,
+    setClasse,
+  ] = useState(
+    'TODOS'
+  );
 
-  const [erro, setErro] = useState('');
-  const [carregando, setCarregando] =
+  const [
+    opcoes,
+    setOpcoes,
+  ] =
+    useState<OpcoesRelatorio>(
+      opcoesIniciais
+    );
+
+  const [
+    dados,
+    setDados,
+  ] =
+    useState<any>(
+      null
+    );
+
+  const [
+    erro,
+    setErro,
+  ] = useState('');
+
+  const [
+    carregando,
+    setCarregando,
+  ] =
     useState(false);
 
   async function carregar() {
     setErro('');
 
-    if (!inicio || !fim) {
+    if (
+      !inicio ||
+      !fim
+    ) {
       setErro(
         'Informe a data inicial e a data final.'
       );
+
       return;
     }
 
-    if (inicio > fim) {
+    if (
+      inicio > fim
+    ) {
       setErro(
         'A data inicial não pode ser posterior à data final.'
       );
+
       return;
     }
 
-    setCarregando(true);
+    setCarregando(
+      true
+    );
 
     try {
-      const params = new URLSearchParams({
-        inicio,
-        fim,
-        classe,
-      });
+      const params =
+        new URLSearchParams(
+          {
+            inicio,
+            fim,
+            classe,
+          }
+        );
 
-      const resposta = await fetch(
-        `/api/relatorios?${params.toString()}`,
-        {
-          cache: 'no-store',
-        }
-      );
+      const resposta =
+        await fetch(
+          `/api/relatorios?${params.toString()}`,
+          {
+            cache:
+              'no-store',
+          }
+        );
 
-      const json = await resposta.json();
+      const json =
+        await resposta.json();
 
-      if (!resposta.ok) {
+      if (
+        !resposta.ok
+      ) {
         setErro(
           json.error ||
             'Não foi possível gerar o relatório.'
         );
 
-        setDados(null);
+        setDados(
+          null
+        );
+
         return;
       }
 
-      setDados(json);
+      setDados(
+        json
+      );
     } catch {
       setErro(
         'Não foi possível comunicar com o sistema.'
       );
 
-      setDados(null);
+      setDados(
+        null
+      );
     } finally {
-      setCarregando(false);
+      setCarregando(
+        false
+      );
     }
   }
 
@@ -277,137 +656,274 @@ export default function RelatoriosClient() {
   }, []);
 
   function alterarOpcao(
-    campo: keyof OpcoesRelatorio
+    campo:
+      keyof OpcoesRelatorio
   ) {
-    setOpcoes((anterior) => ({
-      ...anterior,
-      [campo]: !anterior[campo],
-    }));
+    setOpcoes(
+      (anterior) => ({
+        ...anterior,
+
+        [campo]:
+          !anterior[
+            campo
+          ],
+      })
+    );
   }
 
-  function urlExportacao(tipo: 'pdf' | 'excel') {
-    const params = parametrosOpcoes(opcoes);
+  function urlExportacao(
+    tipo:
+      | 'pdf'
+      | 'excel'
+  ) {
+    const params =
+      parametrosOpcoes(
+        opcoes
+      );
 
-    params.set('inicio', inicio);
-    params.set('fim', fim);
-    params.set('classe', classe);
+    params.set(
+      'inicio',
+      inicio
+    );
+
+    params.set(
+      'fim',
+      fim
+    );
+
+    params.set(
+      'classe',
+      classe
+    );
 
     return `/api/relatorios/${tipo}?${params.toString()}`;
   }
 
-  const estoqueAgrupado = useMemo(() => {
-    if (!dados?.posicaoEstoque) {
-      return [];
-    }
-
-    const grupos = new Map<string, any>();
-
-    for (const item of dados.posicaoEstoque) {
-      const grupoNome =
-        item.grupo || 'Sem grupo';
-
-      if (!grupos.has(grupoNome)) {
-        grupos.set(grupoNome, {
-          nome: grupoNome,
-          categorias: new Map<string, any>(),
-        });
+  const estoqueAgrupado =
+    useMemo(() => {
+      if (
+        !dados?.posicaoEstoque
+      ) {
+        return [];
       }
 
-      const grupo = grupos.get(grupoNome);
+      const grupos =
+        new Map<
+          string,
+          any
+        >();
 
-      const categoriaNome =
-        item.categoria || 'Sem categoria';
+      for (
+        const item of
+          dados.posicaoEstoque
+      ) {
+        const grupoNome =
+          item.grupo ||
+          'Sem grupo';
 
-      if (!grupo.categorias.has(categoriaNome)) {
-        grupo.categorias.set(categoriaNome, {
-          nome: categoriaNome,
-          itens: [],
-        });
+        if (
+          !grupos.has(
+            grupoNome
+          )
+        ) {
+          grupos.set(
+            grupoNome,
+            {
+              nome:
+                grupoNome,
+
+              categorias:
+                new Map<
+                  string,
+                  any
+                >(),
+
+              itens: [],
+            }
+          );
+        }
+
+        const grupo =
+          grupos.get(
+            grupoNome
+          );
+
+        grupo.itens.push(
+          item
+        );
+
+        const categoriaNome =
+          item.categoria ||
+          'Sem categoria';
+
+        if (
+          !grupo.categorias.has(
+            categoriaNome
+          )
+        ) {
+          grupo.categorias.set(
+            categoriaNome,
+            {
+              nome:
+                categoriaNome,
+
+              itens: [],
+            }
+          );
+        }
+
+        grupo.categorias
+          .get(
+            categoriaNome
+          )
+          .itens.push(
+            item
+          );
       }
 
-      grupo.categorias
-        .get(categoriaNome)
-        .itens.push(item);
-    }
-
-    return Array.from(grupos.values())
-      .sort((a, b) =>
-        a.nome.localeCompare(b.nome, 'pt-BR')
+      return Array.from(
+        grupos.values()
       )
-      .map((grupo) => ({
-        ...grupo,
-
-        categorias: Array.from(
-          grupo.categorias.values()
-        )
-          .sort((a: any, b: any) =>
+        .sort(
+          (a, b) =>
             a.nome.localeCompare(
               b.nome,
               'pt-BR'
             )
-          )
-          .map((categoria: any) => ({
-            ...categoria,
+        )
+        .map(
+          (grupo) => ({
+            ...grupo,
 
-            itens: categoria.itens.sort(
-              (a: any, b: any) =>
-                a.nome.localeCompare(
-                  b.nome,
-                  'pt-BR'
+            totais:
+              somarPorUnidade(
+                grupo.itens
+              ),
+
+            categorias:
+              Array.from(
+                grupo.categorias.values()
+              )
+                .sort(
+                  (
+                    a: any,
+                    b: any
+                  ) =>
+                    a.nome.localeCompare(
+                      b.nome,
+                      'pt-BR'
+                    )
                 )
-            ),
-          })),
-      }));
-  }, [dados]);
+                .map(
+                  (
+                    categoria: any
+                  ) => ({
+                    ...categoria,
+
+                    itens:
+                      categoria.itens.sort(
+                        (
+                          a: any,
+                          b: any
+                        ) =>
+                          a.nome.localeCompare(
+                            b.nome,
+                            'pt-BR'
+                          )
+                      ),
+
+                    totais:
+                      somarPorUnidade(
+                        categoria.itens
+                      ),
+                  })
+                ),
+          })
+        );
+    }, [dados]);
 
   return (
     <>
       <div className="card">
-        <h2>Relatório operacional</h2>
+        <h2>
+          Relatório
+          operacional
+        </h2>
 
         <p className="muted">
-          Consulte as informações do estoque e escolha
-          quais seções deseja incluir no relatório.
+          Consulte as
+          informações do
+          estoque e escolha
+          quais seções deseja
+          incluir no relatório.
         </p>
 
         <div className="grid">
           <label>
             Data inicial
+
             <input
               type="date"
-              value={inicio}
-              onChange={(e) =>
-                setInicio(e.target.value)
+              value={
+                inicio
+              }
+              onChange={(
+                e
+              ) =>
+                setInicio(
+                  e.target
+                    .value
+                )
               }
             />
           </label>
 
           <label>
             Data final
+
             <input
               type="date"
-              value={fim}
-              onChange={(e) =>
-                setFim(e.target.value)
+              value={
+                fim
+              }
+              onChange={(
+                e
+              ) =>
+                setFim(
+                  e.target
+                    .value
+                )
               }
             />
           </label>
 
           <label>
             Classe
+
             <select
-              value={classe}
-              onChange={(e) =>
-                setClasse(e.target.value)
+              value={
+                classe
+              }
+              onChange={(
+                e
+              ) =>
+                setClasse(
+                  e.target
+                    .value
+                )
               }
             >
               <option value="TODOS">
                 QS + QR
               </option>
 
-              <option value="QS">QS</option>
+              <option value="QS">
+                QS
+              </option>
 
-              <option value="QR">QR</option>
+              <option value="QR">
+                QR
+              </option>
             </select>
           </label>
         </div>
@@ -415,8 +931,12 @@ export default function RelatoriosClient() {
         <button
           type="button"
           className="btn"
-          disabled={carregando}
-          onClick={carregar}
+          disabled={
+            carregando
+          }
+          onClick={
+            carregar
+          }
         >
           {carregando
             ? 'Consultando...'
@@ -424,55 +944,79 @@ export default function RelatoriosClient() {
         </button>
 
         {erro && (
-          <div className="error">{erro}</div>
+          <div className="error">
+            {erro}
+          </div>
         )}
       </div>
 
       <div className="card">
-        <h2>O que incluir no relatório</h2>
+        <h2>
+          O que incluir no
+          relatório
+        </h2>
 
         <p className="muted">
-          Marque as informações que deseja visualizar e
-          exportar. Os alertas de estoque são sempre
+          Marque as informações
+          que deseja visualizar e
+          exportar. Os alertas de
+          estoque são sempre
           incluídos.
         </p>
 
         <div
           style={{
-            display: 'grid',
+            display:
+              'grid',
+
             gridTemplateColumns:
               'repeat(auto-fit, minmax(220px, 1fr))',
+
             gap: 12,
           }}
         >
           <label>
             <input
               type="checkbox"
-              checked={opcoes.efetivo}
+              checked={
+                opcoes.efetivo
+              }
               onChange={() =>
-                alterarOpcao('efetivo')
+                alterarOpcao(
+                  'efetivo'
+                )
               }
             />{' '}
-            Efetivo por refeição
+            Efetivo por
+            refeição
           </label>
 
           <label>
             <input
               type="checkbox"
-              checked={opcoes.refeicoes}
+              checked={
+                opcoes.refeicoes
+              }
               onChange={() =>
-                alterarOpcao('refeicoes')
+                alterarOpcao(
+                  'refeicoes'
+                )
               }
             />{' '}
-            Refeições relacionadas
+            Refeições
+            relacionadas
           </label>
 
           <label>
             <input
               type="checkbox"
-              checked={opcoes.entradas}
+              checked={
+                opcoes.entradas
+              }
               onChange={() =>
-                alterarOpcao('entradas')
+                alterarOpcao(
+                  'entradas'
+                )
               }
             />{' '}
             Entradas
@@ -481,9 +1025,13 @@ export default function RelatoriosClient() {
           <label>
             <input
               type="checkbox"
-              checked={opcoes.saidas}
+              checked={
+                opcoes.saidas
+              }
               onChange={() =>
-                alterarOpcao('saidas')
+                alterarOpcao(
+                  'saidas'
+                )
               }
             />{' '}
             Saídas
@@ -492,9 +1040,13 @@ export default function RelatoriosClient() {
           <label>
             <input
               type="checkbox"
-              checked={opcoes.devolucoes}
+              checked={
+                opcoes.devolucoes
+              }
               onChange={() =>
-                alterarOpcao('devolucoes')
+                alterarOpcao(
+                  'devolucoes'
+                )
               }
             />{' '}
             Devoluções
@@ -503,9 +1055,13 @@ export default function RelatoriosClient() {
           <label>
             <input
               type="checkbox"
-              checked={opcoes.estoque}
+              checked={
+                opcoes.estoque
+              }
               onChange={() =>
-                alterarOpcao('estoque')
+                alterarOpcao(
+                  'estoque'
+                )
               }
             />{' '}
             Posição do estoque
@@ -519,12 +1075,15 @@ export default function RelatoriosClient() {
             className="row"
             style={{
               gap: 10,
-              flexWrap: 'wrap',
+              flexWrap:
+                'wrap',
             }}
           >
             <a
               className="btn"
-              href={urlExportacao('pdf')}
+              href={urlExportacao(
+                'pdf'
+              )}
               target="_blank"
               rel="noreferrer"
             >
@@ -533,7 +1092,9 @@ export default function RelatoriosClient() {
 
             <a
               className="btn"
-              href={urlExportacao('excel')}
+              href={urlExportacao(
+                'excel'
+              )}
             >
               Baixar Excel
             </a>
@@ -541,84 +1102,179 @@ export default function RelatoriosClient() {
 
           {opcoes.efetivo && (
             <div className="card">
-              <h2>Efetivo por refeição</h2>
+              <h2>
+                Efetivo por
+                refeição
+              </h2>
 
-              {dados.efetivos.length === 0 ? (
+              {dados.efetivos
+                .length ===
+              0 ? (
                 <p className="muted">
-                  Nenhum efetivo registrado no período.
+                  Nenhum efetivo
+                  registrado no
+                  período.
                 </p>
               ) : (
                 <>
                   <div
                     style={{
-                      overflowX: 'auto',
+                      overflowX:
+                        'auto',
                     }}
                   >
                     <table
                       style={{
-                        width: '100%',
-                        borderCollapse: 'collapse',
-                        minWidth: 900,
+                        width:
+                          '100%',
+
+                        borderCollapse:
+                          'collapse',
+
+                        minWidth:
+                          900,
                       }}
                     >
                       <thead>
                         <tr>
-                          <th style={th}>Data</th>
-                          <th style={th}>Refeição</th>
-                          <th style={th}>
-                            Efetivo previsto
+                          <th
+                            style={
+                              th
+                            }
+                          >
+                            Data
                           </th>
-                          <th style={th}>
-                            Efetivo alimentado
+
+                          <th
+                            style={
+                              th
+                            }
+                          >
+                            Refeição
                           </th>
-                          <th style={th}>Faltas</th>
-                          <th style={th}>
-                            Militares de fora
+
+                          <th
+                            style={
+                              th
+                            }
+                          >
+                            Efetivo
+                            previsto
                           </th>
-                          <th style={th}>
-                            Total atendido
+
+                          <th
+                            style={
+                              th
+                            }
+                          >
+                            Efetivo
+                            alimentado
+                          </th>
+
+                          <th
+                            style={
+                              th
+                            }
+                          >
+                            Faltas
+                          </th>
+
+                          <th
+                            style={
+                              th
+                            }
+                          >
+                            Militares
+                            de fora
+                          </th>
+
+                          <th
+                            style={
+                              th
+                            }
+                          >
+                            Total
+                            atendido
                           </th>
                         </tr>
                       </thead>
 
                       <tbody>
                         {dados.efetivos.map(
-                          (item: any) => (
-                            <tr key={item.id}>
-                              <td style={td}>
+                          (
+                            item: any
+                          ) => (
+                            <tr
+                              key={
+                                item.id
+                              }
+                            >
+                              <td
+                                style={
+                                  td
+                                }
+                              >
                                 {formatarData(
                                   item.data
                                 )}
                               </td>
 
-                              <td style={td}>
+                              <td
+                                style={
+                                  td
+                                }
+                              >
                                 <strong>
                                   {nomesRefeicao[
-                                    item.refeicao
+                                    item
+                                      .refeicao
                                   ] ||
                                     item.refeicao}
                                 </strong>
                               </td>
 
-                              <td style={td}>
-                                {item.totalPrevisto}
+                              <td
+                                style={
+                                  td
+                                }
+                              >
+                                {
+                                  item.totalPrevisto
+                                }
                               </td>
 
-                              <td style={td}>
+                              <td
+                                style={
+                                  td
+                                }
+                              >
                                 {item.efetivoAlimentado ??
                                   '—'}
                               </td>
 
-                              <td style={td}>
-                                {item.faltas ?? '—'}
+                              <td
+                                style={
+                                  td
+                                }
+                              >
+                                {item.faltas ??
+                                  '—'}
                               </td>
 
-                              <td style={td}>
+                              <td
+                                style={
+                                  td
+                                }
+                              >
                                 {item.militaresDeFora ??
                                   '—'}
                               </td>
 
-                              <td style={td}>
+                              <td
+                                style={
+                                  td
+                                }
+                              >
                                 <strong>
                                   {item.totalAtendido ??
                                     '—'}
@@ -634,18 +1290,21 @@ export default function RelatoriosClient() {
                   <div
                     className="grid"
                     style={{
-                      marginTop: 18,
+                      marginTop:
+                        18,
                     }}
                   >
                     <div className="card">
                       <span className="muted">
-                        Refeições realizadas
+                        Refeições
+                        realizadas
                       </span>
 
                       <div>
                         <strong>
                           {
-                            dados.resumoEfetivo
+                            dados
+                              .resumoEfetivo
                               .refeicoes
                           }
                         </strong>
@@ -654,13 +1313,15 @@ export default function RelatoriosClient() {
 
                     <div className="card">
                       <span className="muted">
-                        Efetivo previsto
+                        Efetivo
+                        previsto
                       </span>
 
                       <div>
                         <strong>
                           {
-                            dados.resumoEfetivo
+                            dados
+                              .resumoEfetivo
                               .efetivoPrevisto
                           }
                         </strong>
@@ -669,13 +1330,15 @@ export default function RelatoriosClient() {
 
                     <div className="card">
                       <span className="muted">
-                        Efetivo alimentado
+                        Efetivo
+                        alimentado
                       </span>
 
                       <div>
                         <strong>
                           {
-                            dados.resumoEfetivo
+                            dados
+                              .resumoEfetivo
                               .efetivoAlimentado
                           }
                         </strong>
@@ -690,7 +1353,8 @@ export default function RelatoriosClient() {
                       <div>
                         <strong>
                           {
-                            dados.resumoEfetivo
+                            dados
+                              .resumoEfetivo
                               .faltas
                           }
                         </strong>
@@ -699,13 +1363,15 @@ export default function RelatoriosClient() {
 
                     <div className="card">
                       <span className="muted">
-                        Militares de fora
+                        Militares de
+                        fora
                       </span>
 
                       <div>
                         <strong>
                           {
-                            dados.resumoEfetivo
+                            dados
+                              .resumoEfetivo
                               .militaresDeFora
                           }
                         </strong>
@@ -714,13 +1380,15 @@ export default function RelatoriosClient() {
 
                     <div className="card">
                       <span className="muted">
-                        Total de atendimentos
+                        Total de
+                        atendimentos
                       </span>
 
                       <div>
                         <strong>
                           {
-                            dados.resumoEfetivo
+                            dados
+                              .resumoEfetivo
                               .totalAtendido
                           }
                         </strong>
@@ -729,30 +1397,43 @@ export default function RelatoriosClient() {
                   </div>
 
                   <p className="muted">
-                    O total de atendimentos representa as
-                    refeições servidas no período. A mesma
-                    pessoa pode ter participado de mais de
-                    uma refeição.
+                    O total de
+                    atendimentos
+                    representa as
+                    refeições servidas
+                    no período. A mesma
+                    pessoa pode ter
+                    participado de mais
+                    de uma refeição.
                   </p>
 
                   <div
                     style={{
-                      marginTop: 18,
-                      paddingTop: 16,
+                      marginTop:
+                        18,
+
+                      paddingTop:
+                        16,
+
                       borderTop:
                         '1px solid rgba(255,255,255,.12)',
                     }}
                   >
-                    <h3>Sobras</h3>
+                    <h3>
+                      Sobras
+                    </h3>
 
                     <div className="row">
                       <span>
-                        Sobra pesada total no período
+                        Sobra pesada
+                        total no período
                       </span>
 
                       <strong>
                         {formatarNumero(
-                          dados.resumoEfetivo.sobraKg
+                          dados
+                            .resumoEfetivo
+                            .sobraKg
                         )}{' '}
                         kg
                       </strong>
@@ -765,41 +1446,62 @@ export default function RelatoriosClient() {
 
           {opcoes.refeicoes && (
             <div className="card">
-              <h2>Refeições relacionadas</h2>
+              <h2>
+                Refeições
+                relacionadas
+              </h2>
 
               <p className="muted">
-                Refeições identificadas pelas saídas
-                físicas de gêneros no período.
+                Refeições
+                identificadas pelas
+                saídas físicas de
+                gêneros no período.
               </p>
 
-              {dados.refeicoesRelacionadas.length ===
+              {dados
+                .refeicoesRelacionadas
+                .length ===
               0 ? (
                 <p className="muted">
-                  Nenhuma refeição relacionada às saídas
-                  do período.
+                  Nenhuma refeição
+                  relacionada às
+                  saídas do período.
                 </p>
               ) : (
                 dados.refeicoesRelacionadas.map(
-                  (item: any, indice: number) => (
+                  (
+                    item: any,
+                    indice: number
+                  ) => (
                     <div
                       key={`${item.data}-${item.destino}-${indice}`}
                       className="row"
                       style={{
-                        padding: '10px 0',
+                        padding:
+                          '10px 0',
+
                         borderBottom:
                           '1px solid rgba(255,255,255,.08)',
                       }}
                     >
                       <div>
-                        <strong>{item.nome}</strong>
+                        <strong>
+                          {
+                            item.nome
+                          }
+                        </strong>
 
                         <div className="muted">
-                          {formatarData(item.data)}
+                          {formatarData(
+                            item.data
+                          )}
                         </div>
                       </div>
 
                       <strong>
-                        {item.referencia}
+                        {
+                          item.referencia
+                        }
                       </strong>
                     </div>
                   )
@@ -809,15 +1511,21 @@ export default function RelatoriosClient() {
               <div
                 className="row"
                 style={{
-                  marginTop: 14,
+                  marginTop:
+                    14,
                 }}
               >
                 <span>
-                  Total de refeições relacionadas
+                  Total de refeições
+                  relacionadas
                 </span>
 
                 <strong>
-                  {dados.refeicoesRelacionadas.length}
+                  {
+                    dados
+                      .refeicoesRelacionadas
+                      .length
+                  }
                 </strong>
               </div>
             </div>
@@ -826,14 +1534,18 @@ export default function RelatoriosClient() {
           {opcoes.entradas && (
             <TabelaMovimentos
               titulo="Entradas"
-              itens={dados.entradas}
+              itens={
+                dados.entradas
+              }
             />
           )}
 
           {opcoes.saidas && (
             <TabelaMovimentos
               titulo="Saídas"
-              itens={dados.saidas}
+              itens={
+                dados.saidas
+              }
               mostrarDestino
             />
           )}
@@ -841,70 +1553,109 @@ export default function RelatoriosClient() {
           {opcoes.devolucoes && (
             <TabelaMovimentos
               titulo="Devoluções"
-              itens={dados.devolucoes}
+              itens={
+                dados.devolucoes
+              }
             />
           )}
 
           {opcoes.estoque && (
             <div className="card">
-              <h2>Posição do estoque</h2>
+              <h2>
+                Posição do estoque
+              </h2>
 
               <p className="muted">
-                Saldo atual dos gêneros organizado por
-                grupo e categoria. Quantidades de unidades
-                diferentes não são somadas entre si.
+                Saldo atual dos
+                gêneros organizado
+                por grupo e
+                categoria. Os totais
+                são calculados
+                separadamente por
+                unidade de medida.
               </p>
 
               {estoqueAgrupado.map(
-                (grupo: any) => (
+                (
+                  grupo: any
+                ) => (
                   <section
-                    key={grupo.nome}
+                    key={
+                      grupo.nome
+                    }
                     style={{
-                      marginTop: 22,
+                      marginTop:
+                        24,
                     }}
                   >
-                    <h3>{grupo.nome}</h3>
+                    <h3>
+                      {
+                        grupo.nome
+                      }
+                    </h3>
 
                     {grupo.categorias.map(
-                      (categoria: any) => (
+                      (
+                        categoria: any
+                      ) => (
                         <div
-                          key={categoria.nome}
+                          key={
+                            categoria.nome
+                          }
                           style={{
-                            marginTop: 16,
-                            padding: 14,
+                            marginTop:
+                              16,
+
+                            padding:
+                              14,
+
                             border:
                               '1px solid rgba(255,255,255,.10)',
-                            borderRadius: 12,
+
+                            borderRadius:
+                              12,
                           }}
                         >
                           <strong>
-                            {categoria.nome}
+                            {
+                              categoria.nome
+                            }
                           </strong>
 
                           <div
                             style={{
-                              marginTop: 10,
+                              marginTop:
+                                10,
                             }}
                           >
                             {categoria.itens.map(
-                              (item: any) => (
+                              (
+                                item: any
+                              ) => (
                                 <div
-                                  key={item.generoId}
+                                  key={
+                                    item.generoId
+                                  }
                                   className="row"
                                   style={{
                                     padding:
                                       '8px 0',
+
                                     borderBottom:
                                       '1px solid rgba(255,255,255,.06)',
                                   }}
                                 >
                                   <div>
                                     <strong>
-                                      {item.nome}
+                                      {
+                                        item.nome
+                                      }
                                     </strong>
 
                                     <div className="muted">
-                                      {item.classe}
+                                      {
+                                        item.classe
+                                      }
                                     </div>
                                   </div>
 
@@ -912,15 +1663,47 @@ export default function RelatoriosClient() {
                                     {formatarNumero(
                                       item.quantidade
                                     )}{' '}
-                                    {item.unidade}
+                                    {
+                                      item.unidade
+                                    }
                                   </strong>
                                 </div>
                               )
                             )}
                           </div>
+
+                          <TotaisPorUnidade
+                            titulo={`Subtotal — ${categoria.nome}`}
+                            totais={
+                              categoria.totais
+                            }
+                          />
                         </div>
                       )
                     )}
+
+                    <div
+                      style={{
+                        marginTop:
+                          14,
+
+                        padding:
+                          14,
+
+                        border:
+                          '1px solid rgba(255,255,255,.16)',
+
+                        borderRadius:
+                          12,
+                      }}
+                    >
+                      <TotaisPorUnidade
+                        titulo={`Total do grupo — ${grupo.nome}`}
+                        totais={
+                          grupo.totais
+                        }
+                      />
+                    </div>
                   </section>
                 )
               )}
@@ -928,42 +1711,68 @@ export default function RelatoriosClient() {
           )}
 
           <div className="card">
-            <h2>Alertas de estoque</h2>
+            <h2>
+              Alertas de estoque
+            </h2>
 
             <p className="muted">
-              Esta seção é sempre exibida no relatório.
+              Esta seção é sempre
+              exibida no relatório.
             </p>
 
-            {dados.estoqueBaixo.length === 0 &&
-            dados.validade.length === 0 ? (
+            {dados.estoqueBaixo
+              .length ===
+              0 &&
+            dados.validade
+              .length ===
+              0 ? (
               <div
                 style={{
-                  padding: 14,
-                  borderRadius: 10,
+                  padding:
+                    14,
+
+                  borderRadius:
+                    10,
+
                   border:
                     '1px solid rgba(34,197,94,.35)',
+
                   background:
                     'rgba(34,197,94,.06)',
                 }}
               >
-                ✓ Nenhum alerta de estoque.
+                ✓ Nenhum alerta de
+                estoque.
               </div>
             ) : (
               <>
                 {dados.estoqueBaixo.map(
-                  (item: any) => (
+                  (
+                    item: any
+                  ) => (
                     <div
-                      key={item.id}
+                      key={
+                        item.id
+                      }
                       style={{
-                        padding: 14,
-                        marginTop: 10,
-                        borderRadius: 12,
-                        border: item.zerado
-                          ? '2px solid #ef4444'
-                          : '2px solid #f59e0b',
-                        background: item.zerado
-                          ? 'rgba(239,68,68,.10)'
-                          : 'rgba(245,158,11,.10)',
+                        padding:
+                          14,
+
+                        marginTop:
+                          10,
+
+                        borderRadius:
+                          12,
+
+                        border:
+                          item.zerado
+                            ? '2px solid #ef4444'
+                            : '2px solid #f59e0b',
+
+                        background:
+                          item.zerado
+                            ? 'rgba(239,68,68,.10)'
+                            : 'rgba(245,158,11,.10)',
                       }}
                     >
                       <div className="row">
@@ -973,26 +1782,39 @@ export default function RelatoriosClient() {
                             : '⚠ ESTOQUE BAIXO'}
                         </strong>
 
-                        <strong>{item.nome}</strong>
+                        <strong>
+                          {
+                            item.nome
+                          }
+                        </strong>
                       </div>
 
                       <div
                         style={{
-                          marginTop: 8,
+                          marginTop:
+                            8,
                         }}
                       >
                         Saldo atual:{' '}
                         <strong>
-                          {formatarNumero(item.qtd)}{' '}
-                          {item.unidade}
+                          {formatarNumero(
+                            item.qtd
+                          )}{' '}
+                          {
+                            item.unidade
+                          }
                         </strong>
 
                         {' · '}
 
                         Estoque mínimo:{' '}
                         <strong>
-                          {formatarNumero(item.min)}{' '}
-                          {item.unidade}
+                          {formatarNumero(
+                            item.min
+                          )}{' '}
+                          {
+                            item.unidade
+                          }
                         </strong>
                       </div>
                     </div>
@@ -1000,19 +1822,31 @@ export default function RelatoriosClient() {
                 )}
 
                 {dados.validade.map(
-                  (item: any, indice: number) => (
+                  (
+                    item: any,
+                    indice: number
+                  ) => (
                     <div
                       key={`${item.genero}-${item.lote}-${indice}`}
                       style={{
-                        padding: 14,
-                        marginTop: 10,
-                        borderRadius: 12,
-                        border: item.vencido
-                          ? '2px solid #ef4444'
-                          : '2px solid #f59e0b',
-                        background: item.vencido
-                          ? 'rgba(239,68,68,.10)'
-                          : 'rgba(245,158,11,.10)',
+                        padding:
+                          14,
+
+                        marginTop:
+                          10,
+
+                        borderRadius:
+                          12,
+
+                        border:
+                          item.vencido
+                            ? '2px solid #ef4444'
+                            : '2px solid #f59e0b',
+
+                        background:
+                          item.vencido
+                            ? 'rgba(239,68,68,.10)'
+                            : 'rgba(245,158,11,.10)',
                       }}
                     >
                       <strong>
@@ -1023,22 +1857,37 @@ export default function RelatoriosClient() {
 
                       <div
                         style={{
-                          marginTop: 8,
+                          marginTop:
+                            8,
                         }}
                       >
-                        <strong>{item.genero}</strong>
+                        <strong>
+                          {
+                            item.genero
+                          }
+                        </strong>
+
                         {' · '}
-                        Lote {item.lote || '—'}
+
+                        Lote{' '}
+                        {item.lote ||
+                          '—'}
                       </div>
 
                       <div className="muted">
                         Validade:{' '}
-                        {formatarData(item.validade)}
+                        {formatarData(
+                          item.validade
+                        )}
+
                         {' · '}
+
                         {formatarNumero(
                           item.quantidade
                         )}{' '}
-                        {item.unidade}
+                        {
+                          item.unidade
+                        }
                       </div>
                     </div>
                   )
