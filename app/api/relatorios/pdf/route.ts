@@ -17,10 +17,15 @@ import {
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const TIME_ZONE = 'America/Campo_Grande';
+const TIME_ZONE =
+  'America/Campo_Grande';
 
-const nomesRefeicao: Record<string, string> = {
-  CAFE_DA_MANHA: 'Café da manhã',
+const nomesRefeicao: Record<
+  string,
+  string
+> = {
+  CAFE_DA_MANHA:
+    'Café da manhã',
   ALMOCO: 'Almoço',
   JANTAR: 'Jantar',
   CEIA: 'Ceia',
@@ -29,71 +34,102 @@ const nomesRefeicao: Record<string, string> = {
   OUTRO: 'Outro',
 };
 
-function inicioDiaLocal(data: string) {
+function inicioDiaLocal(
+  data: string
+) {
   return new Date(
-    `${data.slice(0, 10)}T04:00:00.000Z`
+    `${data.slice(
+      0,
+      10
+    )}T04:00:00.000Z`
   );
 }
 
-function fimDiaLocal(data: string) {
-  const inicio = inicioDiaLocal(data);
+function fimDiaLocal(
+  data: string
+) {
+  const inicio =
+    inicioDiaLocal(data);
 
   return new Date(
     inicio.getTime() +
-      24 * 60 * 60 * 1000 -
+      24 *
+        60 *
+        60 *
+        1000 -
       1
   );
 }
 
 function hojeLocal() {
   const partes =
-    new Intl.DateTimeFormat('en-CA', {
-      timeZone: TIME_ZONE,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    }).formatToParts(new Date());
+    new Intl.DateTimeFormat(
+      'en-CA',
+      {
+        timeZone:
+          TIME_ZONE,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }
+    ).formatToParts(
+      new Date()
+    );
 
   const ano =
     partes.find(
-      (p) => p.type === 'year'
+      (p) =>
+        p.type === 'year'
     )?.value || '';
 
   const mes =
     partes.find(
-      (p) => p.type === 'month'
+      (p) =>
+        p.type === 'month'
     )?.value || '';
 
   const dia =
     partes.find(
-      (p) => p.type === 'day'
+      (p) =>
+        p.type === 'day'
     )?.value || '';
 
   return `${ano}-${mes}-${dia}`;
 }
 
-function dataLocalISO(data: Date) {
+function dataLocalISO(
+  data: Date
+) {
   const partes =
-    new Intl.DateTimeFormat('en-CA', {
-      timeZone: TIME_ZONE,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    }).formatToParts(data);
+    new Intl.DateTimeFormat(
+      'en-CA',
+      {
+        timeZone:
+          TIME_ZONE,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }
+    ).formatToParts(
+      data
+    );
 
   const ano =
     partes.find(
-      (p) => p.type === 'year'
+      (p) =>
+        p.type === 'year'
     )?.value || '';
 
   const mes =
     partes.find(
-      (p) => p.type === 'month'
+      (p) =>
+        p.type === 'month'
     )?.value || '';
 
   const dia =
     partes.find(
-      (p) => p.type === 'day'
+      (p) =>
+        p.type === 'day'
     )?.value || '';
 
   return `${ano}-${mes}-${dia}`;
@@ -103,14 +139,28 @@ function formatarData(
   data: Date | string
 ) {
   const valor =
-    typeof data === 'string'
-      ? data.slice(0, 10)
-      : dataLocalISO(data);
+    typeof data ===
+    'string'
+      ? data.slice(
+          0,
+          10
+        )
+      : dataLocalISO(
+          data
+        );
 
-  const [ano, mes, dia] =
+  const [
+    ano,
+    mes,
+    dia,
+  ] =
     valor.split('-');
 
-  if (!ano || !mes || !dia) {
+  if (
+    !ano ||
+    !mes ||
+    !dia
+  ) {
     return valor;
   }
 
@@ -123,7 +173,8 @@ function formatarDataHora(
   return new Intl.DateTimeFormat(
     'pt-BR',
     {
-      timeZone: TIME_ZONE,
+      timeZone:
+        TIME_ZONE,
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -131,7 +182,9 @@ function formatarDataHora(
       minute: '2-digit',
       hour12: false,
     }
-  ).format(new Date(data));
+  ).format(
+    new Date(data)
+  );
 }
 
 function formatarNumero(
@@ -142,7 +195,8 @@ function formatarNumero(
   ).toLocaleString(
     'pt-BR',
     {
-      maximumFractionDigits: 3,
+      maximumFractionDigits:
+        3,
     }
   );
 }
@@ -150,10 +204,21 @@ function formatarNumero(
 function textoSeguro(
   valor: unknown
 ) {
-  return String(valor ?? '')
-    .replace(/[–—]/g, '-')
-    .replace(/[“”]/g, '"')
-    .replace(/[‘’]/g, "'")
+  return String(
+    valor ?? ''
+  )
+    .replace(
+      /[–—]/g,
+      '-'
+    )
+    .replace(
+      /[“”]/g,
+      '"'
+    )
+    .replace(
+      /[‘’]/g,
+      "'"
+    )
     .replace(
       /[^\x20-\x7E\u00A0-\u00FF]/g,
       ''
@@ -167,15 +232,19 @@ function quebrarTexto(
   larguraMaxima: number
 ) {
   const palavras =
-    textoSeguro(texto).split(
-      /\s+/
-    );
+    textoSeguro(
+      texto
+    ).split(/\s+/);
 
-  const linhas: string[] = [];
+  const linhas:
+    string[] = [];
 
   let linha = '';
 
-  for (const palavra of palavras) {
+  for (
+    const palavra of
+      palavras
+  ) {
     const teste =
       linha
         ? `${linha} ${palavra}`
@@ -194,13 +263,19 @@ function quebrarTexto(
     ) {
       linha = teste;
     } else {
-      linhas.push(linha);
-      linha = palavra;
+      linhas.push(
+        linha
+      );
+
+      linha =
+        palavra;
     }
   }
 
   if (linha) {
-    linhas.push(linha);
+    linhas.push(
+      linha
+    );
   }
 
   return linhas.length
@@ -218,13 +293,18 @@ function referenciaDestino(
 }
 
 function opcaoAtiva(
-  parametros: URLSearchParams,
+  parametros:
+    URLSearchParams,
   nome: string
 ) {
   const valor =
-    parametros.get(nome);
+    parametros.get(
+      nome
+    );
 
-  if (valor === null) {
+  if (
+    valor === null
+  ) {
     return true;
   }
 
@@ -249,20 +329,27 @@ export async function GET(
       req.url
     ).searchParams;
 
-  const hoje = hojeLocal();
+  const hoje =
+    hojeLocal();
 
   const inicio =
-    parametros.get('inicio') ||
-    hoje;
+    parametros.get(
+      'inicio'
+    ) || hoje;
 
   const fim =
-    parametros.get('fim') ||
-    inicio;
+    parametros.get(
+      'fim'
+    ) || inicio;
 
   const classeParametro =
-    parametros.get('classe');
+    parametros.get(
+      'classe'
+    );
 
-  if (inicio > fim) {
+  if (
+    inicio > fim
+  ) {
     return Response.json(
       {
         error:
@@ -298,8 +385,10 @@ export async function GET(
   const classe:
     | ClasseOperacao
     | null =
-    classeParametro === 'QS' ||
-    classeParametro === 'QR'
+    classeParametro ===
+      'QS' ||
+    classeParametro ===
+      'QR'
       ? classeParametro
       : null;
 
@@ -340,10 +429,14 @@ export async function GET(
     );
 
   const inicioPeriodo =
-    inicioDiaLocal(inicio);
+    inicioDiaLocal(
+      inicio
+    );
 
   const fimPeriodo =
-    fimDiaLocal(fim);
+    fimDiaLocal(
+      fim
+    );
 
   const [
     arranchamentos,
@@ -351,148 +444,219 @@ export async function GET(
     estoque,
     generosAtivos,
     saidasFisicas,
-  ] = await Promise.all([
-    prisma.arranchamento.findMany({
-      where: {
-        data: {
-          gte: inicioPeriodo,
-          lte: fimPeriodo,
-        },
-      },
-
-      orderBy: [
+  ] =
+    await Promise.all([
+      prisma.arranchamento.findMany(
         {
-          data: 'asc',
-        },
+          where: {
+            data: {
+              gte:
+                inicioPeriodo,
+
+              lte:
+                fimPeriodo,
+            },
+          },
+
+          orderBy: [
+            {
+              data:
+                'asc',
+            },
+            {
+              refeicao:
+                'asc',
+            },
+          ],
+        }
+      ),
+
+      prisma.movimentacaoEstoque.findMany(
         {
-          refeicao: 'asc',
-        },
-      ],
-    }),
+          where: {
+            criadoEm: {
+              gte:
+                inicioPeriodo,
 
-    prisma.movimentacaoEstoque.findMany({
-      where: {
-        criadoEm: {
-          gte: inicioPeriodo,
-          lte: fimPeriodo,
-        },
+              lte:
+                fimPeriodo,
+            },
 
-        ...(classe
-          ? { classe }
-          : {}),
-      },
+            ...(classe
+              ? {
+                  classe,
+                }
+              : {}),
+          },
 
-      include: {
-        genero: {
           include: {
-            unidade: true,
+            genero: {
+              include: {
+                unidade:
+                  true,
+
+                categoria: {
+                  include: {
+                    grupo:
+                      true,
+                  },
+                },
+              },
+            },
+
+            lote:
+              true,
+          },
+
+          orderBy: {
+            criadoEm:
+              'asc',
+          },
+        }
+      ),
+
+      prisma.estoqueLocal.findMany(
+        {
+          where: {
+            genero: {
+              situacao:
+                'ATIVO',
+
+              ...(classe
+                ? {
+                    classe,
+                  }
+                : {}),
+            },
+          },
+
+          include: {
+            genero: {
+              include: {
+                unidade:
+                  true,
+
+                categoria: {
+                  include: {
+                    grupo:
+                      true,
+                  },
+                },
+              },
+            },
+
+            local:
+              true,
+
+            lote:
+              true,
+          },
+        }
+      ),
+
+      prisma.genero.findMany(
+        {
+          where: {
+            situacao:
+              'ATIVO',
+
+            ...(classe
+              ? {
+                  classe,
+                }
+              : {}),
+          },
+
+          include: {
+            unidade:
+              true,
 
             categoria: {
               include: {
-                grupo: true,
+                grupo:
+                  true,
               },
             },
           },
-        },
 
-        lote: true,
-      },
+          orderBy: {
+            nome:
+              'asc',
+          },
+        }
+      ),
 
-      orderBy: {
-        criadoEm: 'asc',
-      },
-    }),
+      prisma.saida.findMany(
+        {
+          where: {
+            criadoEm: {
+              gte:
+                inicioPeriodo,
 
-    prisma.estoqueLocal.findMany({
-      where: {
-        genero: {
-          situacao: 'ATIVO',
-
-          ...(classe
-            ? { classe }
-            : {}),
-        },
-      },
-
-      include: {
-        genero: {
-          include: {
-            unidade: true,
-
-            categoria: {
-              include: {
-                grupo: true,
-              },
+              lte:
+                fimPeriodo,
             },
+
+            canceladaEm:
+              null,
+
+            ...(classe
+              ? {
+                  classe,
+                }
+              : {}),
           },
-        },
 
-        local: true,
-        lote: true,
-      },
-    }),
-
-    prisma.genero.findMany({
-      where: {
-        situacao: 'ATIVO',
-
-        ...(classe
-          ? { classe }
-          : {}),
-      },
-
-      include: {
-        unidade: true,
-
-        categoria: {
-          include: {
-            grupo: true,
+          select: {
+            id: true,
+            numero: true,
+            destino: true,
+            data: true,
+            criadoEm: true,
+            observacao: true,
           },
-        },
-      },
 
-      orderBy: {
-        nome: 'asc',
-      },
-    }),
+          orderBy: {
+            criadoEm:
+              'asc',
+          },
+        }
+      ),
+    ]);
 
-    prisma.saida.findMany({
-      where: {
-        criadoEm: {
-          gte: inicioPeriodo,
-          lte: fimPeriodo,
-        },
-
-        canceladaEm: null,
-
-        ...(classe
-          ? { classe }
-          : {}),
-      },
-
-      select: {
-        id: true,
-        numero: true,
-        destino: true,
-        criadoEm: true,
-        observacao: true,
-      },
-
-      orderBy: {
-        criadoEm: 'asc',
-      },
-    }),
-  ]);
+  /*
+   * MAPA DAS SAÍDAS
+   *
+   * A finalidade da movimentação
+   * passa a vir da Saida real,
+   * usando referenciaId.
+   */
+  const saidasPorId =
+    new Map(
+      saidasFisicas.map(
+        (saida) => [
+          saida.id,
+          saida,
+        ]
+      )
+    );
 
   /*
    * POSIÇÃO DO ESTOQUE
    */
   const saldoPorGenero =
-    new Map<string, number>();
+    new Map<
+      string,
+      number
+    >();
 
-  for (const item of estoque) {
+  for (
+    const item of
+      estoque
+  ) {
     saldoPorGenero.set(
       item.generoId,
+
       (saldoPorGenero.get(
         item.generoId
       ) || 0) +
@@ -515,15 +679,17 @@ export async function GET(
           genero.classe,
 
         unidade:
-          genero.unidade.sigla,
+          genero.unidade
+            .sigla,
 
         categoria:
-          genero.categoria?.nome ||
+          genero.categoria
+            ?.nome ||
           'Sem categoria',
 
         grupo:
-          genero.categoria?.grupo
-            ?.nome ||
+          genero.categoria
+            ?.grupo?.nome ||
           'Sem grupo',
 
         estoqueMinimo:
@@ -546,49 +712,88 @@ export async function GET(
    */
   const movimentosDetalhados =
     movimentacoes.map(
-      (item) => ({
-        id:
-          item.id,
+      (item) => {
+        const saidaRelacionada =
+          item.tipo ===
+            'SAIDA' &&
+          item.referenciaTipo ===
+            'Saida' &&
+          item.referenciaId
+            ? saidasPorId.get(
+                item.referenciaId
+              )
+            : undefined;
 
-        tipo:
-          item.tipo,
+        return {
+          id:
+            item.id,
 
-        genero:
-          item.genero.nome,
+          tipo:
+            item.tipo,
 
-        grupo:
-          item.genero.categoria
-            ?.grupo?.nome ||
-          'Sem grupo',
+          genero:
+            item.genero
+              .nome,
 
-        categoria:
-          item.genero.categoria
-            ?.nome ||
-          'Sem categoria',
+          grupo:
+            item.genero
+              .categoria
+              ?.grupo?.nome ||
+            'Sem grupo',
 
-        classe:
-          item.classe,
+          categoria:
+            item.genero
+              .categoria
+              ?.nome ||
+            'Sem categoria',
 
-        quantidade:
-          Number(
-            item.quantidade
-          ),
+          classe:
+            item.classe,
 
-        unidade:
-          item.genero.unidade
-            .sigla,
+          quantidade:
+            Number(
+              item.quantidade
+            ),
 
-        dataHora:
-          item.criadoEm,
+          unidade:
+            item.genero
+              .unidade.sigla,
 
-        lote:
-          item.lote?.numero ||
-          null,
+          dataHora:
+            item.criadoEm,
 
-        observacao:
-          item.observacao ||
-          null,
-      })
+          lote:
+            item.lote
+              ?.numero ||
+            null,
+
+          observacao:
+            item.observacao ||
+            null,
+
+          destinoNome:
+            saidaRelacionada
+              ? nomesRefeicao[
+                  saidaRelacionada
+                    .destino
+                ] ||
+                saidaRelacionada
+                  .destino
+              : null,
+
+          referenciaServico:
+            saidaRelacionada
+              ? referenciaDestino(
+                  saidaRelacionada.destino
+                )
+              : null,
+
+          numeroSaida:
+            saidaRelacionada
+              ?.numero ||
+            null,
+        };
+      }
     );
 
   const entradas =
@@ -620,14 +825,17 @@ export async function GET(
       string,
       {
         data: string;
-        destino: DestinoSaida;
+        destino:
+          DestinoSaida;
         nome: string;
-        referencia: string;
+        referencia:
+          string;
       }
     >();
 
   for (
-    const saida of saidasFisicas
+    const saida of
+      saidasFisicas
   ) {
     const data =
       dataLocalISO(
@@ -698,7 +906,10 @@ export async function GET(
 
     efetivoPrevisto:
       arranchamentos.reduce(
-        (total, item) =>
+        (
+          total,
+          item
+        ) =>
           total +
           item.totalPrevisto,
         0
@@ -706,11 +917,13 @@ export async function GET(
 
     efetivoAlimentado:
       arranchamentos.reduce(
-        (total, item) =>
+        (
+          total,
+          item
+        ) =>
           total +
           Number(
-            item
-              .arranchadosCompareceram ??
+            item.arranchadosCompareceram ??
               0
           ),
         0
@@ -718,21 +931,27 @@ export async function GET(
 
     faltas:
       arranchamentos.reduce(
-        (total, item) =>
+        (
+          total,
+          item
+        ) =>
           total +
           Number(
-            item.faltas ?? 0
+            item.faltas ??
+              0
           ),
         0
       ),
 
     militaresDeFora:
       arranchamentos.reduce(
-        (total, item) =>
+        (
+          total,
+          item
+        ) =>
           total +
           Number(
-            item
-              .naoArranchadosAtendidos ??
+            item.naoArranchadosAtendidos ??
               0
           ),
         0
@@ -740,7 +959,10 @@ export async function GET(
 
     totalAtendido:
       arranchamentos.reduce(
-        (total, item) =>
+        (
+          total,
+          item
+        ) =>
           total +
           Number(
             item.totalAtendido ??
@@ -751,17 +973,21 @@ export async function GET(
 
     sobraKg:
       arranchamentos.reduce(
-        (total, item) =>
+        (
+          total,
+          item
+        ) =>
           total +
           Number(
-            item.sobraKg ?? 0
+            item.sobraKg ??
+              0
           ),
         0
       ),
   };
 
   /*
-   * ALERTAS DE ESTOQUE
+   * ALERTAS
    */
   const estoqueBaixo =
     posicaoEstoque
@@ -802,17 +1028,21 @@ export async function GET(
           Number(
             item.quantidade
           ) > 0 &&
-          item.lote?.validade &&
-          item.lote.validade <=
+          item.lote
+            ?.validade &&
+          item.lote
+            .validade <=
             limiteValidade
       )
       .map(
         (item) => ({
           genero:
-            item.genero.nome,
+            item.genero
+              .nome,
 
           lote:
-            item.lote?.numero ||
+            item.lote
+              ?.numero ||
             '',
 
           validade:
@@ -826,8 +1056,8 @@ export async function GET(
             ),
 
           unidade:
-            item.genero.unidade
-              .sigla,
+            item.genero
+              .unidade.sigla,
 
           vencido:
             Boolean(
@@ -855,7 +1085,10 @@ export async function GET(
                 ).getTime()
               : 0;
 
-          return dataA - dataB;
+          return (
+            dataA -
+            dataB
+          );
         }
       );
 
@@ -904,7 +1137,6 @@ export async function GET(
     margem * 2;
 
   let pagina: PDFPage;
-
   let y = 0;
 
   function novaPagina() {
@@ -926,7 +1158,8 @@ export async function GET(
   ) {
     if (
       y <
-      margem + necessario
+      margem +
+        necessario
     ) {
       novaPagina();
     }
@@ -958,13 +1191,14 @@ export async function GET(
       0;
 
     const espacoDepois =
-      opcoes
-        ?.espacoDepois ??
+      opcoes?.espacoDepois ??
       4;
 
     const linhas =
       quebrarTexto(
-        textoSeguro(texto),
+        textoSeguro(
+          texto
+        ),
         font,
         tamanho,
         larguraUtil -
@@ -981,7 +1215,8 @@ export async function GET(
     );
 
     for (
-      const linha of linhas
+      const linha of
+        linhas
     ) {
       pagina.drawText(
         linha,
@@ -1007,14 +1242,18 @@ export async function GET(
         }
       );
 
-      y -= alturaLinha;
+      y -=
+        alturaLinha;
     }
 
-    y -= espacoDepois;
+    y -=
+      espacoDepois;
   }
 
   function linhaHorizontal() {
-    verificarEspaco(15);
+    verificarEspaco(
+      15
+    );
 
     pagina.drawLine({
       start: {
@@ -1029,7 +1268,8 @@ export async function GET(
         y,
       },
 
-      thickness: 0.7,
+      thickness:
+        0.7,
 
       color: rgb(
         0.75,
@@ -1044,16 +1284,23 @@ export async function GET(
   function tituloSecao(
     titulo: string
   ) {
-    verificarEspaco(35);
+    verificarEspaco(
+      35
+    );
 
     y -= 5;
 
     escrever(
       titulo,
       {
-        tamanho: 14,
-        bold: true,
-        espacoDepois: 7,
+        tamanho:
+          14,
+
+        bold:
+          true,
+
+        espacoDepois:
+          7,
 
         cor: rgb(
           0.05,
@@ -1075,11 +1322,25 @@ export async function GET(
       quantidade: number;
       unidade: string;
       dataHora: Date;
-      lote?: string | null;
-      observacao?: string | null;
-    }
+      lote?:
+        string | null;
+      observacao?:
+        string | null;
+      destinoNome?:
+        string | null;
+      referenciaServico?:
+        string | null;
+      numeroSaida?:
+        number | null;
+    },
+    mostrarFinalidade =
+      false
   ) {
-    verificarEspaco(95);
+    verificarEspaco(
+      mostrarFinalidade
+        ? 120
+        : 95
+    );
 
     escrever(
       item.genero,
@@ -1121,7 +1382,9 @@ export async function GET(
       }
     );
 
-    if (item.lote) {
+    if (
+      item.lote
+    ) {
       escrever(
         `Lote: ${item.lote}`,
         {
@@ -1131,6 +1394,40 @@ export async function GET(
     }
 
     if (
+      mostrarFinalidade
+    ) {
+      escrever(
+        `Finalidade: ${
+          item.destinoNome ||
+          '-'
+        }`,
+        {
+          indent: 10,
+          bold: true,
+        }
+      );
+
+      escrever(
+        `Referência: ${
+          item.referenciaServico ||
+          '-'
+        }`,
+        {
+          indent: 10,
+        }
+      );
+
+      if (
+        item.numeroSaida
+      ) {
+        escrever(
+          `Saída nº ${item.numeroSaida}`,
+          {
+            indent: 10,
+          }
+        );
+      }
+    } else if (
       item.observacao
     ) {
       escrever(
@@ -1197,7 +1494,8 @@ export async function GET(
       new Date()
     )}`,
     {
-      espacoDepois: 10,
+      espacoDepois:
+        10,
     }
   );
 
@@ -1222,9 +1520,12 @@ export async function GET(
       );
     } else {
       for (
-        const item of arranchamentos
+        const item of
+          arranchamentos
       ) {
-        verificarEspaco(110);
+        verificarEspaco(
+          110
+        );
 
         escrever(
           `${formatarData(
@@ -1236,26 +1537,30 @@ export async function GET(
             item.refeicao
           }`,
           {
-            tamanho: 11,
-            bold: true,
+            tamanho:
+              11,
+
+            bold:
+              true,
           }
         );
 
         escrever(
           `Efetivo previsto: ${item.totalPrevisto}`,
           {
-            indent: 10,
+            indent:
+              10,
           }
         );
 
         escrever(
           `Efetivo alimentado: ${
-            item
-              .arranchadosCompareceram ??
+            item.arranchadosCompareceram ??
             0
           }`,
           {
-            indent: 10,
+            indent:
+              10,
           }
         );
 
@@ -1265,30 +1570,33 @@ export async function GET(
             0
           }`,
           {
-            indent: 10,
+            indent:
+              10,
           }
         );
 
         escrever(
           `Militares de fora: ${
-            item
-              .naoArranchadosAtendidos ??
+            item.naoArranchadosAtendidos ??
             0
           }`,
           {
-            indent: 10,
+            indent:
+              10,
           }
         );
 
         escrever(
           `Total atendido: ${
-            item
-              .totalAtendido ??
+            item.totalAtendido ??
             0
           }`,
           {
-            indent: 10,
-            bold: true,
+            indent:
+              10,
+
+            bold:
+              true,
           }
         );
 
@@ -1300,7 +1608,8 @@ export async function GET(
       escrever(
         `Refeições realizadas: ${resumoEfetivo.refeicoes}`,
         {
-          bold: true,
+          bold:
+            true,
         }
       );
 
@@ -1323,23 +1632,30 @@ export async function GET(
       escrever(
         `Total de atendimentos: ${resumoEfetivo.totalAtendido}`,
         {
-          bold: true,
+          bold:
+            true,
         }
       );
 
       escrever(
         'O total de atendimentos representa as refeições servidas no período. A mesma pessoa pode ter participado de mais de uma refeição.',
         {
-          tamanho: 8,
-          espacoDepois: 10,
+          tamanho:
+            8,
+
+          espacoDepois:
+            10,
         }
       );
 
       escrever(
         'Sobras',
         {
-          tamanho: 11,
-          bold: true,
+          tamanho:
+            11,
+
+          bold:
+            true,
         }
       );
 
@@ -1348,8 +1664,11 @@ export async function GET(
           resumoEfetivo.sobraKg
         )} kg`,
         {
-          indent: 10,
-          espacoDepois: 10,
+          indent:
+            10,
+
+          espacoDepois:
+            10,
         }
       );
     }
@@ -1368,8 +1687,11 @@ export async function GET(
     escrever(
       'Refeições identificadas pelas saídas físicas de gêneros no período.',
       {
-        tamanho: 9,
-        espacoDepois: 8,
+        tamanho:
+          9,
+
+        espacoDepois:
+          8,
       }
     );
 
@@ -1382,14 +1704,16 @@ export async function GET(
       );
     } else {
       for (
-        const item of refeicoesRelacionadas
+        const item of
+          refeicoesRelacionadas
       ) {
         escrever(
           `${formatarData(
             item.data
           )} - ${item.nome} (${item.referencia})`,
           {
-            bold: true,
+            bold:
+              true,
           }
         );
       }
@@ -1397,8 +1721,11 @@ export async function GET(
       escrever(
         `Total de refeições relacionadas: ${refeicoesRelacionadas.length}`,
         {
-          bold: true,
-          espacoDepois: 10,
+          bold:
+            true,
+
+          espacoDepois:
+            10,
         }
       );
     }
@@ -1423,7 +1750,8 @@ export async function GET(
       );
     } else {
       for (
-        const item of entradas
+        const item of
+          entradas
       ) {
         escreverMovimento(
           item
@@ -1451,10 +1779,12 @@ export async function GET(
       );
     } else {
       for (
-        const item of saidas
+        const item of
+          saidas
       ) {
         escreverMovimento(
-          item
+          item,
+          true
         );
       }
     }
@@ -1479,7 +1809,8 @@ export async function GET(
       );
     } else {
       for (
-        const item of devolucoes
+        const item of
+          devolucoes
       ) {
         escreverMovimento(
           item
@@ -1499,10 +1830,13 @@ export async function GET(
     );
 
     escrever(
-      'Saldo atual dos gêneros. Quantidades com unidades diferentes não são somadas entre si.',
+      'Saldo atual dos gêneros. Os totais são calculados separadamente por unidade de medida.',
       {
-        tamanho: 9,
-        espacoDepois: 8,
+        tamanho:
+          9,
+
+        espacoDepois:
+          8,
       }
     );
 
@@ -1524,7 +1858,8 @@ export async function GET(
         >();
 
       for (
-        const item of posicaoEstoque
+        const item of
+          posicaoEstoque
       ) {
         if (
           !grupos.has(
@@ -1557,7 +1892,9 @@ export async function GET(
           .get(
             item.categoria
           )!
-          .push(item);
+          .push(
+            item
+          );
       }
 
       const gruposOrdenados =
@@ -1575,15 +1912,21 @@ export async function GET(
         const [
           grupoNome,
           categorias,
-        ] of gruposOrdenados
+        ] of
+          gruposOrdenados
       ) {
-        verificarEspaco(70);
+        verificarEspaco(
+          70
+        );
 
         escrever(
           grupoNome,
           {
-            tamanho: 12,
-            bold: true,
+            tamanho:
+              12,
+
+            bold:
+              true,
 
             cor: rgb(
               0.05,
@@ -1608,22 +1951,35 @@ export async function GET(
           const [
             categoriaNome,
             itens,
-          ] of categoriasOrdenadas
+          ] of
+            categoriasOrdenadas
         ) {
-          verificarEspaco(55);
+          verificarEspaco(
+            55
+          );
 
           escrever(
             categoriaNome,
             {
-              tamanho: 11,
-              bold: true,
-              indent: 10,
+              tamanho:
+                11,
+
+              bold:
+                true,
+
+              indent:
+                10,
             }
           );
 
           const itensOrdenados =
-            [...itens].sort(
-              (a, b) =>
+            [
+              ...itens,
+            ].sort(
+              (
+                a,
+                b
+              ) =>
                 a.nome.localeCompare(
                   b.nome,
                   'pt-BR'
@@ -1631,22 +1987,20 @@ export async function GET(
             );
 
           for (
-            const item of itensOrdenados
+            const item of
+              itensOrdenados
           ) {
             escrever(
               `${item.nome} - ${formatarNumero(
                 item.quantidade
               )} ${item.unidade} - ${item.classe}`,
               {
-                indent: 20,
+                indent:
+                  20,
               }
             );
           }
 
-          /*
-           * SUBTOTAL DA CATEGORIA
-           * SEM MISTURAR UNIDADES
-           */
           const totaisCategoria =
             new Map<
               string,
@@ -1654,7 +2008,8 @@ export async function GET(
             >();
 
           for (
-            const item of itens
+            const item of
+              itens
           ) {
             totaisCategoria.set(
               item.unidade,
@@ -1670,15 +2025,19 @@ export async function GET(
             const [
               unidade,
               total,
-            ] of totaisCategoria
+            ] of
+              totaisCategoria
           ) {
             escrever(
               `Subtotal ${categoriaNome}: ${formatarNumero(
                 total
               )} ${unidade}`,
               {
-                indent: 20,
-                bold: true,
+                indent:
+                  20,
+
+                bold:
+                  true,
               }
             );
           }
@@ -1686,10 +2045,6 @@ export async function GET(
           y -= 4;
         }
 
-        /*
-         * TOTAL DO GRUPO
-         * SEM MISTURAR UNIDADES
-         */
         const totaisGrupo =
           new Map<
             string,
@@ -1697,10 +2052,12 @@ export async function GET(
           >();
 
         for (
-          const itens of categorias.values()
+          const itens of
+            categorias.values()
         ) {
           for (
-            const item of itens
+            const item of
+              itens
           ) {
             totaisGrupo.set(
               item.unidade,
@@ -1717,15 +2074,19 @@ export async function GET(
           const [
             unidade,
             total,
-          ] of totaisGrupo
+          ] of
+            totaisGrupo
         ) {
           escrever(
             `Total ${grupoNome}: ${formatarNumero(
               total
             )} ${unidade}`,
             {
-              bold: true,
-              indent: 10,
+              bold:
+                true,
+
+              indent:
+                10,
             }
           );
         }
@@ -1746,12 +2107,14 @@ export async function GET(
   if (
     estoqueBaixo.length ===
       0 &&
-    validade.length === 0
+    validade.length ===
+      0
   ) {
     escrever(
       'Nenhum alerta de estoque.',
       {
-        bold: true,
+        bold:
+          true,
 
         cor: rgb(
           0.05,
@@ -1768,13 +2131,17 @@ export async function GET(
       escrever(
         'Estoque mínimo',
         {
-          tamanho: 11,
-          bold: true,
+          tamanho:
+            11,
+
+          bold:
+            true,
         }
       );
 
       for (
-        const item of estoqueBaixo
+        const item of
+          estoqueBaixo
       ) {
         escrever(
           `${
@@ -1783,7 +2150,8 @@ export async function GET(
               : 'ESTOQUE BAIXO'
           } - ${item.nome}`,
           {
-            bold: true,
+            bold:
+              true,
 
             cor:
               item.zerado
@@ -1807,7 +2175,8 @@ export async function GET(
             item.estoqueMinimo
           )} ${item.unidade}`,
           {
-            indent: 10,
+            indent:
+              10,
           }
         );
       }
@@ -1822,13 +2191,17 @@ export async function GET(
       escrever(
         'Validade',
         {
-          tamanho: 11,
-          bold: true,
+          tamanho:
+            11,
+
+          bold:
+            true,
         }
       );
 
       for (
-        const item of validade
+        const item of
+          validade
       ) {
         escrever(
           `${
@@ -1837,7 +2210,8 @@ export async function GET(
               : 'VALIDADE PRÓXIMA'
           } - ${item.genero}`,
           {
-            bold: true,
+            bold:
+              true,
 
             cor:
               item.vencido
@@ -1868,7 +2242,8 @@ export async function GET(
             item.quantidade
           )} ${item.unidade}`,
           {
-            indent: 10,
+            indent:
+              10,
           }
         );
       }
@@ -1886,37 +2261,47 @@ export async function GET(
       paginaAtual,
       indice
     ) => {
-      paginaAtual.drawLine({
-        start: {
-          x: margem,
-          y: 28,
-        },
+      paginaAtual.drawLine(
+        {
+          start: {
+            x: margem,
+            y: 28,
+          },
 
-        end: {
-          x:
-            larguraPagina -
-            margem,
-          y: 28,
-        },
+          end: {
+            x:
+              larguraPagina -
+              margem,
+            y: 28,
+          },
 
-        thickness: 0.5,
+          thickness:
+            0.5,
 
-        color: rgb(
-          0.75,
-          0.75,
-          0.75
-        ),
-      });
+          color: rgb(
+            0.75,
+            0.75,
+            0.75
+          ),
+        }
+      );
 
       paginaAtual.drawText(
         textoSeguro(
           'EstoqueAprov - Serviço de Aprovisionamento'
         ),
         {
-          x: margem,
-          y: 15,
-          size: 7,
-          font: fonte,
+          x:
+            margem,
+
+          y:
+            15,
+
+          size:
+            7,
+
+          font:
+            fonte,
 
           color: rgb(
             0.4,
@@ -1947,9 +2332,14 @@ export async function GET(
             margem -
             larguraNumero,
 
-          y: 15,
-          size: 7,
-          font: fonte,
+          y:
+            15,
+
+          size:
+            7,
+
+          font:
+            fonte,
 
           color: rgb(
             0.4,
@@ -1968,7 +2358,9 @@ export async function GET(
     `EstoqueAprov_${inicio}_${fim}.pdf`;
 
   return new Response(
-    Buffer.from(bytes),
+    Buffer.from(
+      bytes
+    ),
     {
       status: 200,
 
