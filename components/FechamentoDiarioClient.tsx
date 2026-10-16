@@ -7,6 +7,7 @@ const nomes: Record<string, string> = {
   ALMOCO: 'Almoço',
   JANTAR: 'Jantar',
   CEIA: 'Ceia',
+  SERVICO_DIA_SEGUINTE: 'Serviço do dia seguinte',
   OUTRO: 'Outro',
 };
 
@@ -17,6 +18,7 @@ type Arranchamento = {
   totalPrevisto: number;
   efetivoPlanejamento: number;
   arranchadosCompareceram: number | null;
+  faltas: number | null;
   naoArranchadosAtendidos: number;
   totalAtendido: number | null;
   sobraKg: number | string | null;
@@ -25,8 +27,9 @@ type Arranchamento = {
 };
 
 type Valores = {
-  compareceram: string;
-  naoArranchados: string;
+  alimentado: string;
+  faltas: string;
+  militaresDeFora: string;
   sobraKg: string;
 };
 
@@ -52,11 +55,6 @@ function dataBR(data: string) {
 }
 
 export default function FechamentoDiarioClient() {
-  /*
-   * O fechamento abre inicialmente no dia anterior.
-   * Isso facilita o lançamento feito no início do dia
-   * seguinte, mas qualquer data poderá ser escolhida.
-   */
   const [data, setData] = useState(dataLocal(-1));
 
   const [rows, setRows] = useState<Arranchamento[]>([]);
@@ -102,12 +100,17 @@ export default function FechamentoDiarioClient() {
 
       for (const item of j as Arranchamento[]) {
         iniciais[item.id] = {
-          compareceram:
+          alimentado:
             item.arranchadosCompareceram !== null
               ? String(item.arranchadosCompareceram)
               : '',
 
-          naoArranchados:
+          faltas:
+            item.faltas !== null
+              ? String(item.faltas)
+              : '',
+
+          militaresDeFora:
             item.fechamentoRealizadoEm
               ? String(item.naoArranchadosAtendidos)
               : '0',
@@ -161,29 +164,37 @@ export default function FechamentoDiarioClient() {
     );
 
   const resumo = useMemo(() => {
-    let compareceram = 0;
-    let naoArranchados = 0;
+    let previsto = 0;
+    let alimentado = 0;
+    let faltas = 0;
+    let militaresDeFora = 0;
     let totalAtendido = 0;
     let sobraKg = 0;
 
     for (const item of rows) {
+      previsto += item.totalPrevisto;
+
       const v = valores[item.id];
 
       if (!v) continue;
 
-      const c = numero(v.compareceram);
-      const n = numero(v.naoArranchados);
+      const a = numero(v.alimentado);
+      const f = numero(v.faltas);
+      const m = numero(v.militaresDeFora);
       const s = numero(v.sobraKg);
 
-      compareceram += c;
-      naoArranchados += n;
-      totalAtendido += c + n;
+      alimentado += a;
+      faltas += f;
+      militaresDeFora += m;
+      totalAtendido += a + m;
       sobraKg += s;
     }
 
     return {
-      compareceram,
-      naoArranchados,
+      previsto,
+      alimentado,
+      faltas,
+      militaresDeFora,
       totalAtendido,
       sobraKg,
     };
@@ -199,27 +210,49 @@ export default function FechamentoDiarioClient() {
 
     for (const item of rows) {
       const v = valores[item.id];
+      const refeicao =
+        nomes[item.refeicao] || item.refeicao;
 
       if (
         !v ||
-        v.compareceram.trim() === ''
+        v.alimentado.trim() === ''
       ) {
         setErro(
-          `Para concluir o fechamento, informe quantos arranchados compareceram no ${nomes[item.refeicao]}.`
+          `Para concluir o lançamento, informe o efetivo alimentado no ${refeicao}.`
         );
         return false;
       }
 
-      if (v.naoArranchados.trim() === '') {
+      if (v.faltas.trim() === '') {
         setErro(
-          `Para concluir o fechamento, informe os não arranchados atendidos no ${nomes[item.refeicao]}. Se não houve, informe 0.`
+          `Para concluir o lançamento, informe as faltas no ${refeicao}. Se não houve faltas, informe 0.`
+        );
+        return false;
+      }
+
+      if (v.militaresDeFora.trim() === '') {
+        setErro(
+          `Para concluir o lançamento, informe os militares de fora atendidos no ${refeicao}. Se não houve, informe 0.`
         );
         return false;
       }
 
       if (v.sobraKg.trim() === '') {
         setErro(
-          `Para concluir o fechamento, informe a sobra pesada do ${nomes[item.refeicao]} em kg. Se não houve sobra, informe 0.`
+          `Para concluir o lançamento, informe a sobra pesada do ${refeicao} em kg. Se não houve sobra, informe 0.`
+        );
+        return false;
+      }
+
+      const alimentado = numero(v.alimentado);
+      const faltas = numero(v.faltas);
+
+      if (
+        alimentado + faltas >
+        item.totalPrevisto
+      ) {
+        setErro(
+          `No ${refeicao}, a soma do efetivo alimentado (${alimentado}) com as faltas (${faltas}) é maior que o efetivo previsto (${item.totalPrevisto}). Confira os valores informados.`
         );
         return false;
       }
@@ -236,15 +269,10 @@ export default function FechamentoDiarioClient() {
       return;
     }
 
-    /*
-     * Se todos já estavam fechados, esta operação será
-     * uma correção. A API manterá a auditoria dos valores
-     * anteriores.
-     */
     if (
       todosFechados &&
       !window.confirm(
-        'Este dia já possui fechamento realizado. Deseja registrar uma correção dos dados? A alteração ficará registrada na auditoria.'
+        'Este dia já possui lançamento realizado. Deseja registrar uma correção dos dados? A alteração ficará registrada na auditoria.'
       )
     ) {
       return;
@@ -260,10 +288,13 @@ export default function FechamentoDiarioClient() {
           id: item.id,
 
           arranchadosCompareceram:
-            numero(v.compareceram),
+            numero(v.alimentado),
+
+          faltas:
+            numero(v.faltas),
 
           naoArranchadosAtendidos:
-            numero(v.naoArranchados),
+            numero(v.militaresDeFora),
 
           sobraKg:
             numero(v.sobraKg),
@@ -291,39 +322,27 @@ export default function FechamentoDiarioClient() {
       if (!r.ok) {
         setErro(
           j.error ||
-            'Não foi possível concluir o fechamento diário.'
+            'Não foi possível registrar o efetivo diário.'
         );
         return;
       }
 
-      setMsg(
-        `Fechamento do serviço de ${dataBR(
-          data
-        )} registrado com sucesso. Total atendido: ${
-          j.resumo.totalAtendido
-        }. Sobra pesada: ${Number(
-          j.resumo.sobraKg
-        ).toLocaleString('pt-BR', {
-          maximumFractionDigits: 3,
-        })} kg.`
-      );
-
       await carregar();
 
-      /*
-       * carregar() limpa a mensagem.
-       * Recolocamos a confirmação após atualizar os dados.
-       */
       setMsg(
-        `Fechamento do serviço de ${dataBR(
+        `Dados do serviço de ${dataBR(
           data
-        )} registrado com sucesso. Total atendido: ${
+        )} registrados com sucesso. Foram ${
+          j.quantidadeRefeicoes
+        } refeição${
+          j.quantidadeRefeicoes === 1 ? '' : 'ões'
+        } registrada${
+          j.quantidadeRefeicoes === 1 ? '' : 's'
+        }, com ${
           j.resumo.totalAtendido
-        }. Sobra pesada: ${Number(
-          j.resumo.sobraKg
-        ).toLocaleString('pt-BR', {
-          maximumFractionDigits: 3,
-        })} kg.`
+        } atendimento${
+          j.resumo.totalAtendido === 1 ? '' : 's'
+        } no total.`
       );
     } catch {
       setErro(
@@ -337,13 +356,13 @@ export default function FechamentoDiarioClient() {
   return (
     <>
       <div className="card">
-        <h2>Fechamento Diário</h2>
+        <h2>Efetivo alimentado</h2>
 
         <p className="muted">
-          Registre os dados reais após a conclusão do serviço
-          de alimentação do dia. O lançamento pode ser feito
-          posteriormente, mantendo sempre a data real do
-          serviço para fins de consulta e relatórios.
+          Registre o efetivo real de cada refeição do dia.
+          O efetivo previsto vem do planejamento. Informe
+          manualmente o efetivo alimentado, as faltas e os
+          militares de fora atendidos.
         </p>
 
         <label>
@@ -387,35 +406,37 @@ export default function FechamentoDiarioClient() {
           </p>
 
           <p className="muted">
-            Caso os dados desse dia precisem constar nos
-            relatórios, faça primeiro o lançamento
-            correspondente ao serviço dessa data.
+            Faça primeiro o planejamento do efetivo para
+            essa data.
           </p>
         </div>
       ) : (
         <>
           <div className="card">
-            <h2>
-              Refeições do dia
-            </h2>
+            <h2>Efetivo por refeição</h2>
 
             {rows.map((item) => {
               const v = valores[item.id] || {
-                compareceram: '',
-                naoArranchados: '0',
+                alimentado: '',
+                faltas: '',
+                militaresDeFora: '0',
                 sobraKg: '',
               };
 
               const total =
-                numero(v.compareceram) +
-                numero(v.naoArranchados);
+                numero(v.alimentado) +
+                numero(v.militaresDeFora);
+
+              const refeicao =
+                nomes[item.refeicao] ||
+                item.refeicao;
 
               return (
                 <div
                   key={item.id}
                   style={{
-                    marginBottom: 22,
-                    paddingBottom: 22,
+                    marginBottom: 24,
+                    paddingBottom: 24,
                     borderBottom:
                       '1px solid rgba(255,255,255,.12)',
                   }}
@@ -433,12 +454,14 @@ export default function FechamentoDiarioClient() {
                           marginBottom: 5,
                         }}
                       >
-                        {nomes[item.refeicao]}
+                        {refeicao}
                       </h3>
 
                       <div className="muted">
-                        Arranchados previstos:{' '}
-                        {item.totalPrevisto}
+                        Efetivo previsto:{' '}
+                        <strong>
+                          {item.totalPrevisto}
+                        </strong>
                       </div>
 
                       <div className="muted">
@@ -450,11 +473,11 @@ export default function FechamentoDiarioClient() {
                     <div>
                       {item.fechamentoRealizadoEm ? (
                         <strong>
-                          ✓ Fechado
+                          ✓ Registrado
                         </strong>
                       ) : (
                         <strong>
-                          Fechamento pendente
+                          Pendente
                         </strong>
                       )}
                     </div>
@@ -486,16 +509,16 @@ export default function FechamentoDiarioClient() {
                     style={{ marginTop: 15 }}
                   >
                     <label>
-                      Arranchados que compareceram
+                      Efetivo alimentado
                       <input
                         type="number"
                         min="0"
                         step="1"
-                        value={v.compareceram}
+                        value={v.alimentado}
                         onChange={(e) =>
                           alterar(
                             item.id,
-                            'compareceram',
+                            'alimentado',
                             e.target.value
                           )
                         }
@@ -503,22 +526,61 @@ export default function FechamentoDiarioClient() {
                     </label>
 
                     <label>
-                      Não arranchados atendidos
+                      Faltas
                       <input
                         type="number"
                         min="0"
                         step="1"
-                        value={v.naoArranchados}
+                        value={v.faltas}
                         onChange={(e) =>
                           alterar(
                             item.id,
-                            'naoArranchados',
+                            'faltas',
                             e.target.value
                           )
                         }
                       />
                     </label>
 
+                    <label>
+                      Militares de fora
+                      <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        value={v.militaresDeFora}
+                        onChange={(e) =>
+                          alterar(
+                            item.id,
+                            'militaresDeFora',
+                            e.target.value
+                          )
+                        }
+                      />
+                    </label>
+                  </div>
+
+                  <div
+                    className="row"
+                    style={{
+                      marginTop: 12,
+                    }}
+                  >
+                    <span>
+                      Total atendido nesta refeição
+                    </span>
+
+                    <strong>{total}</strong>
+                  </div>
+
+                  <div
+                    style={{
+                      marginTop: 18,
+                      paddingTop: 16,
+                      borderTop:
+                        '1px solid rgba(255,255,255,.08)',
+                    }}
+                  >
                     <label>
                       Sobra pesada (kg)
                       <input
@@ -535,14 +597,17 @@ export default function FechamentoDiarioClient() {
                         }
                       />
                     </label>
-                  </div>
 
-                  <div className="row">
-                    <span>
-                      Total efetivamente atendido
-                    </span>
-
-                    <strong>{total}</strong>
+                    <p
+                      className="muted"
+                      style={{
+                        marginBottom: 0,
+                      }}
+                    >
+                      A sobra é registrada
+                      separadamente do quadro de
+                      efetivo.
+                    </p>
                   </div>
                 </div>
               );
@@ -550,31 +615,71 @@ export default function FechamentoDiarioClient() {
           </div>
 
           <div className="card">
-            <h2>Resumo do fechamento</h2>
+            <h2>Resumo do dia</h2>
 
             <div className="row">
               <span>
-                Arranchados que compareceram
+                Refeições realizadas
               </span>
 
               <strong>
-                {resumo.compareceram}
+                {rows.length}
               </strong>
             </div>
 
             <div className="row">
               <span>
-                Não arranchados atendidos
+                Efetivo previsto
               </span>
 
               <strong>
-                {resumo.naoArranchados}
+                {resumo.previsto}
               </strong>
             </div>
 
             <div className="row">
               <span>
-                Total efetivamente atendido
+                Efetivo alimentado
+              </span>
+
+              <strong>
+                {resumo.alimentado}
+              </strong>
+            </div>
+
+            <div className="row">
+              <span>
+                Faltas
+              </span>
+
+              <strong>
+                {resumo.faltas}
+              </strong>
+            </div>
+
+            <div className="row">
+              <span>
+                Militares de fora
+              </span>
+
+              <strong>
+                {resumo.militaresDeFora}
+              </strong>
+            </div>
+
+            <div
+              className="row"
+              style={{
+                marginTop: 10,
+                paddingTop: 12,
+                borderTop:
+                  '1px solid rgba(255,255,255,.12)',
+              }}
+            >
+              <span>
+                <strong>
+                  Total de atendimentos no dia
+                </strong>
               </span>
 
               <strong>
@@ -582,20 +687,37 @@ export default function FechamentoDiarioClient() {
               </strong>
             </div>
 
-            <div className="row">
-              <span>
-                Sobra pesada total
-              </span>
+            <p className="muted">
+              O total representa refeições/atendimentos
+              servidos no dia. A mesma pessoa pode ter
+              participado de mais de uma refeição.
+            </p>
 
-              <strong>
-                {resumo.sobraKg.toLocaleString(
-                  'pt-BR',
-                  {
-                    maximumFractionDigits: 3,
-                  }
-                )}{' '}
-                kg
-              </strong>
+            <div
+              style={{
+                marginTop: 18,
+                paddingTop: 16,
+                borderTop:
+                  '1px solid rgba(255,255,255,.12)',
+              }}
+            >
+              <h3>Sobras</h3>
+
+              <div className="row">
+                <span>
+                  Sobra pesada total do dia
+                </span>
+
+                <strong>
+                  {resumo.sobraKg.toLocaleString(
+                    'pt-BR',
+                    {
+                      maximumFractionDigits: 3,
+                    }
+                  )}{' '}
+                  kg
+                </strong>
+              </div>
             </div>
 
             {msg && (
@@ -619,8 +741,8 @@ export default function FechamentoDiarioClient() {
               {salvando
                 ? 'Salvando...'
                 : todosFechados
-                  ? 'Corrigir fechamento do dia'
-                  : 'Concluir fechamento do dia'}
+                  ? 'Corrigir dados do dia'
+                  : 'Registrar efetivo do dia'}
             </button>
           </div>
         </>
