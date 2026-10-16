@@ -2,8 +2,10 @@ import {
   ClasseOperacao,
   DestinoSaida,
 } from '@prisma/client';
+
 import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/guard';
+
 import {
   PDFDocument,
   StandardFonts,
@@ -22,69 +24,91 @@ const nomesRefeicao: Record<string, string> = {
   ALMOCO: 'Almoço',
   JANTAR: 'Jantar',
   CEIA: 'Ceia',
-  SERVICO_DIA_SEGUINTE: 'Serviço do dia seguinte',
+  SERVICO_DIA_SEGUINTE:
+    'Serviço do dia seguinte',
   OUTRO: 'Outro',
 };
 
 function inicioDiaLocal(data: string) {
-  return new Date(`${data.slice(0, 10)}T04:00:00.000Z`);
+  return new Date(
+    `${data.slice(0, 10)}T04:00:00.000Z`
+  );
 }
 
 function fimDiaLocal(data: string) {
   const inicio = inicioDiaLocal(data);
 
   return new Date(
-    inicio.getTime() + 24 * 60 * 60 * 1000 - 1
+    inicio.getTime() +
+      24 * 60 * 60 * 1000 -
+      1
   );
 }
 
 function hojeLocal() {
-  const partes = new Intl.DateTimeFormat('en-CA', {
-    timeZone: TIME_ZONE,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).formatToParts(new Date());
+  const partes =
+    new Intl.DateTimeFormat('en-CA', {
+      timeZone: TIME_ZONE,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).formatToParts(new Date());
 
   const ano =
-    partes.find((p) => p.type === 'year')?.value || '';
+    partes.find(
+      (p) => p.type === 'year'
+    )?.value || '';
 
   const mes =
-    partes.find((p) => p.type === 'month')?.value || '';
+    partes.find(
+      (p) => p.type === 'month'
+    )?.value || '';
 
   const dia =
-    partes.find((p) => p.type === 'day')?.value || '';
+    partes.find(
+      (p) => p.type === 'day'
+    )?.value || '';
 
   return `${ano}-${mes}-${dia}`;
 }
 
 function dataLocalISO(data: Date) {
-  const partes = new Intl.DateTimeFormat('en-CA', {
-    timeZone: TIME_ZONE,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).formatToParts(data);
+  const partes =
+    new Intl.DateTimeFormat('en-CA', {
+      timeZone: TIME_ZONE,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).formatToParts(data);
 
   const ano =
-    partes.find((p) => p.type === 'year')?.value || '';
+    partes.find(
+      (p) => p.type === 'year'
+    )?.value || '';
 
   const mes =
-    partes.find((p) => p.type === 'month')?.value || '';
+    partes.find(
+      (p) => p.type === 'month'
+    )?.value || '';
 
   const dia =
-    partes.find((p) => p.type === 'day')?.value || '';
+    partes.find(
+      (p) => p.type === 'day'
+    )?.value || '';
 
   return `${ano}-${mes}-${dia}`;
 }
 
-function formatarData(data: Date | string) {
+function formatarData(
+  data: Date | string
+) {
   const valor =
     typeof data === 'string'
       ? data.slice(0, 10)
       : dataLocalISO(data);
 
-  const [ano, mes, dia] = valor.split('-');
+  const [ano, mes, dia] =
+    valor.split('-');
 
   if (!ano || !mes || !dia) {
     return valor;
@@ -93,30 +117,47 @@ function formatarData(data: Date | string) {
   return `${dia}/${mes}/${ano}`;
 }
 
-function formatarDataHora(data: Date | string) {
-  return new Intl.DateTimeFormat('pt-BR', {
-    timeZone: TIME_ZONE,
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).format(new Date(data));
+function formatarDataHora(
+  data: Date | string
+) {
+  return new Intl.DateTimeFormat(
+    'pt-BR',
+    {
+      timeZone: TIME_ZONE,
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    }
+  ).format(new Date(data));
 }
 
-function formatarNumero(valor: unknown) {
-  return Number(valor ?? 0).toLocaleString('pt-BR', {
-    maximumFractionDigits: 3,
-  });
+function formatarNumero(
+  valor: unknown
+) {
+  return Number(
+    valor ?? 0
+  ).toLocaleString(
+    'pt-BR',
+    {
+      maximumFractionDigits: 3,
+    }
+  );
 }
 
-function textoSeguro(valor: unknown) {
+function textoSeguro(
+  valor: unknown
+) {
   return String(valor ?? '')
     .replace(/[–—]/g, '-')
     .replace(/[“”]/g, '"')
     .replace(/[‘’]/g, "'")
-    .replace(/[^\x20-\x7E\u00A0-\u00FF]/g, '');
+    .replace(
+      /[^\x20-\x7E\u00A0-\u00FF]/g,
+      ''
+    );
 }
 
 function quebrarTexto(
@@ -125,20 +166,32 @@ function quebrarTexto(
   tamanho: number,
   larguraMaxima: number
 ) {
-  const palavras = textoSeguro(texto).split(/\s+/);
+  const palavras =
+    textoSeguro(texto).split(
+      /\s+/
+    );
 
   const linhas: string[] = [];
+
   let linha = '';
 
   for (const palavra of palavras) {
-    const teste = linha ? `${linha} ${palavra}` : palavra;
+    const teste =
+      linha
+        ? `${linha} ${palavra}`
+        : palavra;
 
-    const largura = fonte.widthOfTextAtSize(
-      teste,
-      tamanho
-    );
+    const largura =
+      fonte.widthOfTextAtSize(
+        teste,
+        tamanho
+      );
 
-    if (largura <= larguraMaxima || !linha) {
+    if (
+      largura <=
+        larguraMaxima ||
+      !linha
+    ) {
       linha = teste;
     } else {
       linhas.push(linha);
@@ -150,11 +203,16 @@ function quebrarTexto(
     linhas.push(linha);
   }
 
-  return linhas.length ? linhas : [''];
+  return linhas.length
+    ? linhas
+    : [''];
 }
 
-function referenciaDestino(destino: DestinoSaida) {
-  return destino === DestinoSaida.SERVICO_DIA_SEGUINTE
+function referenciaDestino(
+  destino: DestinoSaida
+) {
+  return destino ===
+    DestinoSaida.SERVICO_DIA_SEGUINTE
     ? 'dia seguinte'
     : 'mesmo dia';
 }
@@ -163,30 +221,46 @@ function opcaoAtiva(
   parametros: URLSearchParams,
   nome: string
 ) {
-  const valor = parametros.get(nome);
+  const valor =
+    parametros.get(nome);
 
   if (valor === null) {
     return true;
   }
 
-  return valor === '1' || valor === 'true';
+  return (
+    valor === '1' ||
+    valor === 'true'
+  );
 }
 
-export async function GET(req: Request) {
-  const guard = await requireAdmin();
+export async function GET(
+  req: Request
+) {
+  const guard =
+    await requireAdmin();
 
   if (guard.error) {
     return guard.error;
   }
 
-  const parametros = new URL(req.url).searchParams;
+  const parametros =
+    new URL(
+      req.url
+    ).searchParams;
 
   const hoje = hojeLocal();
 
-  const inicio = parametros.get('inicio') || hoje;
-  const fim = parametros.get('fim') || inicio;
+  const inicio =
+    parametros.get('inicio') ||
+    hoje;
 
-  const classeParametro = parametros.get('classe');
+  const fim =
+    parametros.get('fim') ||
+    inicio;
+
+  const classeParametro =
+    parametros.get('classe');
 
   if (inicio > fim) {
     return Response.json(
@@ -202,11 +276,18 @@ export async function GET(req: Request) {
 
   if (
     classeParametro &&
-    !['TODOS', 'QS', 'QR'].includes(classeParametro)
+    ![
+      'TODOS',
+      'QS',
+      'QR',
+    ].includes(
+      classeParametro
+    )
   ) {
     return Response.json(
       {
-        error: 'Classe inválida para o relatório.',
+        error:
+          'Classe inválida para o relatório.',
       },
       {
         status: 400,
@@ -214,43 +295,55 @@ export async function GET(req: Request) {
     );
   }
 
-  const classe: ClasseOperacao | null =
-    classeParametro === 'QS' || classeParametro === 'QR'
+  const classe:
+    | ClasseOperacao
+    | null =
+    classeParametro === 'QS' ||
+    classeParametro === 'QR'
       ? classeParametro
       : null;
 
-  const incluirEfetivo = opcaoAtiva(
-    parametros,
-    'efetivo'
-  );
+  const incluirEfetivo =
+    opcaoAtiva(
+      parametros,
+      'efetivo'
+    );
 
-  const incluirRefeicoes = opcaoAtiva(
-    parametros,
-    'refeicoes'
-  );
+  const incluirRefeicoes =
+    opcaoAtiva(
+      parametros,
+      'refeicoes'
+    );
 
-  const incluirEntradas = opcaoAtiva(
-    parametros,
-    'entradas'
-  );
+  const incluirEntradas =
+    opcaoAtiva(
+      parametros,
+      'entradas'
+    );
 
-  const incluirSaidas = opcaoAtiva(
-    parametros,
-    'saidas'
-  );
+  const incluirSaidas =
+    opcaoAtiva(
+      parametros,
+      'saidas'
+    );
 
-  const incluirDevolucoes = opcaoAtiva(
-    parametros,
-    'devolucoes'
-  );
+  const incluirDevolucoes =
+    opcaoAtiva(
+      parametros,
+      'devolucoes'
+    );
 
-  const incluirEstoque = opcaoAtiva(
-    parametros,
-    'estoque'
-  );
+  const incluirEstoque =
+    opcaoAtiva(
+      parametros,
+      'estoque'
+    );
 
-  const inicioPeriodo = inicioDiaLocal(inicio);
-  const fimPeriodo = fimDiaLocal(fim);
+  const inicioPeriodo =
+    inicioDiaLocal(inicio);
+
+  const fimPeriodo =
+    fimDiaLocal(fim);
 
   const [
     arranchamentos,
@@ -284,13 +377,16 @@ export async function GET(req: Request) {
           lte: fimPeriodo,
         },
 
-        ...(classe ? { classe } : {}),
+        ...(classe
+          ? { classe }
+          : {}),
       },
 
       include: {
         genero: {
           include: {
             unidade: true,
+
             categoria: {
               include: {
                 grupo: true,
@@ -307,15 +403,22 @@ export async function GET(req: Request) {
       },
     }),
 
-    prisma.estoque.findMany({
+    prisma.estoqueLocal.findMany({
       where: {
-        ...(classe ? { classe } : {}),
+        genero: {
+          situacao: 'ATIVO',
+
+          ...(classe
+            ? { classe }
+            : {}),
+        },
       },
 
       include: {
         genero: {
           include: {
             unidade: true,
+
             categoria: {
               include: {
                 grupo: true,
@@ -324,15 +427,18 @@ export async function GET(req: Request) {
           },
         },
 
+        local: true,
         lote: true,
       },
     }),
 
     prisma.genero.findMany({
       where: {
-        ativo: true,
+        situacao: 'ATIVO',
 
-        ...(classe ? { classe } : {}),
+        ...(classe
+          ? { classe }
+          : {}),
       },
 
       include: {
@@ -357,15 +463,19 @@ export async function GET(req: Request) {
           lte: fimPeriodo,
         },
 
-        canceladoEm: null,
+        canceladaEm: null,
 
-        ...(classe ? { classe } : {}),
+        ...(classe
+          ? { classe }
+          : {}),
       },
 
       select: {
         id: true,
-        criadoEm: true,
+        numero: true,
         destino: true,
+        criadoEm: true,
+        observacao: true,
       },
 
       orderBy: {
@@ -375,264 +485,449 @@ export async function GET(req: Request) {
   ]);
 
   /*
-   * POSIÇÃO ATUAL DO ESTOQUE
-   *
-   * Todos os gêneros ativos aparecem, inclusive os que
-   * possuem saldo zero.
+   * POSIÇÃO DO ESTOQUE
    */
-  const posicaoEstoque = generosAtivos.map((genero) => {
-    const registros = estoque.filter(
-      (item) => item.generoId === genero.id
+  const saldoPorGenero =
+    new Map<string, number>();
+
+  for (const item of estoque) {
+    saldoPorGenero.set(
+      item.generoId,
+      (saldoPorGenero.get(
+        item.generoId
+      ) || 0) +
+        Number(
+          item.quantidade
+        )
     );
+  }
 
-    const quantidade = registros.reduce(
-      (total, item) =>
-        total + Number(item.quantidadeAtual),
-      0
+  const posicaoEstoque =
+    generosAtivos.map(
+      (genero) => ({
+        generoId:
+          genero.id,
+
+        nome:
+          genero.nome,
+
+        classe:
+          genero.classe,
+
+        unidade:
+          genero.unidade.sigla,
+
+        categoria:
+          genero.categoria?.nome ||
+          'Sem categoria',
+
+        grupo:
+          genero.categoria?.grupo
+            ?.nome ||
+          'Sem grupo',
+
+        estoqueMinimo:
+          genero.estoqueMinimo !=
+          null
+            ? Number(
+                genero.estoqueMinimo
+              )
+            : null,
+
+        quantidade:
+          saldoPorGenero.get(
+            genero.id
+          ) || 0,
+      })
     );
-
-    return {
-      generoId: genero.id,
-      nome: genero.nome,
-      classe: genero.classe,
-      unidade: genero.unidade.sigla,
-      grupo:
-        genero.categoria?.grupo?.nome || 'Sem grupo',
-      categoria:
-        genero.categoria?.nome || 'Sem categoria',
-      quantidade,
-      estoqueMinimo: Number(
-        genero.estoqueMinimo ?? 0
-      ),
-    };
-  });
-
-  /*
-   * ALERTAS DE ESTOQUE
-   */
-  const estoqueBaixo = posicaoEstoque
-    .filter(
-      (item) =>
-        item.estoqueMinimo > 0 &&
-        item.quantidade < item.estoqueMinimo
-    )
-    .map((item) => ({
-      ...item,
-      zerado: item.quantidade <= 0,
-    }));
-
-  const agora = new Date();
-
-  const limiteValidade = new Date(
-    agora.getTime() + 30 * 24 * 60 * 60 * 1000
-  );
-
-  const validade = estoque
-    .filter(
-      (item) =>
-        Number(item.quantidadeAtual) > 0 &&
-        item.lote?.validade &&
-        item.lote.validade <= limiteValidade
-    )
-    .map((item) => ({
-      genero: item.genero.nome,
-      lote: item.lote?.numero || '',
-      validade: item.lote?.validade || null,
-      quantidade: Number(item.quantidadeAtual),
-      unidade: item.genero.unidade.sigla,
-      vencido: Boolean(
-        item.lote?.validade &&
-          item.lote.validade < agora
-      ),
-    }))
-    .sort((a, b) => {
-      const dataA = a.validade
-        ? new Date(a.validade).getTime()
-        : 0;
-
-      const dataB = b.validade
-        ? new Date(b.validade).getTime()
-        : 0;
-
-      return dataA - dataB;
-    });
 
   /*
    * MOVIMENTAÇÕES
    */
-  const movimentosDetalhados = movimentacoes.map(
-    (item) => ({
-      id: item.id,
-      tipo: item.tipo,
-      genero: item.genero.nome,
-      grupo:
-        item.genero.categoria?.grupo?.nome ||
-        'Sem grupo',
-      categoria:
-        item.genero.categoria?.nome ||
-        'Sem categoria',
-      classe: item.classe,
-      quantidade: Number(item.quantidade),
-      unidade: item.genero.unidade.sigla,
-      dataHora: item.criadoEm,
-      lote: item.lote?.numero || null,
-      observacao: item.observacao || null,
-    })
-  );
+  const movimentosDetalhados =
+    movimentacoes.map(
+      (item) => ({
+        id:
+          item.id,
 
-  const entradas = movimentosDetalhados.filter(
-    (item) =>
-      item.tipo === 'SALDO_INICIAL' ||
-      item.tipo === 'RECEBIMENTO'
-  );
+        tipo:
+          item.tipo,
 
-  const saidas = movimentosDetalhados.filter(
-    (item) => item.tipo === 'SAIDA'
-  );
+        genero:
+          item.genero.nome,
 
-  const devolucoes = movimentosDetalhados.filter(
-    (item) => item.tipo === 'DEVOLUCAO'
-  );
+        grupo:
+          item.genero.categoria
+            ?.grupo?.nome ||
+          'Sem grupo',
+
+        categoria:
+          item.genero.categoria
+            ?.nome ||
+          'Sem categoria',
+
+        classe:
+          item.classe,
+
+        quantidade:
+          Number(
+            item.quantidade
+          ),
+
+        unidade:
+          item.genero.unidade
+            .sigla,
+
+        dataHora:
+          item.criadoEm,
+
+        lote:
+          item.lote?.numero ||
+          null,
+
+        observacao:
+          item.observacao ||
+          null,
+      })
+    );
+
+  const entradas =
+    movimentosDetalhados.filter(
+      (item) =>
+        item.tipo ===
+        'RECEBIMENTO'
+    );
+
+  const saidas =
+    movimentosDetalhados.filter(
+      (item) =>
+        item.tipo ===
+        'SAIDA'
+    );
+
+  const devolucoes =
+    movimentosDetalhados.filter(
+      (item) =>
+        item.tipo ===
+        'DEVOLUCAO'
+    );
 
   /*
-   * REFEIÇÕES RELACIONADAS ÀS SAÍDAS FÍSICAS
-   *
-   * Várias saídas para a mesma refeição no mesmo dia
-   * representam uma única refeição relacionada.
+   * REFEIÇÕES RELACIONADAS
    */
-  const mapaRefeicoes = new Map<
-    string,
-    {
-      data: string;
-      destino: DestinoSaida;
-      nome: string;
-      referencia: string;
-    }
-  >();
+  const mapaRefeicoes =
+    new Map<
+      string,
+      {
+        data: string;
+        destino: DestinoSaida;
+        nome: string;
+        referencia: string;
+      }
+    >();
 
-  for (const saida of saidasFisicas) {
-    const data = dataLocalISO(saida.criadoEm);
+  for (
+    const saida of saidasFisicas
+  ) {
+    const data =
+      dataLocalISO(
+        saida.criadoEm
+      );
 
-    const chave = `${data}-${saida.destino}`;
+    const chave =
+      `${data}-${saida.destino}`;
 
-    if (!mapaRefeicoes.has(chave)) {
-      mapaRefeicoes.set(chave, {
-        data,
-        destino: saida.destino,
-        nome:
-          nomesRefeicao[saida.destino] ||
-          saida.destino,
-        referencia: referenciaDestino(
-          saida.destino
-        ),
-      });
+    if (
+      !mapaRefeicoes.has(
+        chave
+      )
+    ) {
+      mapaRefeicoes.set(
+        chave,
+        {
+          data,
+
+          destino:
+            saida.destino,
+
+          nome:
+            nomesRefeicao[
+              saida.destino
+            ] ||
+            saida.destino,
+
+          referencia:
+            referenciaDestino(
+              saida.destino
+            ),
+        }
+      );
     }
   }
 
-  const refeicoesRelacionadas = Array.from(
-    mapaRefeicoes.values()
-  ).sort((a, b) => {
-    const data = a.data.localeCompare(b.data);
+  const refeicoesRelacionadas =
+    Array.from(
+      mapaRefeicoes.values()
+    ).sort(
+      (a, b) => {
+        const comparacaoData =
+          a.data.localeCompare(
+            b.data
+          );
 
-    if (data !== 0) {
-      return data;
-    }
+        if (
+          comparacaoData !==
+          0
+        ) {
+          return comparacaoData;
+        }
 
-    return a.nome.localeCompare(b.nome, 'pt-BR');
-  });
+        return a.nome.localeCompare(
+          b.nome,
+          'pt-BR'
+        );
+      }
+    );
 
   /*
-   * EFETIVO
+   * RESUMO DO EFETIVO
    */
   const resumoEfetivo = {
-    refeicoes: arranchamentos.length,
+    refeicoes:
+      arranchamentos.length,
 
-    efetivoPrevisto: arranchamentos.reduce(
-      (total, item) => total + item.totalPrevisto,
-      0
-    ),
+    efetivoPrevisto:
+      arranchamentos.reduce(
+        (total, item) =>
+          total +
+          item.totalPrevisto,
+        0
+      ),
 
-    efetivoAlimentado: arranchamentos.reduce(
-      (total, item) =>
-        total +
-        Number(item.arranchadosCompareceram ?? 0),
-      0
-    ),
+    efetivoAlimentado:
+      arranchamentos.reduce(
+        (total, item) =>
+          total +
+          Number(
+            item
+              .arranchadosCompareceram ??
+              0
+          ),
+        0
+      ),
 
-    faltas: arranchamentos.reduce(
-      (total, item) =>
-        total + Number(item.faltas ?? 0),
-      0
-    ),
+    faltas:
+      arranchamentos.reduce(
+        (total, item) =>
+          total +
+          Number(
+            item.faltas ?? 0
+          ),
+        0
+      ),
 
-    militaresDeFora: arranchamentos.reduce(
-      (total, item) =>
-        total +
-        Number(item.naoArranchadosAtendidos ?? 0),
-      0
-    ),
+    militaresDeFora:
+      arranchamentos.reduce(
+        (total, item) =>
+          total +
+          Number(
+            item
+              .naoArranchadosAtendidos ??
+              0
+          ),
+        0
+      ),
 
-    totalAtendido: arranchamentos.reduce(
-      (total, item) =>
-        total + Number(item.totalAtendido ?? 0),
-      0
-    ),
+    totalAtendido:
+      arranchamentos.reduce(
+        (total, item) =>
+          total +
+          Number(
+            item.totalAtendido ??
+              0
+          ),
+        0
+      ),
 
-    sobraKg: arranchamentos.reduce(
-      (total, item) =>
-        total + Number(item.sobraKg ?? 0),
-      0
-    ),
+    sobraKg:
+      arranchamentos.reduce(
+        (total, item) =>
+          total +
+          Number(
+            item.sobraKg ?? 0
+          ),
+        0
+      ),
   };
 
   /*
-   * CRIAÇÃO DO PDF
+   * ALERTAS DE ESTOQUE
    */
-  const pdf = await PDFDocument.create();
+  const estoqueBaixo =
+    posicaoEstoque
+      .filter(
+        (item) =>
+          item.estoqueMinimo !=
+            null &&
+          item.quantidade <
+            item.estoqueMinimo
+      )
+      .map(
+        (item) => ({
+          ...item,
+
+          zerado:
+            item.quantidade <=
+            0,
+        })
+      );
+
+  const agora =
+    new Date();
+
+  const limiteValidade =
+    new Date(
+      agora.getTime() +
+        30 *
+          24 *
+          60 *
+          60 *
+          1000
+    );
+
+  const validade =
+    estoque
+      .filter(
+        (item) =>
+          Number(
+            item.quantidade
+          ) > 0 &&
+          item.lote?.validade &&
+          item.lote.validade <=
+            limiteValidade
+      )
+      .map(
+        (item) => ({
+          genero:
+            item.genero.nome,
+
+          lote:
+            item.lote?.numero ||
+            '',
+
+          validade:
+            item.lote
+              ?.validade ||
+            null,
+
+          quantidade:
+            Number(
+              item.quantidade
+            ),
+
+          unidade:
+            item.genero.unidade
+              .sigla,
+
+          vencido:
+            Boolean(
+              item.lote
+                ?.validade &&
+                item.lote
+                  .validade <
+                  agora
+            ),
+        })
+      )
+      .sort(
+        (a, b) => {
+          const dataA =
+            a.validade
+              ? new Date(
+                  a.validade
+                ).getTime()
+              : 0;
+
+          const dataB =
+            b.validade
+              ? new Date(
+                  b.validade
+                ).getTime()
+              : 0;
+
+          return dataA - dataB;
+        }
+      );
+
+  /*
+   * PDF
+   */
+  const pdf =
+    await PDFDocument.create();
 
   pdf.setTitle(
     'EstoqueAprov - Relatório Operacional'
   );
 
-  pdf.setAuthor('EstoqueAprov');
+  pdf.setAuthor(
+    'EstoqueAprov'
+  );
 
   pdf.setSubject(
     'Relatório operacional do Serviço de Aprovisionamento'
   );
 
-  pdf.setCreator('EstoqueAprov');
-
-  const fonte = await pdf.embedFont(
-    StandardFonts.Helvetica
+  pdf.setCreator(
+    'EstoqueAprov'
   );
 
-  const negrito = await pdf.embedFont(
-    StandardFonts.HelveticaBold
-  );
+  const fonte =
+    await pdf.embedFont(
+      StandardFonts.Helvetica
+    );
 
-  const larguraPagina = 595.28;
-  const alturaPagina = 841.89;
+  const negrito =
+    await pdf.embedFont(
+      StandardFonts.HelveticaBold
+    );
+
+  const larguraPagina =
+    595.28;
+
+  const alturaPagina =
+    841.89;
+
   const margem = 42;
 
   const larguraUtil =
-    larguraPagina - margem * 2;
+    larguraPagina -
+    margem * 2;
 
   let pagina: PDFPage;
+
   let y = 0;
 
   function novaPagina() {
-    pagina = pdf.addPage([
-      larguraPagina,
-      alturaPagina,
-    ]);
+    pagina =
+      pdf.addPage([
+        larguraPagina,
+        alturaPagina,
+      ]);
 
-    y = alturaPagina - 45;
+    y =
+      alturaPagina -
+      45;
 
     return pagina;
   }
 
-  function verificarEspaco(necessario = 40) {
-    if (y < margem + necessario) {
+  function verificarEspaco(
+    necessario = 40
+  ) {
+    if (
+      y <
+      margem + necessario
+    ) {
       novaPagina();
     }
   }
@@ -644,41 +939,73 @@ export async function GET(req: Request) {
       bold?: boolean;
       indent?: number;
       espacoDepois?: number;
-      cor?: ReturnType<typeof rgb>;
+      cor?: ReturnType<
+        typeof rgb
+      >;
     }
   ) {
-    const tamanho = opcoes?.tamanho ?? 10;
+    const tamanho =
+      opcoes?.tamanho ??
+      10;
 
-    const font = opcoes?.bold ? negrito : fonte;
+    const font =
+      opcoes?.bold
+        ? negrito
+        : fonte;
 
-    const indent = opcoes?.indent ?? 0;
+    const indent =
+      opcoes?.indent ??
+      0;
 
     const espacoDepois =
-      opcoes?.espacoDepois ?? 4;
+      opcoes
+        ?.espacoDepois ??
+      4;
 
-    const linhas = quebrarTexto(
-      textoSeguro(texto),
-      font,
-      tamanho,
-      larguraUtil - indent
-    );
+    const linhas =
+      quebrarTexto(
+        textoSeguro(texto),
+        font,
+        tamanho,
+        larguraUtil -
+          indent
+      );
 
-    const alturaLinha = tamanho + 3;
+    const alturaLinha =
+      tamanho + 3;
 
     verificarEspaco(
-      linhas.length * alturaLinha + espacoDepois
+      linhas.length *
+        alturaLinha +
+        espacoDepois
     );
 
-    for (const linha of linhas) {
-      pagina.drawText(linha, {
-        x: margem + indent,
-        y,
-        size: tamanho,
-        font,
-        color:
-          opcoes?.cor ??
-          rgb(0.12, 0.12, 0.12),
-      });
+    for (
+      const linha of linhas
+    ) {
+      pagina.drawText(
+        linha,
+        {
+          x:
+            margem +
+            indent,
+
+          y,
+
+          size:
+            tamanho,
+
+          font,
+
+          color:
+            opcoes?.cor ??
+            rgb(
+              0.12,
+              0.12,
+              0.12
+            ),
+        }
+      );
 
       y -= alturaLinha;
     }
@@ -696,50 +1023,71 @@ export async function GET(req: Request) {
       },
 
       end: {
-        x: larguraPagina - margem,
+        x:
+          larguraPagina -
+          margem,
         y,
       },
 
       thickness: 0.7,
 
-      color: rgb(0.75, 0.75, 0.75),
+      color: rgb(
+        0.75,
+        0.75,
+        0.75
+      ),
     });
 
     y -= 12;
   }
 
-  function tituloSecao(titulo: string) {
+  function tituloSecao(
+    titulo: string
+  ) {
     verificarEspaco(35);
 
     y -= 5;
 
-    escrever(titulo, {
-      tamanho: 14,
-      bold: true,
-      espacoDepois: 7,
-      cor: rgb(0.05, 0.32, 0.18),
-    });
+    escrever(
+      titulo,
+      {
+        tamanho: 14,
+        bold: true,
+        espacoDepois: 7,
+
+        cor: rgb(
+          0.05,
+          0.32,
+          0.18
+        ),
+      }
+    );
 
     linhaHorizontal();
   }
 
-  function escreverMovimento(item: {
-    genero: string;
-    grupo: string;
-    categoria: string;
-    classe: string;
-    quantidade: number;
-    unidade: string;
-    dataHora: Date;
-    lote?: string | null;
-    observacao?: string | null;
-  }) {
+  function escreverMovimento(
+    item: {
+      genero: string;
+      grupo: string;
+      categoria: string;
+      classe: string;
+      quantidade: number;
+      unidade: string;
+      dataHora: Date;
+      lote?: string | null;
+      observacao?: string | null;
+    }
+  ) {
     verificarEspaco(95);
 
-    escrever(item.genero, {
-      bold: true,
-      tamanho: 11,
-    });
+    escrever(
+      item.genero,
+      {
+        bold: true,
+        tamanho: 11,
+      }
+    );
 
     escrever(
       `Grupo: ${item.grupo} | Categoria: ${item.categoria}`,
@@ -748,9 +1096,12 @@ export async function GET(req: Request) {
       }
     );
 
-    escrever(`Classe: ${item.classe}`, {
-      indent: 10,
-    });
+    escrever(
+      `Classe: ${item.classe}`,
+      {
+        indent: 10,
+      }
+    );
 
     escrever(
       `Quantidade: ${formatarNumero(
@@ -771,12 +1122,17 @@ export async function GET(req: Request) {
     );
 
     if (item.lote) {
-      escrever(`Lote: ${item.lote}`, {
-        indent: 10,
-      });
+      escrever(
+        `Lote: ${item.lote}`,
+        {
+          indent: 10,
+        }
+      );
     }
 
-    if (item.observacao) {
+    if (
+      item.observacao
+    ) {
       escrever(
         `Observação: ${item.observacao}`,
         {
@@ -788,36 +1144,58 @@ export async function GET(req: Request) {
     y -= 4;
   }
 
+  /*
+   * CABEÇALHO
+   */
   novaPagina();
 
-  escrever('ESTOQUE APROV', {
-    tamanho: 19,
-    bold: true,
-    espacoDepois: 3,
-    cor: rgb(0.05, 0.32, 0.18),
-  });
+  escrever(
+    'ESTOQUE APROV',
+    {
+      tamanho: 19,
+      bold: true,
+      espacoDepois: 3,
 
-  escrever('Relatório Operacional', {
-    tamanho: 15,
-    bold: true,
-    espacoDepois: 10,
-  });
+      cor: rgb(
+        0.05,
+        0.32,
+        0.18
+      ),
+    }
+  );
+
+  escrever(
+    'Relatório Operacional',
+    {
+      tamanho: 15,
+      bold: true,
+      espacoDepois: 10,
+    }
+  );
 
   escrever(
     `Período: ${formatarData(
       inicio
-    )} a ${formatarData(fim)}`,
+    )} a ${formatarData(
+      fim
+    )}`,
     {
       bold: true,
     }
   );
 
   escrever(
-    `Classe: ${classe ? classe : 'QS + QR'}`
+    `Classe: ${
+      classe
+        ? classe
+        : 'QS + QR'
+    }`
   );
 
   escrever(
-    `Gerado em: ${formatarDataHora(new Date())}`,
+    `Gerado em: ${formatarDataHora(
+      new Date()
+    )}`,
     {
       espacoDepois: 10,
     }
@@ -828,20 +1206,33 @@ export async function GET(req: Request) {
   /*
    * EFETIVO
    */
-  if (incluirEfetivo) {
-    tituloSecao('Efetivo por refeição');
+  if (
+    incluirEfetivo
+  ) {
+    tituloSecao(
+      'Efetivo por refeição'
+    );
 
-    if (arranchamentos.length === 0) {
+    if (
+      arranchamentos.length ===
+      0
+    ) {
       escrever(
         'Nenhum efetivo registrado no período.'
       );
     } else {
-      for (const item of arranchamentos) {
-        verificarEspaco(120);
+      for (
+        const item of arranchamentos
+      ) {
+        verificarEspaco(110);
 
         escrever(
-          `${formatarData(item.data)} - ${
-            nomesRefeicao[item.refeicao] ||
+          `${formatarData(
+            item.data
+          )} - ${
+            nomesRefeicao[
+              item.refeicao
+            ] ||
             item.refeicao
           }`,
           {
@@ -859,7 +1250,9 @@ export async function GET(req: Request) {
 
         escrever(
           `Efetivo alimentado: ${
-            item.arranchadosCompareceram ?? 0
+            item
+              .arranchadosCompareceram ??
+            0
           }`,
           {
             indent: 10,
@@ -867,7 +1260,10 @@ export async function GET(req: Request) {
         );
 
         escrever(
-          `Faltas: ${item.faltas ?? 0}`,
+          `Faltas: ${
+            item.faltas ??
+            0
+          }`,
           {
             indent: 10,
           }
@@ -875,7 +1271,9 @@ export async function GET(req: Request) {
 
         escrever(
           `Militares de fora: ${
-            item.naoArranchadosAtendidos ?? 0
+            item
+              .naoArranchadosAtendidos ??
+            0
           }`,
           {
             indent: 10,
@@ -884,7 +1282,9 @@ export async function GET(req: Request) {
 
         escrever(
           `Total atendido: ${
-            item.totalAtendido ?? 0
+            item
+              .totalAtendido ??
+            0
           }`,
           {
             indent: 10,
@@ -935,10 +1335,13 @@ export async function GET(req: Request) {
         }
       );
 
-      escrever('Sobras', {
-        tamanho: 11,
-        bold: true,
-      });
+      escrever(
+        'Sobras',
+        {
+          tamanho: 11,
+          bold: true,
+        }
+      );
 
       escrever(
         `Sobra pesada total no período: ${formatarNumero(
@@ -955,8 +1358,12 @@ export async function GET(req: Request) {
   /*
    * REFEIÇÕES RELACIONADAS
    */
-  if (incluirRefeicoes) {
-    tituloSecao('Refeições relacionadas');
+  if (
+    incluirRefeicoes
+  ) {
+    tituloSecao(
+      'Refeições relacionadas'
+    );
 
     escrever(
       'Refeições identificadas pelas saídas físicas de gêneros no período.',
@@ -966,14 +1373,21 @@ export async function GET(req: Request) {
       }
     );
 
-    if (refeicoesRelacionadas.length === 0) {
+    if (
+      refeicoesRelacionadas.length ===
+      0
+    ) {
       escrever(
         'Nenhuma refeição relacionada às saídas do período.'
       );
     } else {
-      for (const item of refeicoesRelacionadas) {
+      for (
+        const item of refeicoesRelacionadas
+      ) {
         escrever(
-          `${formatarData(item.data)} - ${item.nome} (${item.referencia})`,
+          `${formatarData(
+            item.data
+          )} - ${item.nome} (${item.referencia})`,
           {
             bold: true,
           }
@@ -993,16 +1407,27 @@ export async function GET(req: Request) {
   /*
    * ENTRADAS
    */
-  if (incluirEntradas) {
-    tituloSecao('Entradas');
+  if (
+    incluirEntradas
+  ) {
+    tituloSecao(
+      'Entradas'
+    );
 
-    if (entradas.length === 0) {
+    if (
+      entradas.length ===
+      0
+    ) {
       escrever(
         'Nenhuma entrada registrada no período.'
       );
     } else {
-      for (const item of entradas) {
-        escreverMovimento(item);
+      for (
+        const item of entradas
+      ) {
+        escreverMovimento(
+          item
+        );
       }
     }
   }
@@ -1010,16 +1435,27 @@ export async function GET(req: Request) {
   /*
    * SAÍDAS
    */
-  if (incluirSaidas) {
-    tituloSecao('Saídas');
+  if (
+    incluirSaidas
+  ) {
+    tituloSecao(
+      'Saídas'
+    );
 
-    if (saidas.length === 0) {
+    if (
+      saidas.length ===
+      0
+    ) {
       escrever(
         'Nenhuma saída registrada no período.'
       );
     } else {
-      for (const item of saidas) {
-        escreverMovimento(item);
+      for (
+        const item of saidas
+      ) {
+        escreverMovimento(
+          item
+        );
       }
     }
   }
@@ -1027,16 +1463,27 @@ export async function GET(req: Request) {
   /*
    * DEVOLUÇÕES
    */
-  if (incluirDevolucoes) {
-    tituloSecao('Devoluções');
+  if (
+    incluirDevolucoes
+  ) {
+    tituloSecao(
+      'Devoluções'
+    );
 
-    if (devolucoes.length === 0) {
+    if (
+      devolucoes.length ===
+      0
+    ) {
       escrever(
         'Nenhuma devolução registrada no período.'
       );
     } else {
-      for (const item of devolucoes) {
-        escreverMovimento(item);
+      for (
+        const item of devolucoes
+      ) {
+        escreverMovimento(
+          item
+        );
       }
     }
   }
@@ -1044,8 +1491,12 @@ export async function GET(req: Request) {
   /*
    * POSIÇÃO DO ESTOQUE
    */
-  if (incluirEstoque) {
-    tituloSecao('Posição do estoque');
+  if (
+    incluirEstoque
+  ) {
+    tituloSecao(
+      'Posição do estoque'
+    );
 
     escrever(
       'Saldo atual dos gêneros. Quantidades com unidades diferentes não são somadas entre si.',
@@ -1055,75 +1506,133 @@ export async function GET(req: Request) {
       }
     );
 
-    if (posicaoEstoque.length === 0) {
+    if (
+      posicaoEstoque.length ===
+      0
+    ) {
       escrever(
         'Nenhum gênero cadastrado para a classe selecionada.'
       );
     } else {
-      const grupos = new Map<
-        string,
-        Map<string, typeof posicaoEstoque>
-      >();
+      const grupos =
+        new Map<
+          string,
+          Map<
+            string,
+            typeof posicaoEstoque
+          >
+        >();
 
-      for (const item of posicaoEstoque) {
-        if (!grupos.has(item.grupo)) {
-          grupos.set(item.grupo, new Map());
+      for (
+        const item of posicaoEstoque
+      ) {
+        if (
+          !grupos.has(
+            item.grupo
+          )
+        ) {
+          grupos.set(
+            item.grupo,
+            new Map()
+          );
         }
 
-        const categorias = grupos.get(item.grupo)!;
+        const categorias =
+          grupos.get(
+            item.grupo
+          )!;
 
-        if (!categorias.has(item.categoria)) {
-          categorias.set(item.categoria, []);
+        if (
+          !categorias.has(
+            item.categoria
+          )
+        ) {
+          categorias.set(
+            item.categoria,
+            []
+          );
         }
 
-        categorias.get(item.categoria)!.push(item);
+        categorias
+          .get(
+            item.categoria
+          )!
+          .push(item);
       }
 
-      const gruposOrdenados = Array.from(
-        grupos.entries()
-      ).sort(([a], [b]) =>
-        a.localeCompare(b, 'pt-BR')
-      );
-
-      for (const [
-        grupoNome,
-        categorias,
-      ] of gruposOrdenados) {
-        verificarEspaco(70);
-
-        escrever(grupoNome, {
-          tamanho: 12,
-          bold: true,
-          cor: rgb(0.05, 0.32, 0.18),
-        });
-
-        const categoriasOrdenadas = Array.from(
-          categorias.entries()
-        ).sort(([a], [b]) =>
-          a.localeCompare(b, 'pt-BR')
+      const gruposOrdenados =
+        Array.from(
+          grupos.entries()
+        ).sort(
+          ([a], [b]) =>
+            a.localeCompare(
+              b,
+              'pt-BR'
+            )
         );
 
-        for (const [
-          categoriaNome,
-          itens,
-        ] of categoriasOrdenadas) {
-          verificarEspaco(55);
+      for (
+        const [
+          grupoNome,
+          categorias,
+        ] of gruposOrdenados
+      ) {
+        verificarEspaco(70);
 
-          escrever(categoriaNome, {
-            tamanho: 11,
+        escrever(
+          grupoNome,
+          {
+            tamanho: 12,
             bold: true,
-            indent: 10,
-          });
 
-          const itensOrdenados = [...itens].sort(
-            (a, b) =>
-              a.nome.localeCompare(
-                b.nome,
+            cor: rgb(
+              0.05,
+              0.32,
+              0.18
+            ),
+          }
+        );
+
+        const categoriasOrdenadas =
+          Array.from(
+            categorias.entries()
+          ).sort(
+            ([a], [b]) =>
+              a.localeCompare(
+                b,
                 'pt-BR'
               )
           );
 
-          for (const item of itensOrdenados) {
+        for (
+          const [
+            categoriaNome,
+            itens,
+          ] of categoriasOrdenadas
+        ) {
+          verificarEspaco(55);
+
+          escrever(
+            categoriaNome,
+            {
+              tamanho: 11,
+              bold: true,
+              indent: 10,
+            }
+          );
+
+          const itensOrdenados =
+            [...itens].sort(
+              (a, b) =>
+                a.nome.localeCompare(
+                  b.nome,
+                  'pt-BR'
+                )
+            );
+
+          for (
+            const item of itensOrdenados
+          ) {
             escrever(
               `${item.nome} - ${formatarNumero(
                 item.quantidade
@@ -1135,25 +1644,34 @@ export async function GET(req: Request) {
           }
 
           /*
-           * Subtotais da categoria separados por unidade.
+           * SUBTOTAL DA CATEGORIA
+           * SEM MISTURAR UNIDADES
            */
-          const totaisCategoria = new Map<
-            string,
-            number
-          >();
+          const totaisCategoria =
+            new Map<
+              string,
+              number
+            >();
 
-          for (const item of itens) {
+          for (
+            const item of itens
+          ) {
             totaisCategoria.set(
               item.unidade,
-              (totaisCategoria.get(item.unidade) ||
-                0) + item.quantidade
+
+              (totaisCategoria.get(
+                item.unidade
+              ) || 0) +
+                item.quantidade
             );
           }
 
-          for (const [
-            unidade,
-            total,
-          ] of totaisCategoria) {
+          for (
+            const [
+              unidade,
+              total,
+            ] of totaisCategoria
+          ) {
             escrever(
               `Subtotal ${categoriaNome}: ${formatarNumero(
                 total
@@ -1169,21 +1687,38 @@ export async function GET(req: Request) {
         }
 
         /*
-         * Totais do grupo separados por unidade.
+         * TOTAL DO GRUPO
+         * SEM MISTURAR UNIDADES
          */
-        const totaisGrupo = new Map<string, number>();
+        const totaisGrupo =
+          new Map<
+            string,
+            number
+          >();
 
-        for (const itens of categorias.values()) {
-          for (const item of itens) {
+        for (
+          const itens of categorias.values()
+        ) {
+          for (
+            const item of itens
+          ) {
             totaisGrupo.set(
               item.unidade,
-              (totaisGrupo.get(item.unidade) || 0) +
+
+              (totaisGrupo.get(
+                item.unidade
+              ) || 0) +
                 item.quantidade
             );
           }
         }
 
-        for (const [unidade, total] of totaisGrupo) {
+        for (
+          const [
+            unidade,
+            total,
+          ] of totaisGrupo
+        ) {
           escrever(
             `Total ${grupoNome}: ${formatarNumero(
               total
@@ -1201,28 +1736,35 @@ export async function GET(req: Request) {
   }
 
   /*
-   * ALERTAS — SEMPRE INCLUÍDOS
+   * ALERTAS
+   * SEMPRE INCLUÍDOS
    */
-  tituloSecao('Alertas de estoque');
-
-  escrever(
-    'Os alertas são apresentados independentemente das demais opções selecionadas no relatório.',
-    {
-      tamanho: 9,
-      espacoDepois: 8,
-    }
+  tituloSecao(
+    'Alertas de estoque'
   );
 
   if (
-    estoqueBaixo.length === 0 &&
+    estoqueBaixo.length ===
+      0 &&
     validade.length === 0
   ) {
-    escrever('Nenhum alerta de estoque.', {
-      bold: true,
-      cor: rgb(0.05, 0.45, 0.2),
-    });
+    escrever(
+      'Nenhum alerta de estoque.',
+      {
+        bold: true,
+
+        cor: rgb(
+          0.05,
+          0.45,
+          0.2
+        ),
+      }
+    );
   } else {
-    if (estoqueBaixo.length > 0) {
+    if (
+      estoqueBaixo.length >
+      0
+    ) {
       escrever(
         'Estoque mínimo',
         {
@@ -1231,7 +1773,9 @@ export async function GET(req: Request) {
         }
       );
 
-      for (const item of estoqueBaixo) {
+      for (
+        const item of estoqueBaixo
+      ) {
         escrever(
           `${
             item.zerado
@@ -1240,9 +1784,19 @@ export async function GET(req: Request) {
           } - ${item.nome}`,
           {
             bold: true,
-            cor: item.zerado
-              ? rgb(0.75, 0.1, 0.1)
-              : rgb(0.75, 0.42, 0),
+
+            cor:
+              item.zerado
+                ? rgb(
+                    0.75,
+                    0.1,
+                    0.1
+                  )
+                : rgb(
+                    0.75,
+                    0.42,
+                    0
+                  ),
           }
         );
 
@@ -1261,13 +1815,21 @@ export async function GET(req: Request) {
       y -= 5;
     }
 
-    if (validade.length > 0) {
-      escrever('Validade', {
-        tamanho: 11,
-        bold: true,
-      });
+    if (
+      validade.length >
+      0
+    ) {
+      escrever(
+        'Validade',
+        {
+          tamanho: 11,
+          bold: true,
+        }
+      );
 
-      for (const item of validade) {
+      for (
+        const item of validade
+      ) {
         escrever(
           `${
             item.vencido
@@ -1276,19 +1838,32 @@ export async function GET(req: Request) {
           } - ${item.genero}`,
           {
             bold: true,
-            cor: item.vencido
-              ? rgb(0.75, 0.1, 0.1)
-              : rgb(0.75, 0.42, 0),
+
+            cor:
+              item.vencido
+                ? rgb(
+                    0.75,
+                    0.1,
+                    0.1
+                  )
+                : rgb(
+                    0.75,
+                    0.42,
+                    0
+                  ),
           }
         );
 
         escrever(
           `Lote: ${
-            item.lote || '—'
+            item.lote ||
+            '-'
           } | Validade: ${
             item.validade
-              ? formatarData(item.validade)
-              : '—'
+              ? formatarData(
+                  item.validade
+                )
+              : '-'
           } | Saldo: ${formatarNumero(
             item.quantidade
           )} ${item.unidade}`,
@@ -1303,72 +1878,110 @@ export async function GET(req: Request) {
   /*
    * RODAPÉ
    */
-  const paginas = pdf.getPages();
+  const paginas =
+    pdf.getPages();
 
-  paginas.forEach((paginaAtual, indice) => {
-    paginaAtual.drawLine({
-      start: {
-        x: margem,
-        y: 28,
-      },
+  paginas.forEach(
+    (
+      paginaAtual,
+      indice
+    ) => {
+      paginaAtual.drawLine({
+        start: {
+          x: margem,
+          y: 28,
+        },
 
-      end: {
-        x: larguraPagina - margem,
-        y: 28,
-      },
+        end: {
+          x:
+            larguraPagina -
+            margem,
+          y: 28,
+        },
 
-      thickness: 0.5,
+        thickness: 0.5,
 
-      color: rgb(0.75, 0.75, 0.75),
-    });
+        color: rgb(
+          0.75,
+          0.75,
+          0.75
+        ),
+      });
 
-    paginaAtual.drawText(
-      textoSeguro(
-        'EstoqueAprov - Serviço de Aprovisionamento'
-      ),
-      {
-        x: margem,
-        y: 15,
-        size: 7,
-        font: fonte,
-        color: rgb(0.4, 0.4, 0.4),
-      }
-    );
+      paginaAtual.drawText(
+        textoSeguro(
+          'EstoqueAprov - Serviço de Aprovisionamento'
+        ),
+        {
+          x: margem,
+          y: 15,
+          size: 7,
+          font: fonte,
 
-    const numeroPagina = `Página ${
-      indice + 1
-    } de ${paginas.length}`;
+          color: rgb(
+            0.4,
+            0.4,
+            0.4
+          ),
+        }
+      );
 
-    const larguraNumero =
-      fonte.widthOfTextAtSize(numeroPagina, 7);
+      const numeroPagina =
+        `Página ${
+          indice + 1
+        } de ${
+          paginas.length
+        }`;
 
-    paginaAtual.drawText(numeroPagina, {
-      x:
-        larguraPagina -
-        margem -
-        larguraNumero,
-      y: 15,
-      size: 7,
-      font: fonte,
-      color: rgb(0.4, 0.4, 0.4),
-    });
-  });
+      const larguraNumero =
+        fonte.widthOfTextAtSize(
+          numeroPagina,
+          7
+        );
 
-  const bytes = await pdf.save();
+      paginaAtual.drawText(
+        numeroPagina,
+        {
+          x:
+            larguraPagina -
+            margem -
+            larguraNumero,
+
+          y: 15,
+          size: 7,
+          font: fonte,
+
+          color: rgb(
+            0.4,
+            0.4,
+            0.4
+          ),
+        }
+      );
+    }
+  );
+
+  const bytes =
+    await pdf.save();
 
   const nomeArquivo =
     `EstoqueAprov_${inicio}_${fim}.pdf`;
 
-  return new Response(Buffer.from(bytes), {
-    status: 200,
+  return new Response(
+    Buffer.from(bytes),
+    {
+      status: 200,
 
-    headers: {
-      'Content-Type': 'application/pdf',
+      headers: {
+        'Content-Type':
+          'application/pdf',
 
-      'Content-Disposition':
-        `attachment; filename="${nomeArquivo}"`,
+        'Content-Disposition':
+          `attachment; filename="${nomeArquivo}"`,
 
-      'Cache-Control': 'no-store',
-    },
-  });
+        'Cache-Control':
+          'no-store',
+      },
+    }
+  );
 }
