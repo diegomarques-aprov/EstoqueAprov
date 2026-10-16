@@ -4,140 +4,129 @@ export const dynamic = 'force-dynamic';
 
 export default function Home() {
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        width: '100vw',
-        height: '100vh',
-        margin: 0,
-        padding: 0,
-        zIndex: 9999,
-        background: '#000',
-        overflow: 'hidden',
-      }}
-    >
+    <main className="splash">
       <img
         src="/abertura-estoqueaprov.jpg.jpeg"
         alt="EstoqueAprov"
+        className="splashImage"
         draggable={false}
-        style={{
-          position: 'absolute',
-          inset: 0,
-          width: '100%',
-          height: '100%',
-          maxWidth: 'none',
-          objectFit: 'cover',
-          objectPosition: 'center',
-          margin: 0,
-          padding: 0,
-          display: 'block',
-          userSelect: 'none',
-          pointerEvents: 'none',
-        }}
       />
 
       <Link
         href="/login"
+        className="entrar"
         aria-label="Entrar no EstoqueAprov"
-        style={{
-          position: 'absolute',
-
-          /*
-           * O botão fica sobre a região
-           * "ENTRAR" existente na imagem.
-           *
-           * Somente esta área é clicável.
-           */
-          left: '50%',
-          bottom: '12.5%',
-          transform: 'translateX(-50%)',
-
-          width: 'clamp(190px, 20vw, 300px)',
-          height: 'clamp(52px, 7vh, 72px)',
-
-          borderRadius: 14,
-
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-
-          /*
-           * O botão da própria arte
-           * continua visível.
-           */
-          background: 'transparent',
-
-          textDecoration: 'none',
-          WebkitTapHighlightColor: 'transparent',
-
-          /*
-           * Dá sensação de botão real.
-           */
-          cursor: 'pointer',
-
-          zIndex: 2,
-        }}
       >
-        <span
-          style={{
-            position: 'absolute',
-            inset: 0,
-            borderRadius: 14,
-            transition:
-              'transform 90ms ease, box-shadow 90ms ease',
-          }}
-        />
-
-        <span
-          style={{
-            /*
-             * Texto invisível apenas para
-             * acessibilidade. O texto ENTRAR
-             * já está desenhado na imagem.
-             */
-            position: 'absolute',
-            width: 1,
-            height: 1,
-            padding: 0,
-            margin: -1,
-            overflow: 'hidden',
-            clip: 'rect(0, 0, 0, 0)',
-            whiteSpace: 'nowrap',
-            border: 0,
-          }}
-        >
+        <span className="srOnly">
           Entrar
         </span>
       </Link>
 
-      <style>
-        {`
-          a[aria-label="Entrar no EstoqueAprov"] {
-            transition:
-              transform 90ms ease,
-              filter 90ms ease;
-          }
+      <style>{`
+        .splash {
+          position: fixed;
+          inset: 0;
+          width: 100vw;
+          height: 100vh;
+          margin: 0;
+          padding: 0;
+          overflow: hidden;
+          background: #000;
+          z-index: 9999;
+        }
 
-          a[aria-label="Entrar no EstoqueAprov"]:hover {
-            filter: brightness(1.08);
-          }
+        .splashImage {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          max-width: none;
+          object-fit: cover;
+          object-position: center;
+          display: block;
+          pointer-events: none;
+          user-select: none;
+          -webkit-user-drag: none;
+        }
 
-          a[aria-label="Entrar no EstoqueAprov"]:active {
-            transform:
-              translateX(-50%)
-              translateY(6px)
-              scale(0.98);
+        /*
+         * Área clicável posicionada
+         * exclusivamente sobre o botão
+         * ENTRAR da imagem.
+         */
+        .entrar {
+          position: absolute;
 
-            filter: brightness(0.88);
-          }
+          left: 50%;
+          top: 77%;
 
-          a[aria-label="Entrar no EstoqueAprov"]:focus-visible {
-            outline: 3px solid white;
-            outline-offset: 4px;
+          transform:
+            translate(-50%, -50%);
+
+          width: min(42vw, 320px);
+          height: clamp(55px, 8vh, 78px);
+
+          display: block;
+
+          border-radius: 18px;
+
+          cursor: pointer;
+
+          z-index: 10000;
+
+          background:
+            rgba(255,255,255,0.001);
+
+          -webkit-tap-highlight-color:
+            transparent;
+
+          touch-action: manipulation;
+
+          transition:
+            transform 100ms ease,
+            filter 100ms ease;
+        }
+
+        /*
+         * Efeito de pressionar o botão.
+         */
+        .entrar:active {
+          transform:
+            translate(-50%, calc(-50% + 7px))
+            scale(0.97);
+
+          filter: brightness(0.8);
+        }
+
+        .entrar:focus-visible {
+          outline: 3px solid #fff;
+          outline-offset: 4px;
+        }
+
+        .srOnly {
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          padding: 0;
+          margin: -1px;
+          overflow: hidden;
+          clip: rect(0, 0, 0, 0);
+          white-space: nowrap;
+          border: 0;
+        }
+
+        /*
+         * Ajuste para telas menores,
+         * principalmente iPhone.
+         */
+        @media (max-width: 600px) {
+          .entrar {
+            top: 78%;
+            width: min(55vw, 300px);
+            height: 64px;
           }
-        `}
-      </style>
-    </div>
+        }
+      `}</style>
+    </main>
   );
 }
