@@ -53,17 +53,20 @@ function dataLocalISO(data: Date) {
 
   const ano =
     partes.find(
-      (parte) => parte.type === 'year'
+      (parte) =>
+        parte.type === 'year'
     )?.value || '';
 
   const mes =
     partes.find(
-      (parte) => parte.type === 'month'
+      (parte) =>
+        parte.type === 'month'
     )?.value || '';
 
   const dia =
     partes.find(
-      (parte) => parte.type === 'day'
+      (parte) =>
+        parte.type === 'day'
     )?.value || '';
 
   return `${ano}-${mes}-${dia}`;
@@ -163,17 +166,6 @@ export async function GET(
     );
   }
 
-  /*
-   * Para o Serviço do dia seguinte,
-   * precisamos consultar também as
-   * saídas do dia anterior ao início
-   * do período.
-   *
-   * Exemplo:
-   *
-   * alimentação: 17/10
-   * saque principal: 16/10
-   */
   const inicioSaidas =
     adicionarDias(
       inicio,
@@ -188,7 +180,6 @@ export async function GET(
     prisma.saida.findMany({
       where: {
         classe: 'QS',
-
         canceladaEm: null,
 
         data: {
@@ -213,6 +204,7 @@ export async function GET(
             genero: {
               include: {
                 unidade: true,
+
                 categoria: {
                   include: {
                     grupo: true,
@@ -274,7 +266,6 @@ export async function GET(
     prisma.movimentacaoEstoque.findMany({
       where: {
         tipo: 'DEVOLUCAO',
-
         classe: 'QS',
 
         referenciaTipo:
@@ -315,10 +306,13 @@ export async function GET(
     refeicoesFechadas: number;
     totalAtendido: number;
     completo: boolean;
+
     detalhes: Array<{
       refeicao: string;
       refeicaoNome: string;
-      totalAtendido: number | null;
+      totalAtendido:
+        | number
+        | null;
       fechada: boolean;
     }>;
   };
@@ -414,11 +408,6 @@ export async function GET(
     const dia of
       efetivoPorDia.values()
   ) {
-    /*
-     * Consideramos o dia completo
-     * quando as quatro refeições
-     * principais possuem fechamento.
-     */
     dia.completo =
       REFEICOES.every(
         (refeicao) =>
@@ -433,7 +422,7 @@ export async function GET(
 
   /*
    * =====================================================
-   * DEVOLUÇÕES POR SAÍDA E GÊNERO
+   * DEVOLUÇÕES
    * =====================================================
    */
 
@@ -456,7 +445,6 @@ export async function GET(
 
     devolvidoPorSaidaGenero.set(
       chave,
-
       (
         devolvidoPorSaidaGenero.get(
           chave
@@ -470,40 +458,51 @@ export async function GET(
 
   /*
    * =====================================================
-   * CONSUMO RELACIONADO
+   * REGISTROS INDIVIDUAIS DOS SAQUES
    * =====================================================
-   *
-   * SERVICO_DIA_SEGUINTE:
-   * saída operacional do dia anterior,
-   * relacionada ao efetivo do dia seguinte.
-   *
-   * CAFE / ALMOCO / JANTAR / CEIA:
-   * saída complementar relacionada
-   * diretamente àquela refeição.
    */
 
-  const registros: Array<{
+  type Registro = {
     saidaId: string;
     numeroSaida: number;
     dataSaque: string;
     dataAlimentacao: string;
-    tipo: 'PRINCIPAL' | 'COMPLEMENTAR';
+
+    tipo:
+      | 'PRINCIPAL'
+      | 'COMPLEMENTAR';
+
     destino: string;
     destinoNome: string;
+
     generoId: string;
     genero: string;
     grupo: string;
     categoria: string;
     unidade: string;
+
     quantidadeSaida: number;
     quantidadeDevolvida: number;
     quantidadeLiquida: number;
-    totalAtendido: number | null;
-    consumoPorAtendimento: number | null;
-    efetivoFechado: boolean;
-  }> = [];
 
-  for (const saida of saidas) {
+    totalAtendido:
+      | number
+      | null;
+
+    consumoPorAtendimento:
+      | number
+      | null;
+
+    efetivoFechado: boolean;
+  };
+
+  const registros:
+    Registro[] = [];
+
+  for (
+    const saida of
+      saidas
+  ) {
     const dataSaque =
       dataLocalISO(
         saida.data
@@ -526,7 +525,8 @@ export async function GET(
           1
         );
 
-      tipo = 'PRINCIPAL';
+      tipo =
+        'PRINCIPAL';
     } else if (
       REFEICOES.includes(
         saida.destino as
@@ -536,12 +536,6 @@ export async function GET(
       tipo =
         'COMPLEMENTAR';
     } else {
-      /*
-       * OUTRO não entra no cálculo
-       * de consumo por atendimento,
-       * pois não sabemos a qual
-       * alimentação pertence.
-       */
       continue;
     }
 
@@ -572,6 +566,10 @@ export async function GET(
           item.quantidade
         );
 
+      /*
+       * Se não houver devolução,
+       * o valor será naturalmente 0.
+       */
       const quantidadeDevolvida =
         devolvidoPorSaidaGenero.get(
           chaveDevolucao
@@ -594,10 +592,6 @@ export async function GET(
       if (
         tipo === 'PRINCIPAL'
       ) {
-        /*
-         * O saque principal atende o
-         * conjunto das refeições do dia.
-         */
         if (
           efetivoDia?.completo
         ) {
@@ -608,11 +602,6 @@ export async function GET(
             true;
         }
       } else {
-        /*
-         * Saque complementar:
-         * utiliza apenas o efetivo da
-         * refeição correspondente.
-         */
         const refeicao =
           efetivoDia
             ?.detalhes.find(
@@ -719,14 +708,119 @@ export async function GET(
 
   /*
    * =====================================================
-   * CONSOLIDAÇÃO POR GÊNERO
+   * CONSOLIDAÇÃO POR GÊNERO + DIA
    * =====================================================
    *
-   * Aqui NÃO fazemos média simples
-   * das médias diárias.
+   * Primeiro consolidamos tudo que saiu
+   * para o mesmo gênero no mesmo dia de
+   * alimentação.
    *
-   * Somamos consumo e atendimentos
-   * para evitar distorção estatística.
+   * Exemplo:
+   *
+   * Serviço do dia seguinte = 20 Kg
+   * Complemento almoço      =  3 Kg
+   * Devolução               =  2 Kg
+   *
+   * Consumo líquido = 21 Kg
+   *
+   * O consumo se soma.
+   * O efetivo do mesmo serviço não deve
+   * ser multiplicado pela quantidade de
+   * saques realizados.
+   */
+
+  type ConsumoDiaGenero = {
+    generoId: string;
+    genero: string;
+    grupo: string;
+    categoria: string;
+    unidade: string;
+    dataAlimentacao: string;
+
+    quantidadeLiquida: number;
+
+    totalAtendido:
+      | number
+      | null;
+
+    efetivoFechado: boolean;
+  };
+
+  const consumoPorDiaGenero =
+    new Map<
+      string,
+      ConsumoDiaGenero
+    >();
+
+  for (
+    const registro of
+      registros
+  ) {
+    const chave =
+      `${registro.dataAlimentacao}:` +
+      `${registro.generoId}`;
+
+    let item =
+      consumoPorDiaGenero.get(
+        chave
+      );
+
+    if (!item) {
+      const efetivoDia =
+        efetivoPorDia.get(
+          registro.dataAlimentacao
+        );
+
+      item = {
+        generoId:
+          registro.generoId,
+
+        genero:
+          registro.genero,
+
+        grupo:
+          registro.grupo,
+
+        categoria:
+          registro.categoria,
+
+        unidade:
+          registro.unidade,
+
+        dataAlimentacao:
+          registro.dataAlimentacao,
+
+        quantidadeLiquida: 0,
+
+        totalAtendido:
+          efetivoDia?.completo
+            ? efetivoDia.totalAtendido
+            : null,
+
+        efetivoFechado:
+          Boolean(
+            efetivoDia?.completo
+          ),
+      };
+
+      consumoPorDiaGenero.set(
+        chave,
+        item
+      );
+    }
+
+    item.quantidadeLiquida +=
+      registro.quantidadeLiquida;
+  }
+
+  /*
+   * =====================================================
+   * CONSOLIDAÇÃO HISTÓRICA POR GÊNERO
+   * =====================================================
+   *
+   * Agora cada gênero contribui apenas
+   * uma vez por dia com o efetivo daquele
+   * serviço.
    */
 
   const consolidado =
@@ -738,15 +832,19 @@ export async function GET(
         grupo: string;
         categoria: string;
         unidade: string;
+
         quantidadeLiquida: number;
-        atendimentosRelacionados: number;
+
+        atendimentosRelacionados:
+          number;
+
         registrosValidos: number;
       }
     >();
 
   for (
     const registro of
-      registros
+      consumoPorDiaGenero.values()
   ) {
     if (
       !registro.efetivoFechado ||
@@ -781,7 +879,8 @@ export async function GET(
 
         quantidadeLiquida: 0,
 
-        atendimentosRelacionados: 0,
+        atendimentosRelacionados:
+          0,
 
         registrosValidos: 0,
       };
@@ -792,13 +891,22 @@ export async function GET(
       );
     }
 
+    /*
+     * Soma todo o consumo do gênero
+     * naquele serviço.
+     */
     item.quantidadeLiquida +=
       registro.quantidadeLiquida;
 
+    /*
+     * Soma o efetivo apenas uma vez
+     * para aquele gênero naquele dia.
+     */
     item.atendimentosRelacionados +=
       registro.totalAtendido;
 
-    item.registrosValidos += 1;
+    item.registrosValidos +=
+      1;
   }
 
   const consumoPorGenero =
@@ -840,7 +948,8 @@ export async function GET(
     Array.from(
       efetivoPorDia.values()
     ).map((dia) => ({
-      data: dia.data,
+      data:
+        dia.data,
 
       refeicoesFechadas:
         dia.refeicoesFechadas,
@@ -857,7 +966,8 @@ export async function GET(
 
   const diasCompletos =
     dias.filter(
-      (dia) => dia.completo
+      (dia) =>
+        dia.completo
     ).length;
 
   const registrosSemEfetivo =
@@ -890,10 +1000,13 @@ export async function GET(
       ],
 
       regraComplementar:
-        'O saque complementar é relacionado somente ao efetivo atendido da refeição correspondente.',
+        'Os saques complementares são somados ao consumo do gênero no respectivo dia de alimentação.',
 
       devolucoes:
-        'As devoluções registradas para a saída são abatidas da quantidade utilizada na análise.',
+        'Quando houver devolução registrada, a quantidade devolvida é abatida do consumo.',
+
+      consolidacao:
+        'Para cada gênero e dia de alimentação, o consumo líquido dos saques é somado e o efetivo do serviço é contabilizado uma única vez.',
 
       observacao:
         'A análise representa consumo operacional relacionado ao efetivo. Ela não substitui a conferência física nem a decisão administrativa do Aprovisionamento.',
