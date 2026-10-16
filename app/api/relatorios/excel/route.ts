@@ -1,4 +1,8 @@
-import { ClasseOperacao } from '@prisma/client';
+import {
+  ClasseOperacao,
+  DestinoSaida,
+} from '@prisma/client';
+
 import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/guard';
 import ExcelJS from 'exceljs';
@@ -13,17 +17,9 @@ const nomesRefeicao: Record<string, string> = {
   ALMOCO: 'Almoço',
   JANTAR: 'Jantar',
   CEIA: 'Ceia',
+  SERVICO_DIA_SEGUINTE:
+    'Serviço do dia seguinte',
   OUTRO: 'Outro',
-};
-
-const nomesMovimentacao: Record<string, string> = {
-  SALDO_INICIAL: 'Saldo inicial',
-  RECEBIMENTO: 'Recebimento',
-  SAIDA: 'Saída',
-  DEVOLUCAO: 'Devolução',
-  PERDA: 'Perda / descarte',
-  CORRECAO: 'Correção',
-  TRANSFERENCIA: 'Transferência',
 };
 
 function inicioDiaLocal(data: string) {
@@ -69,21 +65,40 @@ function hojeLocal() {
   return `${ano}-${mes}-${dia}`;
 }
 
+function dataLocalISO(data: Date) {
+  const partes =
+    new Intl.DateTimeFormat('en-CA', {
+      timeZone: TIME_ZONE,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).formatToParts(data);
+
+  const ano =
+    partes.find(
+      (p) => p.type === 'year'
+    )?.value || '';
+
+  const mes =
+    partes.find(
+      (p) => p.type === 'month'
+    )?.value || '';
+
+  const dia =
+    partes.find(
+      (p) => p.type === 'day'
+    )?.value || '';
+
+  return `${ano}-${mes}-${dia}`;
+}
+
 function formatarData(
   data: Date | string
 ) {
   const valor =
     typeof data === 'string'
       ? data.slice(0, 10)
-      : new Intl.DateTimeFormat(
-          'en-CA',
-          {
-            timeZone: TIME_ZONE,
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-          }
-        ).format(data);
+      : dataLocalISO(data);
 
   const [ano, mes, dia] =
     valor.split('-');
@@ -107,45 +122,35 @@ function formatarDataHora(
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-      second: '2-digit',
       hour12: false,
     }
   ).format(new Date(data));
 }
 
-function gerarDias(
-  inicio: string,
-  fim: string
+function referenciaDestino(
+  destino: DestinoSaida
 ) {
-  const resultado: string[] = [];
+  return destino ===
+    DestinoSaida.SERVICO_DIA_SEGUINTE
+    ? 'dia seguinte'
+    : 'mesmo dia';
+}
 
-  const atual = new Date(
-    `${inicio.slice(
-      0,
-      10
-    )}T12:00:00.000Z`
-  );
+function opcaoAtiva(
+  parametros: URLSearchParams,
+  nome: string
+) {
+  const valor =
+    parametros.get(nome);
 
-  const final = new Date(
-    `${fim.slice(
-      0,
-      10
-    )}T12:00:00.000Z`
-  );
-
-  while (atual <= final) {
-    resultado.push(
-      atual
-        .toISOString()
-        .slice(0, 10)
-    );
-
-    atual.setUTCDate(
-      atual.getUTCDate() + 1
-    );
+  if (valor === null) {
+    return true;
   }
 
-  return resultado;
+  return (
+    valor === '1' ||
+    valor === 'true'
+  );
 }
 
 function ajustarColunas(
@@ -171,7 +176,22 @@ function formatarCabecalho(
   linha.alignment = {
     vertical: 'middle',
     horizontal: 'center',
+    wrapText: true,
   };
+}
+
+function prepararPlanilha(
+  planilha: ExcelJS.Worksheet
+) {
+  planilha.eachRow(
+    (linha) => {
+      linha.alignment = {
+        ...linha.alignment,
+        vertical: 'middle',
+        wrapText: true,
+      };
+    }
+  );
 }
 
 export async function GET(
@@ -189,8 +209,7 @@ export async function GET(
       req.url
     ).searchParams;
 
-  const hoje =
-    hojeLocal();
+  const hoje = hojeLocal();
 
   const inicio =
     parametros.get('inicio') ||
@@ -244,6 +263,42 @@ export async function GET(
       ? classeParametro
       : null;
 
+  const incluirEfetivo =
+    opcaoAtiva(
+      parametros,
+      'efetivo'
+    );
+
+  const incluirRefeicoes =
+    opcaoAtiva(
+      parametros,
+      'refeicoes'
+    );
+
+  const incluirEntradas =
+    opcaoAtiva(
+      parametros,
+      'entradas'
+    );
+
+  const incluirSaidas =
+    opcaoAtiva(
+      parametros,
+      'saidas'
+    );
+
+  const incluirDevolucoes =
+    opcaoAtiva(
+      parametros,
+      'devolucoes'
+    );
+
+  const incluirEstoque =
+    opcaoAtiva(
+      parametros,
+      'estoque'
+    );
+
   const inicioPeriodo =
     inicioDiaLocal(inicio);
 
@@ -253,21 +308,15 @@ export async function GET(
   const [
     arranchamentos,
     movimentacoes,
+    estoque,
+    generosAtivos,
+    saidasFisicas,
   ] = await Promise.all([
     prisma.arranchamento.findMany({
       where: {
         data: {
           gte: inicioPeriodo,
           lte: fimPeriodo,
-        },
-      },
-
-      include: {
-        usuario: {
-          select: {
-            nome: true,
-            postoGraduacao: true,
-          },
         },
       },
 
@@ -297,6 +346,12 @@ export async function GET(
         genero: {
           include: {
             unidade: true,
+
+            categoria: {
+              include: {
+                grupo: true,
+              },
+            },
           },
         },
 
@@ -309,8 +364,471 @@ export async function GET(
         criadoEm: 'asc',
       },
     }),
+
+    prisma.estoqueLocal.findMany({
+      where: {
+        genero: {
+          situacao: 'ATIVO',
+
+          ...(classe
+            ? { classe }
+            : {}),
+        },
+      },
+
+      include: {
+        genero: {
+          include: {
+            unidade: true,
+
+            categoria: {
+              include: {
+                grupo: true,
+              },
+            },
+          },
+        },
+
+        local: true,
+        lote: true,
+      },
+    }),
+
+    prisma.genero.findMany({
+      where: {
+        situacao: 'ATIVO',
+
+        ...(classe
+          ? { classe }
+          : {}),
+      },
+
+      include: {
+        unidade: true,
+
+        categoria: {
+          include: {
+            grupo: true,
+          },
+        },
+      },
+
+      orderBy: {
+        nome: 'asc',
+      },
+    }),
+
+    prisma.saida.findMany({
+      where: {
+        criadoEm: {
+          gte: inicioPeriodo,
+          lte: fimPeriodo,
+        },
+
+        canceladaEm: null,
+
+        ...(classe
+          ? { classe }
+          : {}),
+      },
+
+      select: {
+        id: true,
+        numero: true,
+        destino: true,
+        criadoEm: true,
+        observacao: true,
+      },
+
+      orderBy: {
+        criadoEm: 'asc',
+      },
+    }),
   ]);
 
+  /*
+   * SALDO ATUAL POR GÊNERO
+   */
+  const saldoPorGenero =
+    new Map<string, number>();
+
+  for (const item of estoque) {
+    saldoPorGenero.set(
+      item.generoId,
+      (saldoPorGenero.get(
+        item.generoId
+      ) || 0) +
+        Number(
+          item.quantidade
+        )
+    );
+  }
+
+  const posicaoEstoque =
+    generosAtivos.map(
+      (genero) => ({
+        generoId:
+          genero.id,
+
+        nome:
+          genero.nome,
+
+        classe:
+          genero.classe,
+
+        unidade:
+          genero.unidade.sigla,
+
+        grupo:
+          genero.categoria?.grupo
+            ?.nome ||
+          'Sem grupo',
+
+        categoria:
+          genero.categoria?.nome ||
+          'Sem categoria',
+
+        estoqueMinimo:
+          genero.estoqueMinimo !=
+          null
+            ? Number(
+                genero.estoqueMinimo
+              )
+            : null,
+
+        quantidade:
+          saldoPorGenero.get(
+            genero.id
+          ) || 0,
+      })
+    );
+
+  /*
+   * MOVIMENTAÇÕES
+   */
+  const movimentosDetalhados =
+    movimentacoes.map(
+      (item) => ({
+        id:
+          item.id,
+
+        tipo:
+          item.tipo,
+
+        classe:
+          item.classe,
+
+        genero:
+          item.genero.nome,
+
+        grupo:
+          item.genero.categoria
+            ?.grupo?.nome ||
+          'Sem grupo',
+
+        categoria:
+          item.genero.categoria
+            ?.nome ||
+          'Sem categoria',
+
+        quantidade:
+          Number(
+            item.quantidade
+          ),
+
+        unidade:
+          item.genero.unidade
+            .sigla,
+
+        dataHora:
+          item.criadoEm,
+
+        lote:
+          item.lote?.numero ||
+          null,
+
+        localOrigem:
+          item.localOrigem?.nome ||
+          null,
+
+        localDestino:
+          item.localDestino?.nome ||
+          null,
+
+        observacao:
+          item.observacao ||
+          null,
+      })
+    );
+
+  const entradas =
+    movimentosDetalhados.filter(
+      (item) =>
+        item.tipo ===
+        'RECEBIMENTO'
+    );
+
+  const saidas =
+    movimentosDetalhados.filter(
+      (item) =>
+        item.tipo ===
+        'SAIDA'
+    );
+
+  const devolucoes =
+    movimentosDetalhados.filter(
+      (item) =>
+        item.tipo ===
+        'DEVOLUCAO'
+    );
+
+  /*
+   * REFEIÇÕES RELACIONADAS
+   */
+  const mapaRefeicoes =
+    new Map<
+      string,
+      {
+        data: string;
+        destino: DestinoSaida;
+        nome: string;
+        referencia: string;
+      }
+    >();
+
+  for (
+    const saida of saidasFisicas
+  ) {
+    const data =
+      dataLocalISO(
+        saida.criadoEm
+      );
+
+    const chave =
+      `${data}|${saida.destino}`;
+
+    if (
+      !mapaRefeicoes.has(
+        chave
+      )
+    ) {
+      mapaRefeicoes.set(
+        chave,
+        {
+          data,
+
+          destino:
+            saida.destino,
+
+          nome:
+            nomesRefeicao[
+              saida.destino
+            ] ||
+            saida.destino,
+
+          referencia:
+            referenciaDestino(
+              saida.destino
+            ),
+        }
+      );
+    }
+  }
+
+  const refeicoesRelacionadas =
+    Array.from(
+      mapaRefeicoes.values()
+    ).sort(
+      (a, b) => {
+        const data =
+          a.data.localeCompare(
+            b.data
+          );
+
+        if (data !== 0) {
+          return data;
+        }
+
+        return a.nome.localeCompare(
+          b.nome,
+          'pt-BR'
+        );
+      }
+    );
+
+  /*
+   * RESUMO DO EFETIVO
+   */
+  const resumoEfetivo = {
+    refeicoes:
+      arranchamentos.length,
+
+    efetivoPrevisto:
+      arranchamentos.reduce(
+        (total, item) =>
+          total +
+          item.totalPrevisto,
+        0
+      ),
+
+    efetivoAlimentado:
+      arranchamentos.reduce(
+        (total, item) =>
+          total +
+          Number(
+            item
+              .arranchadosCompareceram ??
+              0
+          ),
+        0
+      ),
+
+    faltas:
+      arranchamentos.reduce(
+        (total, item) =>
+          total +
+          Number(
+            item.faltas ?? 0
+          ),
+        0
+      ),
+
+    militaresDeFora:
+      arranchamentos.reduce(
+        (total, item) =>
+          total +
+          Number(
+            item
+              .naoArranchadosAtendidos ??
+              0
+          ),
+        0
+      ),
+
+    totalAtendido:
+      arranchamentos.reduce(
+        (total, item) =>
+          total +
+          Number(
+            item.totalAtendido ??
+              0
+          ),
+        0
+      ),
+
+    sobraKg:
+      arranchamentos.reduce(
+        (total, item) =>
+          total +
+          Number(
+            item.sobraKg ?? 0
+          ),
+        0
+      ),
+  };
+
+  /*
+   * ALERTAS
+   */
+  const estoqueBaixo =
+    posicaoEstoque
+      .filter(
+        (item) =>
+          item.estoqueMinimo !=
+            null &&
+          item.quantidade <
+            item.estoqueMinimo
+      )
+      .map(
+        (item) => ({
+          ...item,
+
+          zerado:
+            item.quantidade <=
+            0,
+        })
+      );
+
+  const agora =
+    new Date();
+
+  const limiteValidade =
+    new Date(
+      agora.getTime() +
+        30 *
+          24 *
+          60 *
+          60 *
+          1000
+    );
+
+  const validade =
+    estoque
+      .filter(
+        (item) =>
+          Number(
+            item.quantidade
+          ) > 0 &&
+          item.lote?.validade &&
+          item.lote.validade <=
+            limiteValidade
+      )
+      .map(
+        (item) => ({
+          genero:
+            item.genero.nome,
+
+          lote:
+            item.lote?.numero ||
+            '',
+
+          validade:
+            item.lote
+              ?.validade ||
+            null,
+
+          quantidade:
+            Number(
+              item.quantidade
+            ),
+
+          unidade:
+            item.genero.unidade
+              .sigla,
+
+          vencido:
+            Boolean(
+              item.lote
+                ?.validade &&
+                item.lote
+                  .validade <
+                  agora
+            ),
+        })
+      )
+      .sort(
+        (a, b) => {
+          const dataA =
+            a.validade
+              ? new Date(
+                  a.validade
+                ).getTime()
+              : 0;
+
+          const dataB =
+            b.validade
+              ? new Date(
+                  b.validade
+                ).getTime()
+              : 0;
+
+          return dataA - dataB;
+        }
+      );
+
+  /*
+   * CRIAÇÃO DO EXCEL
+   */
   const workbook =
     new ExcelJS.Workbook();
 
@@ -374,11 +892,6 @@ export async function GET(
   ]);
 
   resumo.addRow([
-    'Horário de referência',
-    'Corumbá / Campo Grande',
-  ]);
-
-  resumo.addRow([
     'Relatório gerado em',
     formatarDataHora(
       new Date()
@@ -387,413 +900,946 @@ export async function GET(
 
   resumo.addRow([]);
 
-  const fechados =
-    arranchamentos.filter(
-      (item) =>
-        item
-          .fechamentoRealizadoEm !=
-        null
-    );
-
-  const totalPrevisto =
-    arranchamentos.reduce(
-      (total, item) =>
-        total +
-        item.totalPrevisto,
-      0
-    );
-
-  const totalPlanejamento =
-    arranchamentos.reduce(
-      (total, item) =>
-        total +
-        item
-          .efetivoPlanejamento,
-      0
-    );
-
-  const totalAtendido =
-    fechados.reduce(
-      (total, item) =>
-        total +
-        Number(
-          item.totalAtendido ??
-            0
-        ),
-      0
-    );
-
-  const totalSobras =
-    fechados.reduce(
-      (total, item) =>
-        total +
-        Number(
-          item.sobraKg ??
-            0
-        ),
-      0
-    );
-
   resumo.addRow([
     'Indicador',
     'Resultado',
   ]);
 
   formatarCabecalho(
-    resumo.getRow(8)
+    resumo.getRow(7)
   );
 
+  if (incluirEfetivo) {
+    resumo.addRow([
+      'Refeições realizadas',
+      resumoEfetivo.refeicoes,
+    ]);
+
+    resumo.addRow([
+      'Efetivo previsto',
+      resumoEfetivo.efetivoPrevisto,
+    ]);
+
+    resumo.addRow([
+      'Efetivo alimentado',
+      resumoEfetivo.efetivoAlimentado,
+    ]);
+
+    resumo.addRow([
+      'Faltas',
+      resumoEfetivo.faltas,
+    ]);
+
+    resumo.addRow([
+      'Militares de fora',
+      resumoEfetivo.militaresDeFora,
+    ]);
+
+    resumo.addRow([
+      'Total de atendimentos',
+      resumoEfetivo.totalAtendido,
+    ]);
+
+    resumo.addRow([
+      'Sobras pesadas (kg)',
+      resumoEfetivo.sobraKg,
+    ]);
+  }
+
+  if (incluirRefeicoes) {
+    resumo.addRow([
+      'Refeições relacionadas',
+      refeicoesRelacionadas.length,
+    ]);
+  }
+
+  if (incluirEntradas) {
+    resumo.addRow([
+      'Registros de entrada',
+      entradas.length,
+    ]);
+  }
+
+  if (incluirSaidas) {
+    resumo.addRow([
+      'Registros de saída',
+      saidas.length,
+    ]);
+  }
+
+  if (incluirDevolucoes) {
+    resumo.addRow([
+      'Registros de devolução',
+      devolucoes.length,
+    ]);
+  }
+
+  if (incluirEstoque) {
+    resumo.addRow([
+      'Gêneros na posição de estoque',
+      posicaoEstoque.length,
+    ]);
+  }
+
   resumo.addRow([
-    'Efetivo previsto',
-    totalPrevisto,
+    'Alertas de estoque mínimo',
+    estoqueBaixo.length,
   ]);
 
   resumo.addRow([
-    'Efetivo para planejamento',
-    totalPlanejamento,
-  ]);
-
-  resumo.addRow([
-    'Total atendido',
-    fechados.length > 0
-      ? totalAtendido
-      : 'Pendente',
-  ]);
-
-  resumo.addRow([
-    'Sobras pesadas (kg)',
-    fechados.length > 0
-      ? totalSobras
-      : 'Pendente',
-  ]);
-
-  resumo.addRow([
-    'Refeições relacionadas',
-    arranchamentos.length,
-  ]);
-
-  resumo.addRow([
-    'Refeições fechadas',
-    fechados.length,
-  ]);
-
-  resumo.addRow([
-    'Refeições pendentes',
-    arranchamentos.length -
-      fechados.length,
+    'Alertas de validade',
+    validade.length,
   ]);
 
   ajustarColunas(
     resumo,
-    [32, 32, 18, 18]
+    [
+      34,
+      32,
+      18,
+      18,
+    ]
   );
 
   /*
-   * EFETIVO ALIMENTADO
+   * EFETIVO POR REFEIÇÃO
    */
-  const efetivo =
-    workbook.addWorksheet(
-      'Efetivo alimentado'
-    );
-
-  efetivo.addRow([
-    'Data',
-    'Situação',
-    'Refeição',
-    'Of / ST / Sgt',
-    'Cb / Sd',
-    'Outros',
-    'Previsto',
-    'Margem (%)',
-    'Planejamento',
-    'Arranchados presentes',
-    'Não arranchados',
-    'Total atendido',
-    'Sobra (kg)',
-    'Observação',
-  ]);
-
-  formatarCabecalho(
-    efetivo.getRow(1)
-  );
-
-  const dias =
-    gerarDias(
-      inicio,
-      fim
-    );
-
-  for (
-    const dia of dias
-  ) {
-    const registros =
-      arranchamentos.filter(
-        (item) =>
-          item.data
-            .toISOString()
-            .slice(0, 10) ===
-          dia
+  if (incluirEfetivo) {
+    const efetivo =
+      workbook.addWorksheet(
+        'Efetivo por refeição'
       );
 
-    if (
-      registros.length ===
-      0
-    ) {
-      efetivo.addRow([
-        formatarData(dia),
-        'SEM LANÇAMENTO',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        'Não existe arranchamento registrado para esta data.',
-      ]);
+    efetivo.addRow([
+      'Data',
+      'Refeição',
+      'Efetivo previsto',
+      'Efetivo alimentado',
+      'Faltas',
+      'Militares de fora',
+      'Total atendido',
+    ]);
 
-      continue;
-    }
+    formatarCabecalho(
+      efetivo.getRow(1)
+    );
 
     for (
-      const item of registros
+      const item of arranchamentos
     ) {
-      const fechado =
-        item
-          .fechamentoRealizadoEm !=
-        null;
-
       efetivo.addRow([
         formatarData(
           item.data
         ),
-
-        fechado
-          ? 'FECHADO'
-          : 'PENDENTE',
 
         nomesRefeicao[
           item.refeicao
         ] ||
           item.refeicao,
 
-        item.oficiaisStenSgt,
-
-        item.cabosSoldados,
-
-        item.outrosPrevistos,
-
         item.totalPrevisto,
 
-        Number(
-          item
-            .margemSegurancaPercent
-        ),
+        item
+          .arranchadosCompareceram ??
+          0,
+
+        item.faltas ??
+          0,
 
         item
-          .efetivoPlanejamento,
+          .naoArranchadosAtendidos ??
+          0,
 
-        fechado
-          ? item
-              .arranchadosCompareceram
-          : '',
+        item.totalAtendido ??
+          0,
+      ]);
+    }
 
-        fechado
-          ? item
-              .naoArranchadosAtendidos
-          : '',
+    efetivo.addRow([]);
 
-        fechado
-          ? item.totalAtendido
-          : '',
+    efetivo.addRow([
+      'TOTAL',
+      `${resumoEfetivo.refeicoes} refeição(ões)`,
+      resumoEfetivo.efetivoPrevisto,
+      resumoEfetivo.efetivoAlimentado,
+      resumoEfetivo.faltas,
+      resumoEfetivo.militaresDeFora,
+      resumoEfetivo.totalAtendido,
+    ]);
 
-        fechado &&
+    efetivo.getRow(
+      efetivo.rowCount
+    ).font = {
+      bold: true,
+    };
+
+    efetivo.addRow([]);
+
+    efetivo.addRow([
+      'Sobras',
+      'Quantidade (kg)',
+    ]);
+
+    formatarCabecalho(
+      efetivo.getRow(
+        efetivo.rowCount
+      )
+    );
+
+    for (
+      const item of arranchamentos
+    ) {
+      if (
         item.sobraKg != null
-          ? Number(
-              item.sobraKg
-            )
-          : '',
+      ) {
+        efetivo.addRow([
+          `${formatarData(
+            item.data
+          )} - ${
+            nomesRefeicao[
+              item.refeicao
+            ] ||
+            item.refeicao
+          }`,
+
+          Number(
+            item.sobraKg
+          ),
+        ]);
+      }
+    }
+
+    efetivo.addRow([
+      'Sobra total no período',
+      resumoEfetivo.sobraKg,
+    ]);
+
+    efetivo.getRow(
+      efetivo.rowCount
+    ).font = {
+      bold: true,
+    };
+
+    ajustarColunas(
+      efetivo,
+      [
+        15,
+        27,
+        18,
+        20,
+        12,
+        20,
+        18,
+      ]
+    );
+
+    efetivo.views = [
+      {
+        state: 'frozen',
+        ySplit: 1,
+      },
+    ];
+
+    prepararPlanilha(
+      efetivo
+    );
+  }
+
+  /*
+   * REFEIÇÕES RELACIONADAS
+   */
+  if (incluirRefeicoes) {
+    const refeicoes =
+      workbook.addWorksheet(
+        'Refeições relacionadas'
+      );
+
+    refeicoes.addRow([
+      'Data da saída',
+      'Refeição / destino',
+      'Referência',
+    ]);
+
+    formatarCabecalho(
+      refeicoes.getRow(1)
+    );
+
+    for (
+      const item of refeicoesRelacionadas
+    ) {
+      refeicoes.addRow([
+        formatarData(
+          item.data
+        ),
+
+        item.nome,
+
+        item.referencia,
+      ]);
+    }
+
+    ajustarColunas(
+      refeicoes,
+      [
+        18,
+        32,
+        20,
+      ]
+    );
+
+    refeicoes.views = [
+      {
+        state: 'frozen',
+        ySplit: 1,
+      },
+    ];
+
+    prepararPlanilha(
+      refeicoes
+    );
+  }
+
+  /*
+   * ENTRADAS
+   */
+  if (incluirEntradas) {
+    const planilhaEntradas =
+      workbook.addWorksheet(
+        'Entradas'
+      );
+
+    planilhaEntradas.addRow([
+      'Data / hora',
+      'Gênero',
+      'Grupo',
+      'Categoria',
+      'Classe',
+      'Quantidade',
+      'Unidade',
+      'Lote',
+      'Local de destino',
+      'Observação',
+    ]);
+
+    formatarCabecalho(
+      planilhaEntradas.getRow(
+        1
+      )
+    );
+
+    for (
+      const item of entradas
+    ) {
+      planilhaEntradas.addRow([
+        formatarDataHora(
+          item.dataHora
+        ),
+
+        item.genero,
+        item.grupo,
+        item.categoria,
+        item.classe,
+        item.quantidade,
+        item.unidade,
+        item.lote || '',
+        item.localDestino || '',
+        item.observacao || '',
+      ]);
+    }
+
+    ajustarColunas(
+      planilhaEntradas,
+      [
+        23,
+        32,
+        24,
+        25,
+        10,
+        15,
+        12,
+        20,
+        30,
+        40,
+      ]
+    );
+
+    planilhaEntradas.views = [
+      {
+        state: 'frozen',
+        ySplit: 1,
+      },
+    ];
+
+    prepararPlanilha(
+      planilhaEntradas
+    );
+  }
+
+  /*
+   * SAÍDAS
+   */
+  if (incluirSaidas) {
+    const planilhaSaidas =
+      workbook.addWorksheet(
+        'Saídas'
+      );
+
+    planilhaSaidas.addRow([
+      'Data / hora',
+      'Gênero',
+      'Grupo',
+      'Categoria',
+      'Classe',
+      'Quantidade',
+      'Unidade',
+      'Lote',
+      'Local de origem',
+      'Finalidade / observação',
+    ]);
+
+    formatarCabecalho(
+      planilhaSaidas.getRow(
+        1
+      )
+    );
+
+    for (
+      const item of saidas
+    ) {
+      planilhaSaidas.addRow([
+        formatarDataHora(
+          item.dataHora
+        ),
+
+        item.genero,
+        item.grupo,
+        item.categoria,
+        item.classe,
+        item.quantidade,
+        item.unidade,
+        item.lote || '',
+        item.localOrigem || '',
+        item.observacao || '',
+      ]);
+    }
+
+    ajustarColunas(
+      planilhaSaidas,
+      [
+        23,
+        32,
+        24,
+        25,
+        10,
+        15,
+        12,
+        20,
+        30,
+        42,
+      ]
+    );
+
+    planilhaSaidas.views = [
+      {
+        state: 'frozen',
+        ySplit: 1,
+      },
+    ];
+
+    prepararPlanilha(
+      planilhaSaidas
+    );
+  }
+
+  /*
+   * DEVOLUÇÕES
+   */
+  if (incluirDevolucoes) {
+    const planilhaDevolucoes =
+      workbook.addWorksheet(
+        'Devoluções'
+      );
+
+    planilhaDevolucoes.addRow([
+      'Data / hora',
+      'Gênero',
+      'Grupo',
+      'Categoria',
+      'Classe',
+      'Quantidade',
+      'Unidade',
+      'Lote',
+      'Local',
+      'Observação',
+    ]);
+
+    formatarCabecalho(
+      planilhaDevolucoes.getRow(
+        1
+      )
+    );
+
+    for (
+      const item of devolucoes
+    ) {
+      planilhaDevolucoes.addRow([
+        formatarDataHora(
+          item.dataHora
+        ),
+
+        item.genero,
+        item.grupo,
+        item.categoria,
+        item.classe,
+        item.quantidade,
+        item.unidade,
+        item.lote || '',
+
+        item.localDestino ||
+          item.localOrigem ||
+          '',
 
         item.observacao ||
           '',
       ]);
     }
-  }
 
-  ajustarColunas(
-    efetivo,
-    [
-      14,
-      18,
-      20,
-      14,
-      14,
-      12,
-      12,
-      13,
-      16,
-      22,
-      20,
-      16,
-      14,
-      45,
-    ]
-  );
-
-  efetivo.views = [
-    {
-      state: 'frozen',
-      ySplit: 1,
-    },
-  ];
-
-  efetivo.autoFilter = {
-    from: 'A1',
-    to: 'N1',
-  };
-
-  /*
-   * MOVIMENTAÇÕES
-   */
-  const movimentos =
-    workbook.addWorksheet(
-      'Movimentações'
+    ajustarColunas(
+      planilhaDevolucoes,
+      [
+        23,
+        32,
+        24,
+        25,
+        10,
+        15,
+        12,
+        20,
+        30,
+        42,
+      ]
     );
 
-  movimentos.addRow([
-    'Data / hora da movimentação',
-    'Tipo',
-    'Classe',
+    planilhaDevolucoes.views = [
+      {
+        state: 'frozen',
+        ySplit: 1,
+      },
+    ];
+
+    prepararPlanilha(
+      planilhaDevolucoes
+    );
+  }
+
+  /*
+   * POSIÇÃO DO ESTOQUE
+   */
+  if (incluirEstoque) {
+    const planilhaEstoque =
+      workbook.addWorksheet(
+        'Posição do estoque'
+      );
+
+    planilhaEstoque.addRow([
+      'Grupo',
+      'Categoria',
+      'Gênero',
+      'Classe',
+      'Quantidade',
+      'Unidade',
+      'Estoque mínimo',
+      'Situação',
+    ]);
+
+    formatarCabecalho(
+      planilhaEstoque.getRow(
+        1
+      )
+    );
+
+    const ordenado =
+      [...posicaoEstoque].sort(
+        (a, b) => {
+          const grupo =
+            a.grupo.localeCompare(
+              b.grupo,
+              'pt-BR'
+            );
+
+          if (grupo !== 0) {
+            return grupo;
+          }
+
+          const categoria =
+            a.categoria.localeCompare(
+              b.categoria,
+              'pt-BR'
+            );
+
+          if (
+            categoria !==
+            0
+          ) {
+            return categoria;
+          }
+
+          return a.nome.localeCompare(
+            b.nome,
+            'pt-BR'
+          );
+        }
+      );
+
+    let grupoAtual:
+      | string
+      | null = null;
+
+    let categoriaAtual:
+      | string
+      | null = null;
+
+    let itensCategoria:
+      typeof posicaoEstoque =
+      [];
+
+    let itensGrupo:
+      typeof posicaoEstoque =
+      [];
+
+    function adicionarSubtotalCategoria() {
+      if (
+        !categoriaAtual ||
+        itensCategoria.length ===
+          0
+      ) {
+        return;
+      }
+
+      const totais =
+        new Map<
+          string,
+          number
+        >();
+
+      for (
+        const item of itensCategoria
+      ) {
+        totais.set(
+          item.unidade,
+
+          (totais.get(
+            item.unidade
+          ) || 0) +
+            item.quantidade
+        );
+      }
+
+      for (
+        const [
+          unidade,
+          total,
+        ] of totais
+      ) {
+        const linha =
+          planilhaEstoque.addRow([
+            '',
+            `Subtotal ${categoriaAtual}`,
+            '',
+            '',
+            total,
+            unidade,
+            '',
+            '',
+          ]);
+
+        linha.font = {
+          bold: true,
+        };
+      }
+    }
+
+    function adicionarTotalGrupo() {
+      if (
+        !grupoAtual ||
+        itensGrupo.length ===
+          0
+      ) {
+        return;
+      }
+
+      const totais =
+        new Map<
+          string,
+          number
+        >();
+
+      for (
+        const item of itensGrupo
+      ) {
+        totais.set(
+          item.unidade,
+
+          (totais.get(
+            item.unidade
+          ) || 0) +
+            item.quantidade
+        );
+      }
+
+      for (
+        const [
+          unidade,
+          total,
+        ] of totais
+      ) {
+        const linha =
+          planilhaEstoque.addRow([
+            `Total ${grupoAtual}`,
+            '',
+            '',
+            '',
+            total,
+            unidade,
+            '',
+            '',
+          ]);
+
+        linha.font = {
+          bold: true,
+        };
+      }
+    }
+
+    for (
+      const item of ordenado
+    ) {
+      if (
+        grupoAtual !==
+        null &&
+        item.grupo !==
+          grupoAtual
+      ) {
+        adicionarSubtotalCategoria();
+        adicionarTotalGrupo();
+
+        itensCategoria =
+          [];
+
+        itensGrupo =
+          [];
+
+        categoriaAtual =
+          null;
+      } else if (
+        categoriaAtual !==
+          null &&
+        item.categoria !==
+          categoriaAtual
+      ) {
+        adicionarSubtotalCategoria();
+
+        itensCategoria =
+          [];
+      }
+
+      grupoAtual =
+        item.grupo;
+
+      categoriaAtual =
+        item.categoria;
+
+      itensCategoria.push(
+        item
+      );
+
+      itensGrupo.push(
+        item
+      );
+
+      let situacao =
+        'Normal';
+
+      if (
+        item.quantidade <=
+        0
+      ) {
+        situacao =
+          'Sem estoque';
+      } else if (
+        item.estoqueMinimo !=
+          null &&
+        item.quantidade <
+          item.estoqueMinimo
+      ) {
+        situacao =
+          'Abaixo do mínimo';
+      }
+
+      planilhaEstoque.addRow([
+        item.grupo,
+        item.categoria,
+        item.nome,
+        item.classe,
+        item.quantidade,
+        item.unidade,
+        item.estoqueMinimo ??
+          '',
+        situacao,
+      ]);
+    }
+
+    adicionarSubtotalCategoria();
+    adicionarTotalGrupo();
+
+    ajustarColunas(
+      planilhaEstoque,
+      [
+        26,
+        28,
+        34,
+        10,
+        16,
+        12,
+        18,
+        20,
+      ]
+    );
+
+    planilhaEstoque.views = [
+      {
+        state: 'frozen',
+        ySplit: 1,
+      },
+    ];
+
+    prepararPlanilha(
+      planilhaEstoque
+    );
+  }
+
+  /*
+   * ALERTAS
+   * SEMPRE INCLUÍDOS
+   */
+  const alertas =
+    workbook.addWorksheet(
+      'Alertas'
+    );
+
+  alertas.addRow([
+    'Tipo de alerta',
     'Gênero',
-    'Quantidade',
+    'Quantidade / saldo',
     'Unidade',
+    'Estoque mínimo',
     'Lote',
-    'Local de saída / origem',
-    'Local de armazenamento / destino',
-    'Valor unitário',
-    'Observação',
+    'Validade',
   ]);
 
   formatarCabecalho(
-    movimentos.getRow(1)
+    alertas.getRow(1)
   );
 
-  for (
-    const item of movimentacoes
+  if (
+    estoqueBaixo.length ===
+      0 &&
+    validade.length === 0
   ) {
-    let localOrigem = '';
-    let localDestino = '';
-
-    if (
-      item.localOrigem
-        ?.nome
-    ) {
-      localOrigem =
-        item.localOrigem.nome;
-    }
-
-    if (
-      item.localDestino
-        ?.nome
-    ) {
-      localDestino =
-        item.localDestino.nome;
-    }
-
-    movimentos.addRow([
-      formatarDataHora(
-        item.criadoEm
-      ),
-
-      nomesMovimentacao[
-        item.tipo
-      ] ||
-        item.tipo,
-
-      item.classe,
-
-      item.genero.nome,
-
-      Number(
-        item.quantidade
-      ),
-
-      item.genero
-        .unidade.sigla,
-
-      item.lote?.numero ||
-        '',
-
-      localOrigem,
-
-      localDestino,
-
-      item.valorUnitario !=
-      null
-        ? Number(
-            item.valorUnitario
-          )
-        : '',
-
-      item.observacao ||
-        '',
+    alertas.addRow([
+      'Nenhum alerta',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
     ]);
+  } else {
+    for (
+      const item of estoqueBaixo
+    ) {
+      alertas.addRow([
+        item.zerado
+          ? 'ESTOQUE ZERADO'
+          : 'ESTOQUE BAIXO',
+
+        item.nome,
+
+        item.quantidade,
+
+        item.unidade,
+
+        item.estoqueMinimo ??
+          '',
+
+        '',
+
+        '',
+      ]);
+    }
+
+    for (
+      const item of validade
+    ) {
+      alertas.addRow([
+        item.vencido
+          ? 'LOTE VENCIDO'
+          : 'VALIDADE PRÓXIMA',
+
+        item.genero,
+
+        item.quantidade,
+
+        item.unidade,
+
+        '',
+
+        item.lote,
+
+        item.validade
+          ? formatarData(
+              item.validade
+            )
+          : '',
+      ]);
+    }
   }
 
   ajustarColunas(
-    movimentos,
+    alertas,
     [
-      26,
-      22,
-      10,
-      32,
-      14,
-      12,
-      20,
-      28,
+      24,
       34,
-      16,
-      45,
+      20,
+      12,
+      18,
+      22,
+      18,
     ]
   );
 
-  movimentos.views = [
+  alertas.views = [
     {
       state: 'frozen',
       ySplit: 1,
     },
   ];
 
-  movimentos.autoFilter = {
-    from: 'A1',
-    to: 'K1',
-  };
+  prepararPlanilha(
+    alertas
+  );
 
   /*
-   * FORMATAÇÃO GERAL
+   * FORMATAÇÃO DO RESUMO
    */
-  for (
-    const planilha of [
-      resumo,
-      efetivo,
-      movimentos,
-    ]
-  ) {
-    planilha.eachRow(
-      (linha) => {
-        linha.alignment = {
-          ...linha.alignment,
-          vertical: 'middle',
-          wrapText: true,
-        };
-      }
-    );
-  }
+  prepararPlanilha(
+    resumo
+  );
 
+  /*
+   * GERAÇÃO DO ARQUIVO
+   */
   const buffer =
     await workbook.xlsx.writeBuffer();
 
