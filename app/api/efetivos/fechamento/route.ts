@@ -5,21 +5,28 @@ import { z } from 'zod';
 const ItemFechamentoSchema = z.object({
   id: z.string().min(1),
 
-  // Obrigatório:
-  // quantidade de arranchados que realmente compareceram
+  // Efetivo alimentado:
+  // quantidade de arranchados que realmente fizeram a refeição.
   arranchadosCompareceram: z.coerce
     .number()
     .int()
     .min(0),
 
-  // Obrigatório, podendo ser zero
+  // Faltas são informadas manualmente pelo usuário.
+  faltas: z.coerce
+    .number()
+    .int()
+    .min(0),
+
+  // Militares de fora:
+  // pessoas atendidas que não estavam no efetivo previsto.
   naoArranchadosAtendidos: z.coerce
     .number()
     .int()
     .min(0),
 
-  // Obrigatório.
-  // Se não houve sobra, deve ser informado 0.
+  // Sobras ficam registradas separadamente do quadro de efetivo.
+  // Zero significa que não houve sobra.
   sobraKg: z.coerce
     .number()
     .min(0),
@@ -27,7 +34,7 @@ const ItemFechamentoSchema = z.object({
 
 const FechamentoSchema = z.object({
   // Data real do serviço (Dia D),
-  // independentemente da data em que o lançamento for feito
+  // independentemente da data em que o lançamento for feito.
   data: z.string().min(10),
 
   itens: z
@@ -57,7 +64,7 @@ export async function POST(req: Request) {
     return Response.json(
       {
         error:
-          'Para concluir o fechamento, informe a data do serviço, o comparecimento dos arranchados, os não arranchados atendidos e a sobra pesada em kg de todas as refeições.',
+          'Para concluir o fechamento, informe a data do serviço, o efetivo alimentado, as faltas, os militares de fora atendidos e a sobra pesada de todas as refeições.',
       },
       {
         status: 400,
@@ -122,11 +129,13 @@ export async function POST(req: Request) {
           }
 
           /*
-           * Total realmente atendido:
+           * Total realmente atendido na refeição:
            *
-           * arranchados que compareceram
+           * efetivo alimentado
            * +
-           * não arranchados atendidos
+           * militares de fora
+           *
+           * As faltas NÃO entram nesta soma.
            */
           const totalAtendido =
             item.arranchadosCompareceram +
@@ -142,18 +151,21 @@ export async function POST(req: Request) {
                 arranchadosCompareceram:
                   item.arranchadosCompareceram,
 
+                faltas:
+                  item.faltas,
+
                 naoArranchadosAtendidos:
                   item.naoArranchadosAtendidos,
 
                 totalAtendido,
 
-                // Pesagem obrigatória.
+                // Pesagem separada do quadro de efetivo.
                 // Zero significa que não houve sobra.
                 sobraKg: item.sobraKg,
 
                 /*
-                 * Esta é a data/hora em que o usuário
-                 * efetivamente realizou o lançamento.
+                 * Data/hora real em que o usuário
+                 * realizou o lançamento.
                  *
                  * A data do serviço continua sendo
                  * Arranchamento.data.
@@ -192,10 +204,13 @@ export async function POST(req: Request) {
                 refeicao:
                   anterior.refeicao,
 
-                arranchadosCompareceram:
+                efetivoAlimentado:
                   anterior.arranchadosCompareceram,
 
-                naoArranchadosAtendidos:
+                faltas:
+                  anterior.faltas,
+
+                militaresDeFora:
                   anterior.naoArranchadosAtendidos,
 
                 totalAtendido:
@@ -216,10 +231,13 @@ export async function POST(req: Request) {
                 refeicao:
                   anterior.refeicao,
 
-                arranchadosCompareceram:
+                efetivoAlimentado:
                   item.arranchadosCompareceram,
 
-                naoArranchadosAtendidos:
+                faltas:
+                  item.faltas,
+
+                militaresDeFora:
                   item.naoArranchadosAtendidos,
 
                 totalAtendido,
@@ -241,11 +259,14 @@ export async function POST(req: Request) {
     );
 
   /*
-   * Soma dos resultados do fechamento diário.
-   * Isso já deixa a API preparada para a tela e
-   * posteriormente para os relatórios.
+   * Consolidação diária.
+   *
+   * O totalAtendido representa o número total de
+   * atendimentos/refeições servidas no dia.
+   *
+   * Uma mesma pessoa pode aparecer em mais de uma refeição.
    */
-  const totalArranchadosCompareceram =
+  const totalEfetivoAlimentado =
     resultado.reduce(
       (total, item) =>
         total +
@@ -253,7 +274,15 @@ export async function POST(req: Request) {
       0
     );
 
-  const totalNaoArranchados =
+  const totalFaltas =
+    resultado.reduce(
+      (total, item) =>
+        total +
+        (item.faltas ?? 0),
+      0
+    );
+
+  const totalMilitaresDeFora =
     resultado.reduce(
       (total, item) =>
         total +
@@ -283,23 +312,21 @@ export async function POST(req: Request) {
     dataServico:
       dados.data,
 
-    /*
-     * Data/hora real do lançamento.
-     * Portanto, um serviço do dia 08 poderá perfeitamente
-     * ser lançado no dia 09, 10, 12 etc.
-     */
     fechamentoRegistradoEm:
       new Date().toISOString(),
 
-    refeicoesFechadas:
+    quantidadeRefeicoes:
       resultado.length,
 
     resumo: {
-      arranchadosCompareceram:
-        totalArranchadosCompareceram,
+      efetivoAlimentado:
+        totalEfetivoAlimentado,
 
-      naoArranchadosAtendidos:
-        totalNaoArranchados,
+      faltas:
+        totalFaltas,
+
+      militaresDeFora:
+        totalMilitaresDeFora,
 
       totalAtendido,
 
@@ -308,6 +335,6 @@ export async function POST(req: Request) {
     },
 
     mensagem:
-      'Fechamento diário registrado com sucesso.',
+      'Efetivo diário registrado com sucesso.',
   });
 }
