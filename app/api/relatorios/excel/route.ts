@@ -436,6 +436,7 @@ export async function GET(
         id: true,
         numero: true,
         destino: true,
+        data: true,
         criadoEm: true,
         observacao: true,
       },
@@ -445,6 +446,26 @@ export async function GET(
       },
     }),
   ]);
+
+  /*
+   * MAPA DAS SAÍDAS
+   *
+   * Cada movimentação de saída possui
+   * referenciaId apontando para Saida.id.
+   *
+   * Assim o Excel utiliza a finalidade
+   * verdadeira da saída e não depende
+   * mais do texto da observação.
+   */
+  const saidasPorId =
+    new Map(
+      saidasFisicas.map(
+        (saida) => [
+          saida.id,
+          saida,
+        ]
+      )
+    );
 
   /*
    * SALDO ATUAL POR GÊNERO
@@ -508,57 +529,105 @@ export async function GET(
    */
   const movimentosDetalhados =
     movimentacoes.map(
-      (item) => ({
-        id:
-          item.id,
+      (item) => {
+        const saidaRelacionada =
+          item.tipo === 'SAIDA' &&
+          item.referenciaTipo ===
+            'Saida' &&
+          item.referenciaId
+            ? saidasPorId.get(
+                item.referenciaId
+              )
+            : undefined;
 
-        tipo:
-          item.tipo,
+        return {
+          id:
+            item.id,
 
-        classe:
-          item.classe,
+          tipo:
+            item.tipo,
 
-        genero:
-          item.genero.nome,
+          classe:
+            item.classe,
 
-        grupo:
-          item.genero.categoria
-            ?.grupo?.nome ||
-          'Sem grupo',
+          genero:
+            item.genero.nome,
 
-        categoria:
-          item.genero.categoria
-            ?.nome ||
-          'Sem categoria',
+          grupo:
+            item.genero.categoria
+              ?.grupo?.nome ||
+            'Sem grupo',
 
-        quantidade:
-          Number(
-            item.quantidade
-          ),
+          categoria:
+            item.genero.categoria
+              ?.nome ||
+            'Sem categoria',
 
-        unidade:
-          item.genero.unidade
-            .sigla,
+          quantidade:
+            Number(
+              item.quantidade
+            ),
 
-        dataHora:
-          item.criadoEm,
+          unidade:
+            item.genero.unidade
+              .sigla,
 
-        lote:
-          item.lote?.numero ||
-          null,
+          dataHora:
+            item.criadoEm,
 
-        localOrigem:
-          item.localOrigem?.nome ||
-          null,
+          lote:
+            item.lote?.numero ||
+            null,
 
-        localDestino:
-          item.localDestino?.nome ||
-          null,
+          localOrigem:
+            item.localOrigem?.nome ||
+            null,
 
-        observacao:
-          item.observacao ||
-          null,
-      })
+          localDestino:
+            item.localDestino?.nome ||
+            null,
+
+          observacao:
+            item.observacao ||
+            null,
+
+          numeroSaida:
+            saidaRelacionada
+              ?.numero ??
+            null,
+
+          destino:
+            saidaRelacionada
+              ?.destino ??
+            null,
+
+          destinoNome:
+            saidaRelacionada
+              ? nomesRefeicao[
+                  saidaRelacionada
+                    .destino
+                ] ||
+                saidaRelacionada
+                  .destino
+              : null,
+
+          referenciaServico:
+            saidaRelacionada
+              ? referenciaDestino(
+                  saidaRelacionada
+                    .destino
+                )
+              : null,
+
+          dataOperacional:
+            saidaRelacionada
+              ? dataLocalISO(
+                  saidaRelacionada
+                    .data
+                )
+              : null,
+        };
+      }
     );
 
   const entradas =
@@ -1294,7 +1363,9 @@ export async function GET(
       'Unidade',
       'Lote',
       'Local de origem',
-      'Finalidade / observação',
+      'Finalidade',
+      'Referência',
+      'Nº da saída',
     ]);
 
     formatarCabecalho(
@@ -1319,7 +1390,15 @@ export async function GET(
         item.unidade,
         item.lote || '',
         item.localOrigem || '',
-        item.observacao || '',
+
+        item.destinoNome ||
+          '',
+
+        item.referenciaServico ||
+          '',
+
+        item.numeroSaida ??
+          '',
       ]);
     }
 
@@ -1335,7 +1414,9 @@ export async function GET(
         12,
         20,
         30,
-        42,
+        30,
+        18,
+        15,
       ]
     );
 
@@ -1616,7 +1697,7 @@ export async function GET(
     ) {
       if (
         grupoAtual !==
-        null &&
+          null &&
         item.grupo !==
           grupoAtual
       ) {
