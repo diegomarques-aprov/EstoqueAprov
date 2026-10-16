@@ -18,8 +18,6 @@ export default function Home() {
         overflow: 'hidden',
       }}
     >
-      {/* Imagem de abertura — mantém exatamente
-          o preenchimento de tela que já funcionava */}
       <img
         src="/abertura-estoqueaprov.jpg.jpeg"
         alt="EstoqueAprov"
@@ -41,25 +39,18 @@ export default function Home() {
         }}
       />
 
-      {/* Somente a região do botão ENTRAR é clicável */}
       <Link
         href="/login"
         aria-label="Entrar no EstoqueAprov"
         className="botao-entrar"
       >
-        <span className="texto-acessivel">
-          Entrar
-        </span>
+        Entrar
       </Link>
 
       <style>{`
         .botao-entrar {
           position: absolute;
 
-          /*
-           * Posição do botão existente
-           * na própria imagem.
-           */
           left: 50%;
           top: 48.4%;
 
@@ -73,63 +64,75 @@ export default function Home() {
 
           transform: translate(-50%, -50%);
 
-          display: block;
+          display: flex;
+          align-items: center;
+          justify-content: center;
 
-          margin: 0;
-          padding: 0;
+          box-sizing: border-box;
 
-          border: 0;
+          border: 2px solid #d7c94b;
           border-radius: 16px;
 
-          background: transparent;
+          background:
+            linear-gradient(
+              180deg,
+              #164d35 0%,
+              #0d3c2a 100%
+            );
+
+          color: #ffffff;
+
+          font-size: clamp(22px, 2vw, 31px);
+          font-weight: 700;
+          line-height: 1;
+
+          text-decoration: none;
+          text-shadow:
+            0 2px 3px rgba(0, 0, 0, 0.65);
+
+          box-shadow:
+            0 7px 0 #08291d,
+            0 10px 16px rgba(0, 0, 0, 0.35);
 
           cursor: pointer;
           z-index: 10000;
 
-          text-decoration: none;
+          user-select: none;
+          -webkit-user-select: none;
 
           -webkit-tap-highlight-color: transparent;
           touch-action: manipulation;
 
           transition:
-            transform 90ms ease,
-            filter 90ms ease;
+            transform 80ms ease,
+            box-shadow 80ms ease,
+            filter 80ms ease;
+        }
+
+        .botao-entrar:hover {
+          filter: brightness(1.06);
         }
 
         /*
-         * Efeito físico ao pressionar:
-         * o botão "afunda" alguns pixels.
+         * Agora o botão VISÍVEL realmente
+         * desce ao ser pressionado.
          */
         .botao-entrar:active {
           transform:
-            translate(-50%, calc(-50% + 6px))
-            scale(0.98);
+            translate(-50%, calc(-50% + 7px));
 
-          filter: brightness(0.82);
+          box-shadow:
+            0 1px 0 #08291d,
+            0 3px 7px rgba(0, 0, 0, 0.28);
+
+          filter: brightness(0.9);
         }
 
         .botao-entrar:focus-visible {
           outline: 3px solid #ffffff;
-          outline-offset: 3px;
+          outline-offset: 4px;
         }
 
-        .texto-acessivel {
-          position: absolute;
-          width: 1px;
-          height: 1px;
-          padding: 0;
-          margin: -1px;
-          overflow: hidden;
-          clip: rect(0, 0, 0, 0);
-          white-space: nowrap;
-          border: 0;
-        }
-
-        /*
-         * No iPhone mantemos o mesmo centro
-         * do botão da arte, aumentando apenas
-         * a área de toque.
-         */
         @media (max-width: 600px) {
           .botao-entrar {
             width: 46vw;
@@ -138,6 +141,8 @@ export default function Home() {
 
             height: 64px;
             min-height: 56px;
+
+            font-size: 24px;
           }
         }
       `}</style>
