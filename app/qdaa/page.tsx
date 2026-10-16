@@ -17,7 +17,9 @@ export default async function Page() {
         ← Início
       </Link>
 
-      <h1>QDAA / Ressuprimento QS</h1>
+      <h1>
+        QDAA / Ressuprimento QS
+      </h1>
 
       <div className="card">
         <h2>
@@ -33,16 +35,20 @@ export default async function Page() {
 
         <p className="muted">
           O QDAA é apurado mensalmente. O
-          histórico de consumo será utilizado
-          para auxiliar o cálculo das
-          necessidades do próximo ciclo
-          bimestral de ressuprimento.
+          histórico de consumo e o efetivo
+          realmente atendido serão utilizados
+          para auxiliar a análise das
+          necessidades dos próximos ciclos de
+          ressuprimento.
         </p>
 
         <div
           className="actions"
           style={{
             marginTop: 14,
+            display: 'flex',
+            gap: 10,
+            flexWrap: 'wrap',
           }}
         >
           <Link
@@ -50,6 +56,13 @@ export default async function Page() {
             href="/qdaa/historico"
           >
             Histórico de Ressuprimentos QS
+          </Link>
+
+          <Link
+            className="btn"
+            href="/consumo-efetivo"
+          >
+            Consumo × Efetivo
           </Link>
         </div>
       </div>
