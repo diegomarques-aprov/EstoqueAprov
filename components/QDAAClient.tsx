@@ -1436,9 +1436,10 @@ export default function QDAAClient() {
                         </button>
                       )
                     )}
-                </div>
+                               </div>
               </div>
             )}
+          </div>
 
           <div className="card">
             <h2>
