@@ -1,46 +1,5 @@
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { currentUser } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
-import FinanceiroQRClient from '@/components/FinanceiroQRClient';
 
-export default async function Page() {
-  const usuario = await currentUser();
-
-  if (!usuario) {
-    redirect('/login');
-  }
-
-  const generos = await prisma.genero.findMany({
-    where: {
-      classe: 'QR',
-      situacao: 'ATIVO',
-    },
-    include: {
-      unidade: true,
-    },
-    orderBy: {
-      nome: 'asc',
-    },
-  });
-
-  return (
-    <main>
-      <Link
-        className="back"
-        href="/inicio"
-      >
-        ← Início
-      </Link>
-
-      <h1>Recursos e Compras QR</h1>
-
-      <p className="muted">
-        Controle de crédito disponível, entradas de
-        recurso, compras/empenhos e histórico de saldo.
-      </p>
-
-      <FinanceiroQRClient generos={generos} />
-    </main>
-  );
+export default function Page() {
+  redirect('/inicio');
 }
