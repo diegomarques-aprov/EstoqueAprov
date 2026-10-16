@@ -4,9 +4,15 @@ import { requireAdmin } from '@/lib/guard';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-function inicioDoMes(ano: number, mes: number) {
+function inicioDoMes(
+  ano: number,
+  mes: number
+) {
   return new Date(
-    `${ano}-${String(mes).padStart(2, '0')}-01T00:00:00.000Z`
+    `${ano}-${String(mes).padStart(
+      2,
+      '0'
+    )}-01T00:00:00.000Z`
   );
 }
 
@@ -21,7 +27,9 @@ function inicioDoMesSeguinte(
   }
 
   return new Date(
-    `${ano}-${String(mes + 1).padStart(
+    `${ano}-${String(
+      mes + 1
+    ).padStart(
       2,
       '0'
     )}-01T00:00:00.000Z`
@@ -91,24 +99,35 @@ function impactoEstoque(
   }
 }
 
-export async function GET(req: Request) {
-  const g = await requireAdmin();
+export async function GET(
+  req: Request
+) {
+  const g =
+    await requireAdmin();
 
   if (g.error) {
     return g.error;
   }
 
-  const q = new URL(req.url).searchParams;
+  const q =
+    new URL(
+      req.url
+    ).searchParams;
 
-  const agora = new Date();
+  const agora =
+    new Date();
 
-  const ano = Number(
-    q.get('ano') || agora.getUTCFullYear()
-  );
+  const ano =
+    Number(
+      q.get('ano') ||
+        agora.getUTCFullYear()
+    );
 
-  const mes = Number(
-    q.get('mes') || agora.getUTCMonth() + 1
-  );
+  const mes =
+    Number(
+      q.get('mes') ||
+        agora.getUTCMonth() + 1
+    );
 
   if (
     !Number.isInteger(ano) ||
@@ -117,7 +136,8 @@ export async function GET(req: Request) {
   ) {
     return Response.json(
       {
-        error: 'Ano inválido.',
+        error:
+          'Ano inválido.',
       },
       {
         status: 400,
@@ -132,7 +152,8 @@ export async function GET(req: Request) {
   ) {
     return Response.json(
       {
-        error: 'Mês inválido.',
+        error:
+          'Mês inválido.',
       },
       {
         status: 400,
@@ -140,10 +161,17 @@ export async function GET(req: Request) {
     );
   }
 
-  const inicio = inicioDoMes(ano, mes);
+  const inicio =
+    inicioDoMes(
+      ano,
+      mes
+    );
 
   const fimExclusivo =
-    inicioDoMesSeguinte(ano, mes);
+    inicioDoMesSeguinte(
+      ano,
+      mes
+    );
 
   /*
    * =====================================================
@@ -186,6 +214,15 @@ export async function GET(req: Request) {
    * RECEBIMENTO e SAIDA serão tratados separadamente
    * usando as datas operacionais das respectivas
    * entidades.
+   *
+   * IMPORTANTE:
+   *
+   * Correções criadas automaticamente pelo cancelamento
+   * de uma saída NÃO entram aqui.
+   *
+   * A saída cancelada já é excluída do consumo abaixo.
+   * Se a correção de recomposição também fosse somada,
+   * o QDAA acrescentaria o estoque duas vezes.
    */
 
   const movimentosGerais =
@@ -200,6 +237,19 @@ export async function GET(req: Request) {
             'PERDA',
             'CORRECAO',
             'TRANSFERENCIA',
+          ],
+        },
+
+        NOT: {
+          AND: [
+            {
+              tipo:
+                'CORRECAO',
+            },
+            {
+              referenciaTipo:
+                'CancelamentoSaida',
+            },
           ],
         },
 
@@ -303,39 +353,65 @@ export async function GET(req: Request) {
    * =====================================================
    */
 
-  const movimentos: MovimentoQDAA[] = [];
+  const movimentos:
+    MovimentoQDAA[] = [];
 
-  for (const movimento of movimentosGerais) {
+  for (
+    const movimento of
+      movimentosGerais
+  ) {
     movimentos.push({
-      generoId: movimento.generoId,
-      tipo: movimento.tipo,
-      quantidade: numero(
-        movimento.quantidade
-      ),
+      generoId:
+        movimento.generoId,
+
+      tipo:
+        movimento.tipo,
+
+      quantidade:
+        numero(
+          movimento.quantidade
+        ),
+
       dataOperacional:
         movimento.criadoEm,
     });
   }
 
-  for (const item of recebimentos) {
+  for (
+    const item of recebimentos
+  ) {
     movimentos.push({
-      generoId: item.generoId,
-      tipo: 'RECEBIMENTO',
-      quantidade: numero(
-        item.quantidade
-      ),
+      generoId:
+        item.generoId,
+
+      tipo:
+        'RECEBIMENTO',
+
+      quantidade:
+        numero(
+          item.quantidade
+        ),
+
       dataOperacional:
         item.recebimento.data,
     });
   }
 
-  for (const item of saidas) {
+  for (
+    const item of saidas
+  ) {
     movimentos.push({
-      generoId: item.generoId,
-      tipo: 'SAIDA',
-      quantidade: numero(
-        item.quantidade
-      ),
+      generoId:
+        item.generoId,
+
+      tipo:
+        'SAIDA',
+
+      quantidade:
+        numero(
+          item.quantidade
+        ),
+
       dataOperacional:
         item.saida.data,
     });
@@ -350,14 +426,19 @@ export async function GET(req: Request) {
   const movimentosAnteriores =
     movimentos.filter(
       (movimento) =>
-        movimento.dataOperacional < inicio
+        movimento
+          .dataOperacional <
+        inicio
     );
 
   const movimentosMes =
     movimentos.filter(
       (movimento) =>
-        movimento.dataOperacional >= inicio &&
-        movimento.dataOperacional <
+        movimento
+          .dataOperacional >=
+          inicio &&
+        movimento
+          .dataOperacional <
           fimExclusivo
     );
 
@@ -382,16 +463,24 @@ export async function GET(req: Request) {
     });
 
   const estoqueAtualPorGenero =
-    new Map<string, number>();
+    new Map<
+      string,
+      number
+    >();
 
-  for (const item of estoqueAtualRegistros) {
+  for (
+    const item of
+      estoqueAtualRegistros
+  ) {
     estoqueAtualPorGenero.set(
       item.generoId,
 
       (estoqueAtualPorGenero.get(
         item.generoId
       ) || 0) +
-        numero(item.quantidade)
+        numero(
+          item.quantidade
+        )
     );
   }
 
@@ -402,9 +491,15 @@ export async function GET(req: Request) {
    */
 
   const estoqueInicialPorGenero =
-    new Map<string, number>();
+    new Map<
+      string,
+      number
+    >();
 
-  for (const movimento of movimentosAnteriores) {
+  for (
+    const movimento of
+      movimentosAnteriores
+  ) {
     const atual =
       estoqueInicialPorGenero.get(
         movimento.generoId
@@ -428,42 +523,65 @@ export async function GET(req: Request) {
    * =====================================================
    */
 
-  const consolidado = new Map<
-    string,
-    ConsolidadoGenero
-  >();
+  const consolidado =
+    new Map<
+      string,
+      ConsolidadoGenero
+    >();
 
-  for (const genero of generos) {
+  for (
+    const genero of generos
+  ) {
     const estoqueInicial =
       estoqueInicialPorGenero.get(
         genero.id
       ) || 0;
 
-    consolidado.set(genero.id, {
-      generoId: genero.id,
-      genero: genero.nome,
-      unidade: genero.unidade.sigla,
+    consolidado.set(
+      genero.id,
+      {
+        generoId:
+          genero.id,
 
-      estoqueInicial,
+        genero:
+          genero.nome,
 
-      saldoInicialLancado: 0,
-      recebimentos: 0,
-      devolucoes: 0,
+        unidade:
+          genero.unidade
+            .sigla,
 
-      consumo: 0,
-      perdas: 0,
-      correcoes: 0,
-
-      estoqueFinalCalculado:
         estoqueInicial,
 
-      estoqueAtual:
-        estoqueAtualPorGenero.get(
-          genero.id
-        ) || 0,
+        saldoInicialLancado:
+          0,
 
-      movimentacoesNoMes: 0,
-    });
+        recebimentos:
+          0,
+
+        devolucoes:
+          0,
+
+        consumo:
+          0,
+
+        perdas:
+          0,
+
+        correcoes:
+          0,
+
+        estoqueFinalCalculado:
+          estoqueInicial,
+
+        estoqueAtual:
+          estoqueAtualPorGenero.get(
+            genero.id
+          ) || 0,
+
+        movimentacoesNoMes:
+          0,
+      }
+    );
   }
 
   /*
@@ -472,7 +590,10 @@ export async function GET(req: Request) {
    * =====================================================
    */
 
-  for (const movimento of movimentosMes) {
+  for (
+    const movimento of
+      movimentosMes
+  ) {
     const item =
       consolidado.get(
         movimento.generoId
@@ -494,10 +615,13 @@ export async function GET(req: Request) {
       movimento.tipo !==
       'TRANSFERENCIA'
     ) {
-      item.movimentacoesNoMes += 1;
+      item.movimentacoesNoMes +=
+        1;
     }
 
-    switch (movimento.tipo) {
+    switch (
+      movimento.tipo
+    ) {
       case 'SALDO_INICIAL':
         item.saldoInicialLancado +=
           quantidade;
@@ -549,22 +673,25 @@ export async function GET(req: Request) {
    * Nunca somamos kg + L + un.
    */
 
-  const totaisPorUnidade = new Map<
-    string,
-    {
-      unidade: string;
-      estoqueInicial: number;
-      saldoInicialLancado: number;
-      recebimentos: number;
-      devolucoes: number;
-      consumo: number;
-      perdas: number;
-      correcoes: number;
-      estoqueFinalCalculado: number;
-    }
-  >();
+  const totaisPorUnidade =
+    new Map<
+      string,
+      {
+        unidade: string;
+        estoqueInicial: number;
+        saldoInicialLancado: number;
+        recebimentos: number;
+        devolucoes: number;
+        consumo: number;
+        perdas: number;
+        correcoes: number;
+        estoqueFinalCalculado: number;
+      }
+    >();
 
-  for (const item of itens) {
+  for (
+    const item of itens
+  ) {
     let total =
       totaisPorUnidade.get(
         item.unidade
@@ -572,16 +699,32 @@ export async function GET(req: Request) {
 
     if (!total) {
       total = {
-        unidade: item.unidade,
+        unidade:
+          item.unidade,
 
-        estoqueInicial: 0,
-        saldoInicialLancado: 0,
-        recebimentos: 0,
-        devolucoes: 0,
-        consumo: 0,
-        perdas: 0,
-        correcoes: 0,
-        estoqueFinalCalculado: 0,
+        estoqueInicial:
+          0,
+
+        saldoInicialLancado:
+          0,
+
+        recebimentos:
+          0,
+
+        devolucoes:
+          0,
+
+        consumo:
+          0,
+
+        perdas:
+          0,
+
+        correcoes:
+          0,
+
+        estoqueFinalCalculado:
+          0,
       };
 
       totaisPorUnidade.set(
@@ -624,7 +767,8 @@ export async function GET(req: Request) {
   const generosComMovimento =
     itens.filter(
       (item) =>
-        item.movimentacoesNoMes > 0
+        item.movimentacoesNoMes >
+        0
     ).length;
 
   const generosSemMovimento =
@@ -654,13 +798,15 @@ export async function GET(req: Request) {
           .slice(0, 10),
 
       fim: new Date(
-        fimExclusivo.getTime() - 1
+        fimExclusivo.getTime() -
+          1
       )
         .toISOString()
         .slice(0, 10),
     },
 
-    classe: 'QS',
+    classe:
+      'QS',
 
     estatisticas: {
       generosCadastrados:
@@ -700,8 +846,9 @@ export async function GET(req: Request) {
       'Recebimentos são apropriados ao mês pela data operacional do recebimento.',
       'Saídas são apropriadas ao mês pela data operacional da saída.',
       'Saídas canceladas não são consideradas consumo.',
+      'Correções automáticas geradas pelo cancelamento de saída não são contabilizadas novamente no QDAA.',
       'Transferências entre locais não alteram o estoque total do gênero.',
-      'Correções positivas acrescentam estoque e correções negativas reduzem estoque.',
+      'Correções operacionais positivas acrescentam estoque e correções negativas reduzem estoque.',
       'Os totais são separados por unidade de medida para evitar soma entre kg, litros e unidades.',
       'O relatório serve como apoio à conferência e elaboração do QDAA.',
     ],
