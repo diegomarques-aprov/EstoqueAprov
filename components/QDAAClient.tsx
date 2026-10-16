@@ -386,7 +386,22 @@ export default function QDAAClient() {
     setMensagemReferencia('');
     setErroReferencia('');
   }
+  function abrirReferenciaEPular(
+    item: any
+  ) {
+    abrirReferencia(item);
 
+    setTimeout(() => {
+      document
+        .getElementById(
+          'referencia-inicial-qs'
+        )
+        ?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        });
+    }, 100);
+  }
   function fecharReferencia() {
     setGeneroReferencia(null);
     setQuantidadeReferencia('');
@@ -1280,14 +1295,82 @@ export default function QDAAClient() {
               }
               .
             </p>
+            <div
+              style={{
+                marginTop: 16,
+                padding: 16,
+                border:
+                  '1px solid rgba(255,255,255,0.12)',
+                borderRadius: 10,
+              }}
+            >
+              <strong>
+                O que significa cada base de
+                cálculo?
+              </strong>
 
-            {quantidadeSemBase >
+              <div
+                style={{
+                  marginTop: 12,
+                  display: 'grid',
+                  gap: 10,
+                }}
+              >
+                <div>
+                  <strong>
+                    Histórico do EstoqueAprov
+                  </strong>
+
+                  <div className="muted">
+                    O sistema já possui
+                    histórico de consumo do
+                    gênero e utiliza esse
+                    consumo real para calcular
+                    a média mensal.
+                  </div>
+                </div>
+
+                <div>
+                  <strong>
+                    Referência inicial
+                  </strong>
+
+                  <div className="muted">
+                    Ainda não existe histórico
+                    suficiente no EstoqueAprov.
+                    Nesse caso, o cálculo usa
+                    uma quantidade de consumo
+                    informada pelo
+                    Administrador como
+                    referência inicial.
+                  </div>
+                </div>
+
+                <div>
+                  <strong>
+                    Sem base de cálculo
+                  </strong>
+
+                  <div className="muted">
+                    O gênero ainda não possui
+                    histórico suficiente nem
+                    referência inicial. O
+                    EstoqueAprov não consegue
+                    sugerir o quantitativo de
+                    ressuprimento até que essa
+                    referência seja informada.
+                  </div>
+                </div>
+              </div>
+            </div>
+                       {quantidadeSemBase >
               0 && (
               <div
                 className="card"
                 style={{
                   border:
                     '1px solid #facc15',
+                  marginTop: 16,
                 }}
               >
                 <strong>
@@ -1297,18 +1380,65 @@ export default function QDAAClient() {
                 <p>
                   {quantidadeSemBase}{' '}
                   gênero(s) QS ainda não
-                  possuem histórico nem
-                  referência inicial.
+                  possuem histórico suficiente
+                  nem referência inicial.
                 </p>
 
                 <p className="muted">
-                  Informe a referência desses
-                  gêneros antes de finalizar o
-                  planejamento.
+                  Clique no gênero abaixo para
+                  informar a referência
+                  necessária:
                 </p>
+
+                <div
+                  style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: 8,
+                    marginTop: 12,
+                  }}
+                >
+                  {ressuprimento.itens
+                    .filter(
+                      (item: any) =>
+                        item.quantidadeSugerida ===
+                        null
+                    )
+                    .map(
+                      (item: any) => (
+                        <button
+                          key={
+                            item.generoId
+                          }
+                          type="button"
+                          onClick={() =>
+                            abrirReferenciaEPular(
+                              item
+                            )
+                          }
+                          style={{
+                            cursor:
+                              'pointer',
+                            padding:
+                              '9px 14px',
+                            borderRadius: 8,
+                            border:
+                              '1px solid #facc15',
+                            background:
+                              'rgba(250,204,21,0.10)',
+                            color:
+                              'inherit',
+                            fontWeight: 700,
+                          }}
+                        >
+                          {item.genero} → informar
+                          referência
+                        </button>
+                      )
+                    )}
+                </div>
               </div>
             )}
-          </div>
 
           <div className="card">
             <h2>
@@ -1647,8 +1777,22 @@ export default function QDAAClient() {
               registrada a justificativa.
             </p>
 
-            <label>
-              Observação geral do planejamento
+                        <label
+              style={{
+                display: 'block',
+                marginTop: 18,
+                width: '100%',
+              }}
+            >
+              <span
+                style={{
+                  display: 'block',
+                  marginBottom: 8,
+                  fontWeight: 600,
+                }}
+              >
+                Observação geral do planejamento
+              </span>
 
               <textarea
                 value={
@@ -1664,6 +1808,17 @@ export default function QDAAClient() {
                   )
                 }
                 placeholder="Ex.: previsão de exercício, aumento de efetivo, missão extraordinária ou outra consideração operacional."
+                rows={4}
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  minHeight: 110,
+                  resize: 'vertical',
+                  boxSizing:
+                    'border-box',
+                  padding: 12,
+                  borderRadius: 8,
+                }}
               />
             </label>
 
@@ -1774,8 +1929,14 @@ export default function QDAAClient() {
           REFERÊNCIA INICIAL
       ====================================== */}
 
-      {generoReferencia && (
-        <div className="card">
+            {generoReferencia && (
+        <div
+          id="referencia-inicial-qs"
+          className="card"
+          style={{
+            scrollMarginTop: 20,
+          }}
+        >
           <h2>
             Referência inicial —{' '}
             {generoReferencia.genero}
