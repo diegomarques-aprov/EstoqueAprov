@@ -22,6 +22,10 @@ type G = {
   nome: string;
   classe: 'QS' | 'QR';
   situacao: 'ATIVO' | 'INATIVO';
+  estoqueMinimo:
+    | number
+    | string
+    | null;
   unidade: {
     sigla: string;
   };
@@ -75,15 +79,47 @@ export default function SaidaClient() {
   const [destino, setDestino] =
     useState('ALMOCO');
 
-  const [data, setData] = useState(
-    () =>
-      new Date()
-        .toISOString()
-        .slice(0, 10)
-  );
+  const [data, setData] =
+    useState(() => {
+      const partes =
+        new Intl.DateTimeFormat(
+          'en-CA',
+          {
+            timeZone:
+              'America/Campo_Grande',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+          }
+        ).formatToParts(
+          new Date()
+        );
 
-  const [observacao, setObservacao] =
-    useState('');
+      const ano =
+        partes.find(
+          (p) =>
+            p.type === 'year'
+        )?.value || '';
+
+      const mes =
+        partes.find(
+          (p) =>
+            p.type === 'month'
+        )?.value || '';
+
+      const dia =
+        partes.find(
+          (p) =>
+            p.type === 'day'
+        )?.value || '';
+
+      return `${ano}-${mes}-${dia}`;
+    });
+
+  const [
+    observacao,
+    setObservacao,
+  ] = useState('');
 
   const [msg, setMsg] =
     useState('');
@@ -123,7 +159,9 @@ export default function SaidaClient() {
       await respostaEstoque.json();
 
     setGeneros(
-      Array.isArray(dadosGeneros)
+      Array.isArray(
+        dadosGeneros
+      )
         ? dadosGeneros
         : []
     );
@@ -133,19 +171,30 @@ export default function SaidaClient() {
       number
     > = {};
 
-    if (Array.isArray(dadosEstoque)) {
+    if (
+      Array.isArray(
+        dadosEstoque
+      )
+    ) {
       for (
-        const x of dadosEstoque as E[]
+        const x of
+          dadosEstoque as E[]
       ) {
-        novosSaldos[x.generoId] =
+        novosSaldos[
+          x.generoId
+        ] =
           (novosSaldos[
             x.generoId
           ] || 0) +
-          Number(x.quantidade);
+          Number(
+            x.quantidade
+          );
       }
     }
 
-    setSaldos(novosSaldos);
+    setSaldos(
+      novosSaldos
+    );
   }
 
   useEffect(() => {
@@ -155,64 +204,74 @@ export default function SaidaClient() {
     setMsg('');
   }, [classe]);
 
-  const generosDisponiveis =
+  /*
+   * IMPORTANTE:
+   * Todos os gêneros ativos permanecem
+   * disponíveis na estrutura.
+   *
+   * Saldo zero não remove gênero,
+   * categoria nem grupo da tela.
+   */
+  const generosAtivos =
     useMemo(
       () =>
         generos.filter(
           (genero) =>
             genero.situacao ===
-              'ATIVO' &&
-            (saldos[genero.id] ||
-              0) > 0
+            'ATIVO'
         ),
-      [generos, saldos]
+      [generos]
     );
 
-  const grupos = useMemo(() => {
-    const mapa = new Map<
-      string,
-      Grupo
-    >();
+  const grupos =
+    useMemo(() => {
+      const mapa =
+        new Map<
+          string,
+          Grupo
+        >();
 
-    for (
-      const genero of
-        generosDisponiveis
-    ) {
-      const grupo =
-        genero.categoria?.grupo;
+      for (
+        const genero of
+          generosAtivos
+      ) {
+        const grupo =
+          genero.categoria
+            ?.grupo;
 
-      if (grupo) {
-        mapa.set(
-          grupo.id,
-          grupo
-        );
+        if (grupo) {
+          mapa.set(
+            grupo.id,
+            grupo
+          );
+        }
       }
-    }
 
-    return Array.from(
-      mapa.values()
-    ).sort((a, b) =>
-      a.nome.localeCompare(
-        b.nome,
-        'pt-BR'
-      )
-    );
-  }, [generosDisponiveis]);
+      return Array.from(
+        mapa.values()
+      ).sort((a, b) =>
+        a.nome.localeCompare(
+          b.nome,
+          'pt-BR'
+        )
+      );
+    }, [generosAtivos]);
 
   function categoriasDoGrupo(
     grupoId: string
   ) {
-    const mapa = new Map<
-      string,
-      {
-        id: string;
-        nome: string;
-      }
-    >();
+    const mapa =
+      new Map<
+        string,
+        {
+          id: string;
+          nome: string;
+        }
+      >();
 
     for (
       const genero of
-        generosDisponiveis
+        generosAtivos
     ) {
       const categoria =
         genero.categoria;
@@ -225,8 +284,10 @@ export default function SaidaClient() {
         mapa.set(
           categoria.id,
           {
-            id: categoria.id,
-            nome: categoria.nome,
+            id:
+              categoria.id,
+            nome:
+              categoria.nome,
           }
         );
       }
@@ -245,10 +306,11 @@ export default function SaidaClient() {
   function generosDaCategoria(
     categoriaId: string
   ) {
-    return generosDisponiveis
+    return generosAtivos
       .filter(
         (genero) =>
-          genero.categoria?.id ===
+          genero.categoria
+            ?.id ===
           categoriaId
       )
       .sort((a, b) =>
@@ -257,6 +319,28 @@ export default function SaidaClient() {
           'pt-BR'
         )
       );
+  }
+
+  function saldoGenero(
+    generoId: string
+  ) {
+    return (
+      saldos[generoId] ||
+      0
+    );
+  }
+
+  function categoriaTemEstoque(
+    categoriaId: string
+  ) {
+    return generosDaCategoria(
+      categoriaId
+    ).some(
+      (genero) =>
+        saldoGenero(
+          genero.id
+        ) > 0
+    );
   }
 
   function generoSelecionado(
@@ -268,22 +352,52 @@ export default function SaidaClient() {
     );
   }
 
+  function abaixoDoMinimo(
+    genero: G
+  ) {
+    if (
+      genero.estoqueMinimo ==
+      null
+    ) {
+      return false;
+    }
+
+    const minimo =
+      Number(
+        genero.estoqueMinimo
+      );
+
+    return (
+      saldoGenero(
+        genero.id
+      ) > 0 &&
+      saldoGenero(
+        genero.id
+      ) < minimo
+    );
+  }
+
   function alterarGrupo(
     indice: number,
     grupoId: string
   ) {
-    setItens((atuais) =>
-      atuais.map((item, n) =>
-        n === indice
-          ? {
-              ...item,
-              grupoId,
-              categoriaId: '',
-              generoId: '',
-              quantidade: '',
-            }
-          : item
-      )
+    setItens(
+      (atuais) =>
+        atuais.map(
+          (item, n) =>
+            n === indice
+              ? {
+                  ...item,
+                  grupoId,
+                  categoriaId:
+                    '',
+                  generoId:
+                    '',
+                  quantidade:
+                    '',
+                }
+              : item
+        )
     );
 
     setRevisar(false);
@@ -294,17 +408,21 @@ export default function SaidaClient() {
     indice: number,
     categoriaId: string
   ) {
-    setItens((atuais) =>
-      atuais.map((item, n) =>
-        n === indice
-          ? {
-              ...item,
-              categoriaId,
-              generoId: '',
-              quantidade: '',
-            }
-          : item
-      )
+    setItens(
+      (atuais) =>
+        atuais.map(
+          (item, n) =>
+            n === indice
+              ? {
+                  ...item,
+                  categoriaId,
+                  generoId:
+                    '',
+                  quantidade:
+                    '',
+                }
+              : item
+        )
     );
 
     setRevisar(false);
@@ -315,16 +433,19 @@ export default function SaidaClient() {
     indice: number,
     generoId: string
   ) {
-    setItens((atuais) =>
-      atuais.map((item, n) =>
-        n === indice
-          ? {
-              ...item,
-              generoId,
-              quantidade: '',
-            }
-          : item
-      )
+    setItens(
+      (atuais) =>
+        atuais.map(
+          (item, n) =>
+            n === indice
+              ? {
+                  ...item,
+                  generoId,
+                  quantidade:
+                    '',
+                }
+              : item
+        )
     );
 
     setRevisar(false);
@@ -335,15 +456,17 @@ export default function SaidaClient() {
     indice: number,
     quantidade: string
   ) {
-    setItens((atuais) =>
-      atuais.map((item, n) =>
-        n === indice
-          ? {
-              ...item,
-              quantidade,
-            }
-          : item
-      )
+    setItens(
+      (atuais) =>
+        atuais.map(
+          (item, n) =>
+            n === indice
+              ? {
+                  ...item,
+                  quantidade,
+                }
+              : item
+        )
     );
 
     setRevisar(false);
@@ -354,12 +477,18 @@ export default function SaidaClient() {
     const vistos =
       new Set<string>();
 
-    for (const item of itens) {
-      if (!item.grupoId) {
+    for (
+      const item of itens
+    ) {
+      if (
+        !item.grupoId
+      ) {
         return 'Selecione o grupo em todos os itens.';
       }
 
-      if (!item.categoriaId) {
+      if (
+        !item.categoriaId
+      ) {
         return 'Selecione a categoria em todos os itens.';
       }
 
@@ -370,6 +499,17 @@ export default function SaidaClient() {
 
       if (!genero) {
         return 'Selecione o gênero em todos os itens.';
+      }
+
+      const disponivel =
+        saldoGenero(
+          genero.id
+        );
+
+      if (
+        disponivel <= 0
+      ) {
+        return `${genero.nome}: sem estoque disponível. Não é possível realizar a saída deste gênero.`;
       }
 
       if (
@@ -389,14 +529,11 @@ export default function SaidaClient() {
           item.quantidade
         );
 
-      if (!(quantidade > 0)) {
+      if (
+        !(quantidade > 0)
+      ) {
         return `${genero.nome}: informe uma quantidade válida.`;
       }
-
-      const disponivel =
-        saldos[
-          item.generoId
-        ] || 0;
 
       if (
         quantidade >
@@ -470,7 +607,9 @@ export default function SaidaClient() {
       const dados =
         await resposta.json();
 
-      if (!resposta.ok) {
+      if (
+        !resposta.ok
+      ) {
         setMsg(
           dados.error ||
             'Não foi possível concluir a saída.'
@@ -484,7 +623,10 @@ export default function SaidaClient() {
         `Saída nº ${dados.numero} confirmada e estoque atualizado.`
       );
 
-      setItens([vazio()]);
+      setItens([
+        vazio(),
+      ]);
+
       setObservacao('');
       setRevisar(false);
 
@@ -556,11 +698,17 @@ export default function SaidaClient() {
             Refeição/destino
 
             <select
-              value={destino}
-              onChange={(e) => {
+              value={
+                destino
+              }
+              onChange={(
+                e
+              ) => {
                 setDestino(
-                  e.target.value
+                  e.target
+                    .value
                 );
+
                 setRevisar(
                   false
                 );
@@ -592,10 +740,14 @@ export default function SaidaClient() {
             <input
               type="date"
               value={data}
-              onChange={(e) => {
+              onChange={(
+                e
+              ) => {
                 setData(
-                  e.target.value
+                  e.target
+                    .value
                 );
+
                 setRevisar(
                   false
                 );
@@ -609,8 +761,8 @@ export default function SaidaClient() {
           <p className="muted">
             Esta opção identifica
             apenas a finalidade da
-            saída. A data e a hora da
-            movimentação serão
+            saída. A data e a hora
+            da movimentação serão
             registradas no momento
             real em que o material
             sair do estoque.
@@ -624,10 +776,14 @@ export default function SaidaClient() {
             value={
               observacao
             }
-            onChange={(e) => {
+            onChange={(
+              e
+            ) => {
               setObservacao(
-                e.target.value
+                e.target
+                  .value
               );
+
               setRevisar(
                 false
               );
@@ -638,7 +794,9 @@ export default function SaidaClient() {
 
       <div className="card">
         <div className="top">
-          <h2>Gêneros</h2>
+          <h2>
+            Gêneros
+          </h2>
 
           <button
             className="linkbtn"
@@ -679,6 +837,28 @@ export default function SaidaClient() {
               generosDaCategoria(
                 item.categoriaId
               );
+
+            const categoriaSemEstoque =
+              Boolean(
+                item.categoriaId
+              ) &&
+              !categoriaTemEstoque(
+                item.categoriaId
+              );
+
+            const saldo =
+              genero
+                ? saldoGenero(
+                    genero.id
+                  )
+                : 0;
+
+            const estoqueBaixo =
+              genero
+                ? abaixoDoMinimo(
+                    genero
+                  )
+                : false;
 
             return (
               <div
@@ -737,8 +917,7 @@ export default function SaidaClient() {
                       ) =>
                         alterarGrupo(
                           indice,
-                          e
-                            .target
+                          e.target
                             .value
                         )
                       }
@@ -783,8 +962,7 @@ export default function SaidaClient() {
                       ) =>
                         alterarCategoria(
                           indice,
-                          e
-                            .target
+                          e.target
                             .value
                         )
                       }
@@ -798,24 +976,48 @@ export default function SaidaClient() {
                       {categorias.map(
                         (
                           categoria
-                        ) => (
-                          <option
-                            key={
+                        ) => {
+                          const temEstoque =
+                            categoriaTemEstoque(
                               categoria.id
-                            }
-                            value={
-                              categoria.id
-                            }
-                          >
-                            {
-                              categoria.nome
-                            }
-                          </option>
-                        )
+                            );
+
+                          return (
+                            <option
+                              key={
+                                categoria.id
+                              }
+                              value={
+                                categoria.id
+                              }
+                            >
+                              {
+                                categoria.nome
+                              }
+                              {!temEstoque
+                                ? ' — sem estoque'
+                                : ''}
+                            </option>
+                          );
+                        }
                       )}
                     </select>
                   </label>
                 </div>
+
+                {categoriaSemEstoque && (
+                  <div
+                    className="error"
+                    style={{
+                      marginTop:
+                        10,
+                    }}
+                  >
+                    Sem estoque
+                    disponível nesta
+                    categoria.
+                  </div>
+                )}
 
                 <div className="grid">
                   <label>
@@ -833,8 +1035,7 @@ export default function SaidaClient() {
                       ) =>
                         alterarGenero(
                           indice,
-                          e
-                            .target
+                          e.target
                             .value
                         )
                       }
@@ -848,35 +1049,47 @@ export default function SaidaClient() {
                       {generosCategoria.map(
                         (
                           generoOpcao
-                        ) => (
-                          <option
-                            key={
+                        ) => {
+                          const saldoOpcao =
+                            saldoGenero(
                               generoOpcao.id
-                            }
-                            value={
-                              generoOpcao.id
-                            }
-                          >
-                            {
-                              generoOpcao.nome
-                            }{' '}
-                            —{' '}
-                            {(
-                              saldos[
-                                generoOpcao
-                                  .id
-                              ] ||
-                              0
-                            ).toLocaleString(
-                              'pt-BR'
-                            )}{' '}
-                            {
+                            );
+
+                          const baixo =
+                            abaixoDoMinimo(
                               generoOpcao
-                                .unidade
-                                .sigla
-                            }
-                          </option>
-                        )
+                            );
+
+                          return (
+                            <option
+                              key={
+                                generoOpcao.id
+                              }
+                              value={
+                                generoOpcao.id
+                              }
+                            >
+                              {
+                                generoOpcao.nome
+                              }{' '}
+                              —{' '}
+                              {saldoOpcao.toLocaleString(
+                                'pt-BR'
+                              )}{' '}
+                              {
+                                generoOpcao
+                                  .unidade
+                                  .sigla
+                              }
+                              {saldoOpcao <=
+                              0
+                                ? ' — SEM ESTOQUE'
+                                : baixo
+                                ? ' — ESTOQUE BAIXO'
+                                : ''}
+                            </option>
+                          );
+                        }
                       )}
                     </select>
                   </label>
@@ -894,15 +1107,16 @@ export default function SaidaClient() {
                         item.quantidade
                       }
                       disabled={
-                        !genero
+                        !genero ||
+                        saldo <=
+                          0
                       }
                       onChange={(
                         e
                       ) =>
                         alterarQuantidade(
                           indice,
-                          e
-                            .target
+                          e.target
                             .value
                         )
                       }
@@ -910,30 +1124,62 @@ export default function SaidaClient() {
                   </label>
                 </div>
 
-                {genero && (
-                  <span className="muted">
-                    Disponível:{' '}
-                    {(
-                      saldos[
-                        genero.id
-                      ] ||
-                      0
-                    ).toLocaleString(
-                      'pt-BR'
-                    )}{' '}
-                    {
-                      genero
-                        .unidade
-                        .sigla
-                    }
-                    . O sistema
-                    utilizará
-                    primeiro o lote
-                    válido com
-                    vencimento mais
-                    próximo (PVPS).
-                  </span>
-                )}
+                {genero &&
+                  saldo <= 0 && (
+                    <div
+                      className="error"
+                      style={{
+                        marginTop:
+                          10,
+                      }}
+                    >
+                      Sem estoque
+                      disponível para{' '}
+                      {
+                        genero.nome
+                      }
+                      . A saída está
+                      bloqueada.
+                    </div>
+                  )}
+
+                {genero &&
+                  estoqueBaixo && (
+                    <div
+                      className="error"
+                      style={{
+                        marginTop:
+                          10,
+                      }}
+                    >
+                      ⚠ Estoque baixo
+                      — abaixo do
+                      limite mínimo.
+                      A saída continua
+                      disponível.
+                    </div>
+                  )}
+
+                {genero &&
+                  saldo > 0 && (
+                    <span className="muted">
+                      Disponível:{' '}
+                      {saldo.toLocaleString(
+                        'pt-BR'
+                      )}{' '}
+                      {
+                        genero
+                          .unidade
+                          .sigla
+                      }
+                      . O sistema
+                      utilizará
+                      primeiro o lote
+                      válido com
+                      vencimento mais
+                      próximo (PVPS).
+                    </span>
+                  )}
               </div>
             );
           }
