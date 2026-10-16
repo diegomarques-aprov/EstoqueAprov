@@ -50,13 +50,13 @@ model Usuario {
   auditorias                   Auditoria[]
   recebimentos                 Recebimento[]                   @relation("RecebimentoCriador")
   movimentacoesEstoque         MovimentacaoEstoque[]           @relation("MovUsuario")
-  saidas                       Saida[]                         @relation("SaidaCriador")
-  arranchamentos               Arranchamento[]                 @relation("ArranchamentoUsuario")
-  referenciasConsumoQS         ReferenciaConsumoQS[]           @relation("ReferenciaConsumoQSUsuario")
-  planejamentosRessuprimentoQS PlanejamentoRessuprimentoQS[]   @relation("PlanejamentoRessuprimentoQSUsuario")
-  recursosQR                   RecursoQR[]                     @relation("RecursoQRCriador")
-  movimentosFinanceirosQR      MovimentacaoFinanceiraQR[]      @relation("MovFinanceiraQRUsuario")
-  comprasQR                    CompraQR[]                      @relation("CompraQRCriador")
+  saidas                       Saida[]                          @relation("SaidaCriador")
+  arranchamentos               Arranchamento[]                  @relation("ArranchamentoUsuario")
+  referenciasConsumoQS         ReferenciaConsumoQS[]            @relation("ReferenciaConsumoQSUsuario")
+  planejamentosRessuprimentoQS PlanejamentoRessuprimentoQS[]    @relation("PlanejamentoRessuprimentoQSUsuario")
+  recursosQR                   RecursoQR[]                      @relation("RecursoQRCriador")
+  movimentosFinanceirosQR      MovimentacaoFinanceiraQR[]       @relation("MovFinanceiraQRUsuario")
+  comprasQR                    CompraQR[]                       @relation("CompraQRCriador")
 }
 
 model LocalArmazenamento {
@@ -75,25 +75,25 @@ model LocalArmazenamento {
 }
 
 model GrupoGenero {
-  id         String      @id @default(cuid())
-  nome       String      @unique
-  descricao  String?
-  situacao   Situacao    @default(ATIVO)
-  categorias Categoria[]
-  criadoEm   DateTime    @default(now())
-  atualizadoEm DateTime  @updatedAt
+  id           String      @id @default(cuid())
+  nome         String      @unique
+  descricao    String?
+  situacao     Situacao    @default(ATIVO)
+  categorias   Categoria[]
+  criadoEm     DateTime    @default(now())
+  atualizadoEm DateTime    @updatedAt
 }
 
 model Categoria {
-  id                     String                @id @default(cuid())
-  nome                   String                @unique
+  id                     String               @id @default(cuid())
+  nome                   String               @unique
   grupoId                String?
-  grupo                   GrupoGenero?         @relation(fields: [grupoId], references: [id])
+  grupo                   GrupoGenero?        @relation(fields: [grupoId], references: [id])
   controlaLotePadrao     Boolean?
   controlaValidadePadrao Boolean?
   localPadraoId          String?
-  localPadrao            LocalArmazenamento?   @relation(fields: [localPadraoId], references: [id])
-  situacao               Situacao              @default(ATIVO)
+  localPadrao            LocalArmazenamento?  @relation(fields: [localPadraoId], references: [id])
+  situacao               Situacao             @default(ATIVO)
   generos                Genero[]
 
   @@index([grupoId])
@@ -108,32 +108,32 @@ model UnidadeMedida {
 }
 
 model Genero {
-  id                              String                            @id @default(cuid())
-  nome                            String
-  classe                          ClasseGenero
-  categoriaId                     String?
-  categoria                       Categoria?                        @relation(fields: [categoriaId], references: [id])
-  unidadeId                       String
-  unidade                         UnidadeMedida                     @relation(fields: [unidadeId], references: [id])
-  controlaLote                    Boolean                           @default(false)
-  controlaValidade                Boolean                           @default(false)
-  estoqueMinimo                   Decimal?                          @db.Decimal(14, 3)
-  localPadraoId                   String?
-  localPadrao                     LocalArmazenamento?               @relation(fields: [localPadraoId], references: [id])
-  situacao                        Situacao                          @default(ATIVO)
-  criadoPorId                     String
-  criadoPor                       Usuario                           @relation("GeneroCriador", fields: [criadoPorId], references: [id])
-  criadoEm                        DateTime                          @default(now())
-  atualizadoEm                    DateTime                          @updatedAt
-  lotes                           Lote[]
-  estoques                        EstoqueLocal[]
-  itensRecebimento                ItemRecebimento[]
-  itensSaida                      ItemSaida[]
-  movimentacoesEstoque            MovimentacaoEstoque[]
-  referenciasConsumoQS            ReferenciaConsumoQS[]
+  id                               String                            @id @default(cuid())
+  nome                             String
+  classe                           ClasseGenero
+  categoriaId                      String?
+  categoria                        Categoria?                        @relation(fields: [categoriaId], references: [id])
+  unidadeId                        String
+  unidade                          UnidadeMedida                     @relation(fields: [unidadeId], references: [id])
+  controlaLote                     Boolean                           @default(false)
+  controlaValidade                 Boolean                           @default(false)
+  estoqueMinimo                    Decimal?                          @db.Decimal(14, 3)
+  localPadraoId                    String?
+  localPadrao                      LocalArmazenamento?               @relation(fields: [localPadraoId], references: [id])
+  situacao                         Situacao                          @default(ATIVO)
+  criadoPorId                      String
+  criadoPor                        Usuario                           @relation("GeneroCriador", fields: [criadoPorId], references: [id])
+  criadoEm                         DateTime                          @default(now())
+  atualizadoEm                     DateTime                          @updatedAt
+  lotes                            Lote[]
+  estoques                         EstoqueLocal[]
+  itensRecebimento                 ItemRecebimento[]
+  itensSaida                       ItemSaida[]
+  movimentacoesEstoque             MovimentacaoEstoque[]
+  referenciasConsumoQS             ReferenciaConsumoQS[]
   itensPlanejamentoRessuprimentoQS ItemPlanejamentoRessuprimentoQS[]
-  itensCompraQR                   ItemCompraQR[]
-  itensRecebimentoCompraQR        ItemRecebimentoCompraQR[]
+  itensCompraQR                    ItemCompraQR[]
+  itensRecebimentoCompraQR         ItemRecebimentoCompraQR[]
 
   @@unique([nome, classe])
 }
@@ -320,45 +320,57 @@ model ItemSaida {
 }
 
 model MovimentacaoEstoque {
-  id             String               @id @default(cuid())
+  id             String              @id @default(cuid())
   tipo           TipoMovimentacao
   classe         ClasseOperacao
   generoId       String
-  genero         Genero               @relation(fields: [generoId], references: [id])
+  genero         Genero              @relation(fields: [generoId], references: [id])
   loteId         String?
-  lote           Lote?                @relation(fields: [loteId], references: [id])
+  lote           Lote?               @relation(fields: [loteId], references: [id])
   localOrigemId  String?
-  localOrigem    LocalArmazenamento?  @relation("MovLocalOrigem", fields: [localOrigemId], references: [id])
+  localOrigem    LocalArmazenamento? @relation("MovLocalOrigem", fields: [localOrigemId], references: [id])
   localDestinoId String?
-  localDestino   LocalArmazenamento?  @relation("MovLocalDestino", fields: [localDestinoId], references: [id])
-  quantidade     Decimal              @db.Decimal(14, 3)
-  valorUnitario  Decimal?             @db.Decimal(14, 4)
+  localDestino   LocalArmazenamento? @relation("MovLocalDestino", fields: [localDestinoId], references: [id])
+  quantidade     Decimal             @db.Decimal(14, 3)
+  valorUnitario  Decimal?            @db.Decimal(14, 4)
   referenciaTipo String?
   referenciaId   String?
   observacao     String?
   usuarioId      String
-  usuario        Usuario              @relation("MovUsuario", fields: [usuarioId], references: [id])
-  criadoEm       DateTime             @default(now())
+  usuario        Usuario             @relation("MovUsuario", fields: [usuarioId], references: [id])
+  criadoEm       DateTime            @default(now())
 }
 
 model Arranchamento {
   id                     String        @id @default(cuid())
   data                   DateTime
   refeicao               DestinoSaida
+
   oficiaisStenSgt        Int           @default(0)
   cabosSoldados          Int           @default(0)
   outrosPrevistos        Int           @default(0)
-  totalPrevisto           Int
+
+  totalPrevisto          Int
+
   margemSegurancaPercent Decimal       @default(10) @db.Decimal(5, 2)
-  efetivoPlanejamento     Int
+  efetivoPlanejamento    Int
+
+  // Efetivo real da refeição
   arranchadosCompareceram Int?
+  faltas                  Int?
   naoArranchadosAtendidos Int           @default(0)
   totalAtendido           Int?
+
   fechamentoRealizadoEm  DateTime?
+
+  // Sobras permanecem separadas do quadro de efetivo
   sobraKg                 Decimal?      @db.Decimal(14, 3)
+
   observacao              String?
+
   usuarioId               String
   usuario                 Usuario       @relation("ArranchamentoUsuario", fields: [usuarioId], references: [id])
+
   criadoEm                DateTime      @default(now())
   atualizadoEm            DateTime      @updatedAt
 
@@ -392,35 +404,35 @@ model RecursoQR {
 }
 
 model MovimentacaoFinanceiraQR {
-  id              String            @id @default(cuid())
+  id              String             @id @default(cuid())
   tipo            TipoMovFinanceiraQR
-  valor           Decimal           @db.Decimal(14, 2)
-  saldoAnterior   Decimal           @db.Decimal(14, 2)
-  saldoResultante Decimal           @db.Decimal(14, 2)
+  valor           Decimal            @db.Decimal(14, 2)
+  saldoAnterior   Decimal            @db.Decimal(14, 2)
+  saldoResultante Decimal            @db.Decimal(14, 2)
   documento       String?
   observacao      String?
   compraId        String?
-  compra          CompraQR?         @relation(fields: [compraId], references: [id])
+  compra          CompraQR?          @relation(fields: [compraId], references: [id])
   usuarioId       String
-  usuario         Usuario           @relation("MovFinanceiraQRUsuario", fields: [usuarioId], references: [id])
-  criadoEm        DateTime          @default(now())
+  usuario         Usuario            @relation("MovFinanceiraQRUsuario", fields: [usuarioId], references: [id])
+  criadoEm        DateTime           @default(now())
 }
 
 model CompraQR {
-  id                 String                    @id @default(cuid())
-  numero             Int                       @unique @default(autoincrement())
+  id                 String                     @id @default(cuid())
+  numero             Int                        @unique @default(autoincrement())
   data               DateTime
   fornecedor         String?
   documento          String?
   observacao         String?
-  valorEstimado      Decimal?                  @db.Decimal(14, 2)
-  valorEmpenhado     Decimal                   @db.Decimal(14, 2)
-  status             StatusCompraQR            @default(EMPENHADA)
+  valorEstimado      Decimal?                   @db.Decimal(14, 2)
+  valorEmpenhado     Decimal                    @db.Decimal(14, 2)
+  status             StatusCompraQR             @default(EMPENHADA)
   canceladaEm        DateTime?
   motivoCancelamento String?
   criadoPorId        String
-  criadoPor          Usuario                   @relation("CompraQRCriador", fields: [criadoPorId], references: [id])
-  criadoEm           DateTime                  @default(now())
+  criadoPor          Usuario                    @relation("CompraQRCriador", fields: [criadoPorId], references: [id])
+  criadoEm           DateTime                   @default(now())
   itens              ItemCompraQR[]
   movimentacoes      MovimentacaoFinanceiraQR[]
   recebimentos       RecebimentoCompraQR[]
