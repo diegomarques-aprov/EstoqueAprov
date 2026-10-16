@@ -675,14 +675,6 @@ export default async function Inicio() {
           >
             QDAA / Ressuprimento QS
           </Link>
-
-          <Link
-            className="btn"
-            style={verdesOperacao[2]}
-            href="/qr/financeiro"
-          >
-            Recursos e Compras QR
-          </Link>
         </div>
       </div>
 
