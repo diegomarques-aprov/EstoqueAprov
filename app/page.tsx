@@ -4,106 +4,116 @@ export const dynamic = 'force-dynamic';
 
 export default function Home() {
   return (
-    <main className="splash">
+    <div
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        margin: 0,
+        padding: 0,
+        zIndex: 9999,
+        background: '#000',
+        overflow: 'hidden',
+      }}
+    >
+      {/* Imagem de abertura — mantém exatamente
+          o preenchimento de tela que já funcionava */}
       <img
         src="/abertura-estoqueaprov.jpg.jpeg"
         alt="EstoqueAprov"
-        className="splashImage"
         draggable={false}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          maxWidth: 'none',
+          objectFit: 'cover',
+          objectPosition: 'center',
+          margin: 0,
+          padding: 0,
+          display: 'block',
+          userSelect: 'none',
+          pointerEvents: 'none',
+        }}
       />
 
+      {/* Somente a região do botão ENTRAR é clicável */}
       <Link
         href="/login"
-        className="entrar"
         aria-label="Entrar no EstoqueAprov"
+        className="botao-entrar"
       >
-        <span className="srOnly">
+        <span className="texto-acessivel">
           Entrar
         </span>
       </Link>
 
       <style>{`
-        .splash {
-          position: fixed;
-          inset: 0;
-          width: 100vw;
-          height: 100vh;
+        .botao-entrar {
+          position: absolute;
+
+          /*
+           * Posição do botão existente
+           * na própria imagem.
+           */
+          left: 50%;
+          top: 48.4%;
+
+          width: 22%;
+          max-width: 330px;
+          min-width: 190px;
+
+          height: 8.5%;
+          max-height: 78px;
+          min-height: 52px;
+
+          transform: translate(-50%, -50%);
+
+          display: block;
+
           margin: 0;
           padding: 0;
-          overflow: hidden;
-          background: #000;
-          z-index: 9999;
-        }
 
-        .splashImage {
-          position: absolute;
-          inset: 0;
-          width: 100%;
-          height: 100%;
-          max-width: none;
-          object-fit: cover;
-          object-position: center;
-          display: block;
-          pointer-events: none;
-          user-select: none;
-          -webkit-user-drag: none;
-        }
+          border: 0;
+          border-radius: 16px;
 
-        /*
-         * Área clicável posicionada
-         * exclusivamente sobre o botão
-         * ENTRAR da imagem.
-         */
-        .entrar {
-          position: absolute;
-
-          left: 50%;
-          top: 77%;
-
-          transform:
-            translate(-50%, -50%);
-
-          width: min(42vw, 320px);
-          height: clamp(55px, 8vh, 78px);
-
-          display: block;
-
-          border-radius: 18px;
+          background: transparent;
 
           cursor: pointer;
-
           z-index: 10000;
 
-          background:
-            rgba(255,255,255,0.001);
+          text-decoration: none;
 
-          -webkit-tap-highlight-color:
-            transparent;
-
+          -webkit-tap-highlight-color: transparent;
           touch-action: manipulation;
 
           transition:
-            transform 100ms ease,
-            filter 100ms ease;
+            transform 90ms ease,
+            filter 90ms ease;
         }
 
         /*
-         * Efeito de pressionar o botão.
+         * Efeito físico ao pressionar:
+         * o botão "afunda" alguns pixels.
          */
-        .entrar:active {
+        .botao-entrar:active {
           transform:
-            translate(-50%, calc(-50% + 7px))
-            scale(0.97);
+            translate(-50%, calc(-50% + 6px))
+            scale(0.98);
 
-          filter: brightness(0.8);
+          filter: brightness(0.82);
         }
 
-        .entrar:focus-visible {
-          outline: 3px solid #fff;
-          outline-offset: 4px;
+        .botao-entrar:focus-visible {
+          outline: 3px solid #ffffff;
+          outline-offset: 3px;
         }
 
-        .srOnly {
+        .texto-acessivel {
           position: absolute;
           width: 1px;
           height: 1px;
@@ -116,17 +126,21 @@ export default function Home() {
         }
 
         /*
-         * Ajuste para telas menores,
-         * principalmente iPhone.
+         * No iPhone mantemos o mesmo centro
+         * do botão da arte, aumentando apenas
+         * a área de toque.
          */
         @media (max-width: 600px) {
-          .entrar {
-            top: 78%;
-            width: min(55vw, 300px);
+          .botao-entrar {
+            width: 46vw;
+            max-width: 290px;
+            min-width: 170px;
+
             height: 64px;
+            min-height: 56px;
           }
         }
       `}</style>
-    </main>
+    </div>
   );
 }
