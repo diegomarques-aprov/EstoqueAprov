@@ -119,6 +119,7 @@ type Dados = {
 
   dias: Array<{
     data: string;
+    refeicoesPrevistas: number;
     refeicoesFechadas: number;
     totalAtendido: number;
     completo: boolean;
@@ -451,8 +452,9 @@ export default function ConsumoEfetivoClient() {
               seguinte, o sistema
               utiliza a soma dos
               atendimentos das
-              refeições fechadas do
-              dia relacionado.
+              refeições cadastradas e
+              fechadas do dia
+              relacionado.
             </p>
 
             <div
@@ -523,7 +525,10 @@ export default function ConsumoEfetivoClient() {
                           {
                             dia.refeicoesFechadas
                           }
-                          /4
+                          /
+                          {
+                            dia.refeicoesPrevistas
+                          }
                         </td>
 
                         <td
