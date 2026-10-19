@@ -4,7 +4,8 @@ import { requireAdmin } from '@/lib/guard';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const TIME_ZONE = 'America/Campo_Grande';
+const TIME_ZONE =
+  'America/Campo_Grande';
 
 const REFEICOES = [
   'CAFE_DA_MANHA',
@@ -13,60 +14,80 @@ const REFEICOES = [
   'CEIA',
 ] as const;
 
-const nomesRefeicoes: Record<string, string> = {
-  CAFE_DA_MANHA: 'Café da manhã',
+const nomesRefeicoes: Record<
+  string,
+  string
+> = {
+  CAFE_DA_MANHA:
+    'Café da manhã',
   ALMOCO: 'Almoço',
   JANTAR: 'Jantar',
   CEIA: 'Ceia',
-  SERVICO_DIA_SEGUINTE: 'Serviço do dia seguinte',
+  SERVICO_DIA_SEGUINTE:
+    'Serviço do dia seguinte',
   OUTRO: 'Outro',
 };
 
-function numero(valor: unknown) {
-  return Number(valor || 0);
+function numero(
+  valor: unknown
+) {
+  return Number(
+    valor || 0
+  );
 }
 
 function arredondar(
   valor: number,
   casas = 3
 ) {
-  const fator = 10 ** casas;
+  const fator =
+    10 ** casas;
 
   return (
     Math.round(
-      (valor + Number.EPSILON) * fator
+      (valor +
+        Number.EPSILON) *
+        fator
     ) / fator
   );
 }
 
-function dataLocalISO(data: Date) {
+function dataLocalISO(
+  data: Date
+) {
   const partes =
     new Intl.DateTimeFormat(
       'en-CA',
       {
-        timeZone: TIME_ZONE,
+        timeZone:
+          TIME_ZONE,
         year: 'numeric',
         month: '2-digit',
         day: '2-digit',
       }
-    ).formatToParts(data);
+    ).formatToParts(
+      data
+    );
 
   const ano =
     partes.find(
       (parte) =>
-        parte.type === 'year'
+        parte.type ===
+        'year'
     )?.value || '';
 
   const mes =
     partes.find(
       (parte) =>
-        parte.type === 'month'
+        parte.type ===
+        'month'
     )?.value || '';
 
   const dia =
     partes.find(
       (parte) =>
-        parte.type === 'day'
+        parte.type ===
+        'day'
     )?.value || '';
 
   return `${ano}-${mes}-${dia}`;
@@ -76,12 +97,14 @@ function adicionarDias(
   data: string,
   dias: number
 ) {
-  const base = new Date(
-    `${data}T12:00:00.000Z`
-  );
+  const base =
+    new Date(
+      `${data}T12:00:00.000Z`
+    );
 
   base.setUTCDate(
-    base.getUTCDate() + dias
+    base.getUTCDate() +
+      dias
   );
 
   return base
@@ -154,7 +177,9 @@ export async function GET(
     );
   }
 
-  if (inicio > fim) {
+  if (
+    inicio > fim
+  ) {
     return Response.json(
       {
         error:
@@ -167,8 +192,9 @@ export async function GET(
   }
 
   /*
-   * O Serviço do dia seguinte é
-   * retirado fisicamente no dia
+   * O Serviço do dia
+   * seguinte é retirado
+   * fisicamente no dia
    * anterior.
    */
   const inicioSaidas =
@@ -181,172 +207,197 @@ export async function GET(
     saidas,
     arranchamentos,
     devolucoes,
-  ] = await Promise.all([
-    prisma.saida.findMany({
-      where: {
-        classe: 'QS',
-        canceladaEm: null,
+  ] =
+    await Promise.all([
+      prisma.saida.findMany(
+        {
+          where: {
+            classe:
+              'QS',
 
-        data: {
-          gte:
-            inicioDiaLocal(
-              inicioSaidas
-            ),
+            canceladaEm:
+              null,
 
-          lt:
-            fimDiaLocal(
-              adicionarDias(
-                fim,
-                1
-              )
-            ),
-        },
-      },
+            data: {
+              gte:
+                inicioDiaLocal(
+                  inicioSaidas
+                ),
 
-      include: {
-        itens: {
+              lt:
+                fimDiaLocal(
+                  adicionarDias(
+                    fim,
+                    1
+                  )
+                ),
+            },
+          },
+
           include: {
-            genero: {
+            itens: {
               include: {
-                unidade: true,
+                genero: {
+                  include:
+                    {
+                      unidade:
+                        true,
 
-                categoria: {
-                  include: {
-                    grupo: true,
-                  },
+                      categoria:
+                        {
+                          include:
+                            {
+                              grupo:
+                                true,
+                            },
+                        },
+                    },
                 },
               },
             },
           },
-        },
-      },
 
-      orderBy: [
-        {
-          data: 'asc',
-        },
-        {
-          numero: 'asc',
-        },
-      ],
-    }),
-
-    prisma.arranchamento.findMany({
-      where: {
-        data: {
-          gte:
-            inicioDiaLocal(
-              inicio
-            ),
-
-          lt:
-            fimDiaLocal(
-              adicionarDias(
-                fim,
-                1
-              )
-            ),
-        },
-
-        refeicao: {
-          in: [
-            'CAFE_DA_MANHA',
-            'ALMOCO',
-            'JANTAR',
-            'CEIA',
+          orderBy: [
+            {
+              data: 'asc',
+            },
+            {
+              numero:
+                'asc',
+            },
           ],
-        },
-      },
+        }
+      ),
 
-      orderBy: [
+      prisma.arranchamento.findMany(
         {
-          data: 'asc',
-        },
+          where: {
+            data: {
+              gte:
+                inicioDiaLocal(
+                  inicio
+                ),
+
+              lt:
+                fimDiaLocal(
+                  adicionarDias(
+                    fim,
+                    1
+                  )
+                ),
+            },
+
+            refeicao: {
+              in: [
+                'CAFE_DA_MANHA',
+                'ALMOCO',
+                'JANTAR',
+                'CEIA',
+              ],
+            },
+          },
+
+          orderBy: [
+            {
+              data: 'asc',
+            },
+            {
+              refeicao:
+                'asc',
+            },
+          ],
+        }
+      ),
+
+      prisma.movimentacaoEstoque.findMany(
         {
-          refeicao: 'asc',
-        },
-      ],
-    }),
+          where: {
+            tipo:
+              'DEVOLUCAO',
 
-    prisma.movimentacaoEstoque.findMany({
-      where: {
-        tipo: 'DEVOLUCAO',
-        classe: 'QS',
+            classe:
+              'QS',
 
-        referenciaTipo:
-          'DevolucaoSaida',
+            referenciaTipo:
+              'DevolucaoSaida',
 
-        criadoEm: {
-          gte:
-            inicioDiaLocal(
-              inicioSaidas
-            ),
+            criadoEm: {
+              gte:
+                inicioDiaLocal(
+                  inicioSaidas
+                ),
 
-          lt:
-            fimDiaLocal(
-              adicionarDias(
-                fim,
-                2
-              )
-            ),
-        },
-      },
+              lt:
+                fimDiaLocal(
+                  adicionarDias(
+                    fim,
+                    2
+                  )
+                ),
+            },
+          },
 
-      select: {
-        generoId: true,
-        quantidade: true,
-        referenciaId: true,
-      },
-    }),
-  ]);
+          select: {
+            generoId:
+              true,
+
+            quantidade:
+              true,
+
+            referenciaId:
+              true,
+          },
+        }
+      ),
+    ]);
 
   /*
    * =====================================================
    * EFETIVO REAL POR DIA
    * =====================================================
    *
-   * IMPORTANTE:
+   * Não exigimos
+   * obrigatoriamente
+   * Café + Almoço +
+   * Jantar + Ceia.
    *
-   * Não exigimos mais obrigatoriamente
-   * Café + Almoço + Jantar + Ceia.
-   *
-   * Um dia é considerado fechado quando
-   * existe pelo menos uma refeição
-   * cadastrada para aquele dia e TODAS
-   * as refeições cadastradas estão
+   * Um dia é considerado
+   * fechado quando existe
+   * pelo menos uma refeição
+   * cadastrada para aquele
+   * dia e TODAS as refeições
+   * cadastradas estão
    * fechadas.
-   *
-   * Assim:
-   *
-   * 1 refeição realizada e fechada = dia fechado
-   * 2 refeições realizadas e fechadas = dia fechado
-   * 4 refeições realizadas e fechadas = dia fechado
-   *
-   * Se existir refeição cadastrada ainda
-   * sem fechamento, o dia permanece
-   * pendente.
    */
 
   type EfetivoDia = {
     data: string;
 
-    refeicoesPrevistas: number;
+    refeicoesPrevistas:
+      number;
 
-    refeicoesFechadas: number;
+    refeicoesFechadas:
+      number;
 
-    totalAtendido: number;
+    totalAtendido:
+      number;
 
-    completo: boolean;
+    completo:
+      boolean;
 
     detalhes: Array<{
-      refeicao: string;
-      refeicaoNome: string;
+      refeicao:
+        string;
+
+      refeicaoNome:
+        string;
 
       totalAtendido:
         | number
         | null;
 
-      fechada: boolean;
+      fechada:
+        boolean;
     }>;
   };
 
@@ -357,7 +408,8 @@ export async function GET(
     >();
 
   for (
-    let data = inicio;
+    let data =
+      inicio;
     data <= fim;
     data =
       adicionarDias(
@@ -370,13 +422,17 @@ export async function GET(
       {
         data,
 
-        refeicoesPrevistas: 0,
+        refeicoesPrevistas:
+          0,
 
-        refeicoesFechadas: 0,
+        refeicoesFechadas:
+          0,
 
-        totalAtendido: 0,
+        totalAtendido:
+          0,
 
-        completo: false,
+        completo:
+          false,
 
         detalhes: [],
       }
@@ -402,9 +458,9 @@ export async function GET(
     }
 
     /*
-     * A existência do registro de
-     * Arranchamento representa uma
-     * refeição prevista/realizada
+     * A existência do
+     * Arranchamento representa
+     * uma refeição prevista
      * naquele dia.
      */
     dia.refeicoesPrevistas +=
@@ -418,7 +474,8 @@ export async function GET(
 
     const totalAtendido =
       arranchamento
-        .totalAtendido == null
+        .totalAtendido ==
+      null
         ? null
         : Number(
             arranchamento
@@ -427,7 +484,8 @@ export async function GET(
 
     if (
       fechada &&
-      totalAtendido != null
+      totalAtendido !=
+        null
     ) {
       dia.refeicoesFechadas +=
         1;
@@ -436,28 +494,32 @@ export async function GET(
         totalAtendido;
     }
 
-    dia.detalhes.push({
-      refeicao:
-        arranchamento.refeicao,
+    dia.detalhes.push(
+      {
+        refeicao:
+          arranchamento.refeicao,
 
-      refeicaoNome:
-        nomesRefeicoes[
-          arranchamento.refeicao
-        ] ||
-        arranchamento.refeicao,
+        refeicaoNome:
+          nomesRefeicoes[
+            arranchamento
+              .refeicao
+          ] ||
+          arranchamento
+            .refeicao,
 
-      totalAtendido,
+        totalAtendido,
 
-      fechada,
-    });
+        fechada,
+      }
+    );
   }
 
   /*
-   * O dia fica completo quando:
-   *
-   * - existe ao menos uma refeição;
-   * - todas as refeições cadastradas
-   *   para aquele dia foram fechadas.
+   * O dia fica completo
+   * quando existe ao menos
+   * uma refeição e todas
+   * as refeições cadastradas
+   * foram fechadas.
    */
   for (
     const dia of
@@ -477,7 +539,10 @@ export async function GET(
    */
 
   const devolvidoPorSaidaGenero =
-    new Map<string, number>();
+    new Map<
+      string,
+      number
+    >();
 
   for (
     const devolucao of
@@ -495,7 +560,6 @@ export async function GET(
 
     devolvidoPorSaidaGenero.set(
       chave,
-
       (
         devolvidoPorSaidaGenero.get(
           chave
@@ -514,37 +578,51 @@ export async function GET(
    */
 
   type Registro = {
-    saidaId: string;
+    saidaId:
+      string;
 
-    numeroSaida: number;
+    numeroSaida:
+      number;
 
-    dataSaque: string;
+    dataSaque:
+      string;
 
-    dataAlimentacao: string;
+    dataAlimentacao:
+      string;
 
     tipo:
       | 'PRINCIPAL'
       | 'COMPLEMENTAR';
 
-    destino: string;
+    destino:
+      string;
 
-    destinoNome: string;
+    destinoNome:
+      string;
 
-    generoId: string;
+    generoId:
+      string;
 
-    genero: string;
+    genero:
+      string;
 
-    grupo: string;
+    grupo:
+      string;
 
-    categoria: string;
+    categoria:
+      string;
 
-    unidade: string;
+    unidade:
+      string;
 
-    quantidadeSaida: number;
+    quantidadeSaida:
+      number;
 
-    quantidadeDevolvida: number;
+    quantidadeDevolvida:
+      number;
 
-    quantidadeLiquida: number;
+    quantidadeLiquida:
+      number;
 
     totalAtendido:
       | number
@@ -554,7 +632,8 @@ export async function GET(
       | number
       | null;
 
-    efetivoFechado: boolean;
+    efetivoFechado:
+      boolean;
   };
 
   const registros:
@@ -598,9 +677,11 @@ export async function GET(
         'COMPLEMENTAR';
     } else {
       /*
-       * OUTRO não entra no consumo
-       * por efetivo porque não existe
-       * relação segura com uma
+       * OUTRO não entra
+       * no consumo por
+       * efetivo porque
+       * não existe relação
+       * segura com uma
        * refeição.
        */
       continue;
@@ -633,10 +714,6 @@ export async function GET(
           item.quantidade
         );
 
-      /*
-       * Se não houve devolução,
-       * será zero.
-       */
       const quantidadeDevolvida =
         devolvidoPorSaidaGenero.get(
           chaveDevolucao
@@ -650,14 +727,14 @@ export async function GET(
       const quantidadeLiquida =
         Math.max(
           0,
-
           quantidadeSaida -
             quantidadeDevolvida
         );
 
       let totalAtendido:
         | number
-        | null = null;
+        | null =
+        null;
 
       let efetivoFechado =
         false;
@@ -667,18 +744,25 @@ export async function GET(
        * SAQUE PRINCIPAL
        * =========================================
        *
-       * Serviço do dia seguinte:
-       * utiliza a soma das refeições
-       * realizadas e fechadas daquele dia.
+       * Serviço do dia
+       * seguinte utiliza
+       * o efetivo total
+       * do serviço quando
+       * o dia estiver
+       * completamente
+       * fechado.
        */
       if (
-        tipo === 'PRINCIPAL'
+        tipo ===
+        'PRINCIPAL'
       ) {
         if (
-          efetivoDia?.completo
+          efetivoDia
+            ?.completo
         ) {
           totalAtendido =
-            efetivoDia.totalAtendido;
+            efetivoDia
+              .totalAtendido;
 
           efetivoFechado =
             true;
@@ -689,24 +773,32 @@ export async function GET(
          * SAQUE COMPLEMENTAR
          * =======================================
          *
-         * Utiliza somente o efetivo da
-         * refeição correspondente.
+         * Utiliza somente
+         * o efetivo da
+         * refeição
+         * correspondente.
          */
         const refeicao =
           efetivoDia
             ?.detalhes.find(
-              (registro) =>
-                registro.refeicao ===
+              (
+                registro
+              ) =>
+                registro
+                  .refeicao ===
                 saida.destino
             );
 
         if (
-          refeicao?.fechada &&
-          refeicao.totalAtendido !=
+          refeicao
+            ?.fechada &&
+          refeicao
+            .totalAtendido !=
             null
         ) {
           totalAtendido =
-            refeicao.totalAtendido;
+            refeicao
+              .totalAtendido;
 
           efetivoFechado =
             true;
@@ -714,85 +806,88 @@ export async function GET(
       }
 
       const consumoPorAtendimento =
-        totalAtendido != null &&
+        totalAtendido !=
+          null &&
         totalAtendido > 0
           ? quantidadeLiquida /
             totalAtendido
           : null;
 
-      registros.push({
-        saidaId:
-          saida.id,
+      registros.push(
+        {
+          saidaId:
+            saida.id,
 
-        numeroSaida:
-          saida.numero,
+          numeroSaida:
+            saida.numero,
 
-        dataSaque,
+          dataSaque,
 
-        dataAlimentacao,
+          dataAlimentacao,
 
-        tipo,
+          tipo,
 
-        destino:
-          saida.destino,
+          destino:
+            saida.destino,
 
-        destinoNome:
-          nomesRefeicoes[
-            saida.destino
-          ] ||
-          saida.destino,
+          destinoNome:
+            nomesRefeicoes[
+              saida.destino
+            ] ||
+            saida.destino,
 
-        generoId:
-          item.generoId,
+          generoId:
+            item.generoId,
 
-        genero:
-          item.genero.nome,
+          genero:
+            item.genero.nome,
 
-        grupo:
-          item.genero
-            .categoria
-            ?.grupo
-            ?.nome ||
-          'Sem grupo',
+          grupo:
+            item.genero
+              .categoria
+              ?.grupo
+              ?.nome ||
+            'Sem grupo',
 
-        categoria:
-          item.genero
-            .categoria
-            ?.nome ||
-          'Sem categoria',
+          categoria:
+            item.genero
+              .categoria
+              ?.nome ||
+            'Sem categoria',
 
-        unidade:
-          item.genero
-            .unidade.sigla,
+          unidade:
+            item.genero
+              .unidade.sigla,
 
-        quantidadeSaida:
-          arredondar(
-            quantidadeSaida
-          ),
+          quantidadeSaida:
+            arredondar(
+              quantidadeSaida
+            ),
 
-        quantidadeDevolvida:
-          arredondar(
-            quantidadeDevolvida
-          ),
+          quantidadeDevolvida:
+            arredondar(
+              quantidadeDevolvida
+            ),
 
-        quantidadeLiquida:
-          arredondar(
-            quantidadeLiquida
-          ),
+          quantidadeLiquida:
+            arredondar(
+              quantidadeLiquida
+            ),
 
-        totalAtendido,
+          totalAtendido,
 
-        consumoPorAtendimento:
-          consumoPorAtendimento ==
-          null
-            ? null
-            : arredondar(
-                consumoPorAtendimento,
-                6
-              ),
+          consumoPorAtendimento:
+            consumoPorAtendimento ==
+            null
+              ? null
+              : arredondar(
+                  consumoPorAtendimento,
+                  6
+                ),
 
-        efetivoFechado,
-      });
+          efetivoFechado,
+        }
+      );
     }
   }
 
@@ -801,41 +896,121 @@ export async function GET(
    * CONSUMO POR GÊNERO + DIA
    * =====================================================
    *
-   * Principal + complementações
-   * - devoluções, quando houver.
+   * REGRA OPERACIONAL:
    *
-   * O efetivo daquele serviço entra
-   * somente uma vez para o gênero.
+   * 1. Se o gênero possui
+   *    saque PRINCIPAL no
+   *    serviço:
+   *
+   *    - soma principal +
+   *      complementares;
+   *    - devoluções já
+   *      foram abatidas;
+   *    - utiliza o efetivo
+   *      total do serviço;
+   *    - o efetivo é
+   *      contado uma única
+   *      vez.
+   *
+   * 2. Se o gênero NÃO
+   *    possui saque principal
+   *    e possui somente
+   *    complementar(es):
+   *
+   *    - cada complementar
+   *      é relacionado ao
+   *      efetivo da respectiva
+   *      refeição;
+   *    - refeições diferentes
+   *      têm seus efetivos
+   *      somados;
+   *    - a mesma refeição
+   *      nunca é contada
+   *      duas vezes.
    */
 
   type ConsumoDiaGenero = {
-    generoId: string;
+    generoId:
+      string;
 
-    genero: string;
+    genero:
+      string;
 
-    grupo: string;
+    grupo:
+      string;
 
-    categoria: string;
+    categoria:
+      string;
 
-    unidade: string;
+    unidade:
+      string;
 
-    dataAlimentacao: string;
+    dataAlimentacao:
+      string;
 
-    quantidadeLiquida: number;
+    quantidadeLiquida:
+      number;
 
     totalAtendido:
       | number
       | null;
 
-    efetivoFechado: boolean;
+    efetivoFechado:
+      boolean;
   };
 
-  const consumoPorDiaGenero =
+  type AcumuladorDiaGenero = {
+    generoId:
+      string;
+
+    genero:
+      string;
+
+    grupo:
+      string;
+
+    categoria:
+      string;
+
+    unidade:
+      string;
+
+    dataAlimentacao:
+      string;
+
+    quantidadeLiquida:
+      number;
+
+    possuiPrincipal:
+      boolean;
+
+    /*
+     * Guarda quais refeições
+     * complementares já
+     * pertencem ao gênero
+     * naquele dia.
+     *
+     * Um Set evita duplicar
+     * o efetivo quando houver
+     * mais de um saque para
+     * a mesma refeição.
+     */
+    destinosComplementares:
+      Set<string>;
+  };
+
+  const acumuladoPorDiaGenero =
     new Map<
       string,
-      ConsumoDiaGenero
+      AcumuladorDiaGenero
     >();
 
+  /*
+   * Primeiro agrupamos
+   * todos os saques do
+   * mesmo gênero no mesmo
+   * dia de alimentação.
+   */
   for (
     const registro of
       registros
@@ -845,16 +1020,11 @@ export async function GET(
       `${registro.generoId}`;
 
     let item =
-      consumoPorDiaGenero.get(
+      acumuladoPorDiaGenero.get(
         chave
       );
 
     if (!item) {
-      const efetivoDia =
-        efetivoPorDia.get(
-          registro.dataAlimentacao
-        );
-
       item = {
         generoId:
           registro.generoId,
@@ -874,34 +1044,217 @@ export async function GET(
         dataAlimentacao:
           registro.dataAlimentacao,
 
-        quantidadeLiquida: 0,
+        quantidadeLiquida:
+          0,
 
-        totalAtendido:
-          efetivoDia?.completo
-            ? efetivoDia.totalAtendido
-            : null,
+        possuiPrincipal:
+          false,
 
-        efetivoFechado:
-          Boolean(
-            efetivoDia?.completo
-          ),
+        destinosComplementares:
+          new Set<string>(),
       };
 
-      consumoPorDiaGenero.set(
+      acumuladoPorDiaGenero.set(
         chave,
         item
       );
     }
 
     /*
-     * Soma principal e
-     * complementações.
+     * Soma o consumo
+     * líquido.
      *
-     * As devoluções já foram
-     * descontadas anteriormente.
+     * As devoluções já
+     * foram abatidas na
+     * criação do registro.
      */
     item.quantidadeLiquida +=
       registro.quantidadeLiquida;
+
+    if (
+      registro.tipo ===
+      'PRINCIPAL'
+    ) {
+      item.possuiPrincipal =
+        true;
+    } else {
+      item.destinosComplementares.add(
+        registro.destino
+      );
+    }
+  }
+
+  const consumoPorDiaGenero =
+    new Map<
+      string,
+      ConsumoDiaGenero
+    >();
+
+  /*
+   * Depois de conhecer
+   * todos os saques daquele
+   * gênero/dia, definimos
+   * qual efetivo deve ser
+   * relacionado ao consumo.
+   */
+  for (
+    const [
+      chave,
+      acumulado,
+    ] of
+      acumuladoPorDiaGenero.entries()
+  ) {
+    const efetivoDia =
+      efetivoPorDia.get(
+        acumulado
+          .dataAlimentacao
+      );
+
+    let totalAtendido:
+      | number
+      | null =
+      null;
+
+    let efetivoFechado =
+      false;
+
+    /*
+     * =========================================
+     * EXISTE SAQUE PRINCIPAL
+     * =========================================
+     *
+     * O gênero pertence ao
+     * serviço como um todo.
+     *
+     * Principal +
+     * complementares são
+     * somados, mas o efetivo
+     * total do serviço entra
+     * somente uma vez.
+     */
+    if (
+      acumulado
+        .possuiPrincipal
+    ) {
+      if (
+        efetivoDia
+          ?.completo
+      ) {
+        totalAtendido =
+          efetivoDia
+            .totalAtendido;
+
+        efetivoFechado =
+          true;
+      }
+    } else {
+      /*
+       * =======================================
+       * SOMENTE SAQUES COMPLEMENTARES
+       * =======================================
+       *
+       * Como não existe
+       * saque principal
+       * desse gênero,
+       * usamos somente
+       * os efetivos das
+       * refeições às quais
+       * os complementos
+       * pertencem.
+       */
+      let somaAtendidos =
+        0;
+
+      let todasFechadas =
+        acumulado
+          .destinosComplementares
+          .size > 0;
+
+      for (
+        const destino of
+          acumulado
+            .destinosComplementares
+      ) {
+        const refeicao =
+          efetivoDia
+            ?.detalhes.find(
+              (
+                registro
+              ) =>
+                registro
+                  .refeicao ===
+                destino
+            );
+
+        if (
+          !refeicao ||
+          !refeicao
+            .fechada ||
+          refeicao
+            .totalAtendido ==
+            null
+        ) {
+          todasFechadas =
+            false;
+
+          continue;
+        }
+
+        /*
+         * Cada refeição
+         * entra somente
+         * uma vez.
+         */
+        somaAtendidos +=
+          refeicao
+            .totalAtendido;
+      }
+
+      if (
+        todasFechadas &&
+        somaAtendidos > 0
+      ) {
+        totalAtendido =
+          somaAtendidos;
+
+        efetivoFechado =
+          true;
+      }
+    }
+
+    consumoPorDiaGenero.set(
+      chave,
+      {
+        generoId:
+          acumulado.generoId,
+
+        genero:
+          acumulado.genero,
+
+        grupo:
+          acumulado.grupo,
+
+        categoria:
+          acumulado.categoria,
+
+        unidade:
+          acumulado.unidade,
+
+        dataAlimentacao:
+          acumulado
+            .dataAlimentacao,
+
+        quantidadeLiquida:
+          arredondar(
+            acumulado
+              .quantidadeLiquida
+          ),
+
+        totalAtendido,
+
+        efetivoFechado,
+      }
+    );
   }
 
   /*
@@ -914,22 +1267,29 @@ export async function GET(
     new Map<
       string,
       {
-        generoId: string;
+        generoId:
+          string;
 
-        genero: string;
+        genero:
+          string;
 
-        grupo: string;
+        grupo:
+          string;
 
-        categoria: string;
+        categoria:
+          string;
 
-        unidade: string;
+        unidade:
+          string;
 
-        quantidadeLiquida: number;
+        quantidadeLiquida:
+          number;
 
         atendimentosRelacionados:
           number;
 
-        registrosValidos: number;
+        registrosValidos:
+          number;
       }
     >();
 
@@ -938,10 +1298,14 @@ export async function GET(
       consumoPorDiaGenero.values()
   ) {
     if (
-      !registro.efetivoFechado ||
-      registro.totalAtendido ==
+      !registro
+        .efetivoFechado ||
+      registro
+        .totalAtendido ==
         null ||
-      registro.totalAtendido <= 0
+      registro
+        .totalAtendido <=
+        0
     ) {
       continue;
     }
@@ -968,12 +1332,14 @@ export async function GET(
         unidade:
           registro.unidade,
 
-        quantidadeLiquida: 0,
+        quantidadeLiquida:
+          0,
 
         atendimentosRelacionados:
           0,
 
-        registrosValidos: 0,
+        registrosValidos:
+          0,
       };
 
       consolidado.set(
@@ -986,8 +1352,9 @@ export async function GET(
       registro.quantidadeLiquida;
 
     /*
-     * Uma vez por gênero por
-     * serviço/dia.
+     * O efetivo correspondente
+     * ao gênero naquele serviço
+     * entra uma única vez.
      */
     item.atendimentosRelacionados +=
       registro.totalAtendido;
@@ -1000,29 +1367,32 @@ export async function GET(
     Array.from(
       consolidado.values()
     )
-      .map((item) => ({
-        ...item,
+      .map(
+        (item) => ({
+          ...item,
 
-        quantidadeLiquida:
-          arredondar(
-            item.quantidadeLiquida
-          ),
+          quantidadeLiquida:
+            arredondar(
+              item.quantidadeLiquida
+            ),
 
-        consumoMedioPorAtendimento:
-          item.atendimentosRelacionados >
-          0
-            ? arredondar(
-                item.quantidadeLiquida /
-                  item.atendimentosRelacionados,
-                6
-              )
-            : null,
-      }))
-      .sort((a, b) =>
-        a.genero.localeCompare(
-          b.genero,
-          'pt-BR'
-        )
+          consumoMedioPorAtendimento:
+            item.atendimentosRelacionados >
+            0
+              ? arredondar(
+                  item.quantidadeLiquida /
+                    item.atendimentosRelacionados,
+                  6
+                )
+              : null,
+        })
+      )
+      .sort(
+        (a, b) =>
+          a.genero.localeCompare(
+            b.genero,
+            'pt-BR'
+          )
       );
 
   /*
@@ -1034,25 +1404,27 @@ export async function GET(
   const dias =
     Array.from(
       efetivoPorDia.values()
-    ).map((dia) => ({
-      data:
-        dia.data,
+    ).map(
+      (dia) => ({
+        data:
+          dia.data,
 
-      refeicoesPrevistas:
-        dia.refeicoesPrevistas,
+        refeicoesPrevistas:
+          dia.refeicoesPrevistas,
 
-      refeicoesFechadas:
-        dia.refeicoesFechadas,
+        refeicoesFechadas:
+          dia.refeicoesFechadas,
 
-      totalAtendido:
-        dia.totalAtendido,
+        totalAtendido:
+          dia.totalAtendido,
 
-      completo:
-        dia.completo,
+        completo:
+          dia.completo,
 
-      detalhes:
-        dia.detalhes,
-    }));
+        detalhes:
+          dia.detalhes,
+      })
+    );
 
   const diasCompletos =
     dias.filter(
@@ -1108,13 +1480,13 @@ export async function GET(
       ],
 
       regraComplementar:
-        'Os saques complementares são somados ao consumo do gênero no respectivo dia de alimentação.',
+        'Quando existe saque principal do gênero, os complementares são somados ao consumo do serviço sem repetir o efetivo. Quando existem somente saques complementares, o consumo é relacionado apenas aos efetivos das respectivas refeições.',
 
       devolucoes:
         'Quando houver devolução registrada, a quantidade devolvida é abatida do consumo.',
 
       consolidacao:
-        'Para cada gênero e dia de alimentação, o consumo líquido dos saques é somado e o efetivo do serviço é contabilizado uma única vez.',
+        'Para cada gênero e dia de alimentação, o consumo líquido é consolidado e o efetivo correspondente é contabilizado uma única vez.',
 
       observacao:
         'A análise representa consumo operacional relacionado ao efetivo. Ela não substitui a conferência física nem a decisão administrativa do Aprovisionamento.',
@@ -1131,8 +1503,9 @@ export async function GET(
       diasPendentes,
 
       /*
-       * Mantido para compatibilidade
-       * com o componente atual.
+       * Mantido para
+       * compatibilidade
+       * com o componente.
        */
       diasIncompletos:
         diasPendentes,
