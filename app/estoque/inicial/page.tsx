@@ -4,8 +4,20 @@ import { currentUser } from '@/lib/auth';
 import EstoqueInicialClient from '@/components/EstoqueInicialClient';
 
 export default async function Page() {
-  if (!(await currentUser())) {
+  const usuario = await currentUser();
+
+  if (!usuario) {
     redirect('/login');
+  }
+
+  if (
+    ![
+      'ADMIN_PRINCIPAL',
+      'ADMINISTRADOR',
+      'CHEFE_DEPOSITO',
+    ].includes(usuario.perfil)
+  ) {
+    redirect('/inicio');
   }
 
   return (
