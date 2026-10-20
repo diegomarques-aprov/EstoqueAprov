@@ -85,24 +85,95 @@ export default async function Inicio() {
   }
 
   /*
+   * PERFIS
+   */
+
+  const administrador =
+    u.perfil === 'ADMIN_PRINCIPAL' ||
+    u.perfil === 'ADMINISTRADOR';
+
+  const administradorPrincipal =
+    u.perfil === 'ADMIN_PRINCIPAL';
+
+  const chefeDeposito =
+    u.perfil === 'CHEFE_DEPOSITO';
+
+  const graduadoServico =
+    u.perfil === 'GRADUADO_SERVICO';
+
+  /*
+   * VISIBILIDADE
+   *
+   * Administradores:
+   * visão completa.
+   *
+   * Chefe do Depósito:
+   * operação do depósito.
+   *
+   * Graduado de Serviço:
+   * estoque, entradas, saídas,
+   * devoluções/ajustes/pesagem e efetivo.
+   */
+
+  const podeVerPainelEstoque =
+    administrador || chefeDeposito;
+
+  const podeVerEfetivo =
+    administrador || graduadoServico;
+
+  const podeVerEstoqueInicial =
+    administrador || chefeDeposito;
+
+  const podeConsultarEstoque =
+    administrador ||
+    chefeDeposito ||
+    graduadoServico;
+
+  const podeReceber =
+    administrador ||
+    chefeDeposito ||
+    graduadoServico;
+
+  const podeRegistrarSaida =
+    administrador ||
+    chefeDeposito ||
+    graduadoServico;
+
+  const podeAjustar =
+    administrador ||
+    chefeDeposito ||
+    graduadoServico;
+
+  const podeVerRelatorios =
+    administrador;
+
+  const podeVerQDAA =
+    administrador;
+
+  /*
    * DATAS
    */
+
   const hoje = new Date();
   const inicioHoje = inicioDoDiaUTC(hoje);
 
   const amanha = new Date(hoje);
   amanha.setDate(amanha.getDate() + 1);
 
-  const inicioAmanha = inicioDoDiaUTC(amanha);
-  const fimAmanha = fimDoDiaUTC(amanha);
+  const inicioAmanha =
+    inicioDoDiaUTC(amanha);
+
+  const fimAmanha =
+    fimDoDiaUTC(amanha);
 
   /*
    * CONSULTAS PRINCIPAIS
    *
-   * São independentes e executadas em paralelo
-   * para não bloquear a abertura do Início
-   * uma após a outra.
+   * Mantemos as consultas existentes em paralelo
+   * para preservar o comportamento e o desempenho
+   * atuais do Início.
    */
+
   const [
     estoques,
     arranchamentosAmanha,
@@ -175,6 +246,7 @@ export default async function Inicio() {
   /*
    * ESTOQUE ABAIXO DO MÍNIMO
    */
+
   const saldosPorGenero = new Map<
     string,
     {
@@ -191,9 +263,10 @@ export default async function Inicio() {
       continue;
     }
 
-    const atual = saldosPorGenero.get(
-      estoque.generoId
-    );
+    const atual =
+      saldosPorGenero.get(
+        estoque.generoId
+      );
 
     if (atual) {
       atual.quantidade += Number(
@@ -225,6 +298,7 @@ export default async function Inicio() {
   /*
    * VALIDADES
    */
+
   const agora = hoje.getTime();
 
   const limiteValidade =
@@ -255,6 +329,7 @@ export default async function Inicio() {
   /*
    * ARRANCHAMENTO DO DIA SEGUINTE
    */
+
   const totalPrevistoAmanha =
     arranchamentosAmanha.reduce(
       (total, item) =>
@@ -276,9 +351,12 @@ export default async function Inicio() {
   /*
    * FECHAMENTOS PENDENTES
    */
+
   const diasPendentes = new Set(
     fechamentosPendentes.map((item) =>
-      item.data.toISOString().slice(0, 10)
+      item.data
+        .toISOString()
+        .slice(0, 10)
     )
   );
 
@@ -288,9 +366,11 @@ export default async function Inicio() {
   /*
    * LEMBRETE QDAA
    */
+
   const diaDoMes = hoje.getDate();
 
   const exibirLembreteQDAA =
+    administrador &&
     diaDoMes >= 23 &&
     diaDoMes <= 25;
 
@@ -321,176 +401,199 @@ export default async function Inicio() {
 
       {/* FECHAMENTOS PENDENTES */}
 
-      {fechamentosPendentes.length >
-        0 && (
-        <div
-          className="card"
-          style={{
-            border:
-              '1px solid #ef4444',
-            background:
-              'rgba(239, 68, 68, 0.08)',
-          }}
-        >
-          <h2 style={{ marginTop: 0 }}>
-            ⚠ Fechamento Diário pendente
-          </h2>
-
-          <p>
-            Existem{' '}
-            <strong>
-              {quantidadeDiasPendentes}{' '}
-              {quantidadeDiasPendentes ===
-              1
-                ? 'dia'
-                : 'dias'}
-            </strong>{' '}
-            com fechamento do efetivo
-            alimentado pendente.
-          </p>
-
-          <p className="muted">
-            Informe o comparecimento dos
-            arranchados, os não arranchados
-            atendidos e a sobra pesada de
-            cada refeição.
-          </p>
-
-          <div className="row">
-            <span>
-              Refeições pendentes
-            </span>
-
-            <strong>
-              {fechamentosPendentes.length}
-            </strong>
-          </div>
-
+      {podeVerEfetivo &&
+        fechamentosPendentes.length >
+          0 && (
           <div
-            className="actions"
-            style={{ marginTop: 14 }}
+            className="card"
+            style={{
+              border:
+                '1px solid #ef4444',
+              background:
+                'rgba(239, 68, 68, 0.08)',
+            }}
           >
-            <Link
-              className="btn"
-              href="/efetivo/fechamento"
+            <h2
+              style={{
+                marginTop: 0,
+              }}
             >
-              Realizar Fechamento Diário
-            </Link>
+              ⚠ Fechamento Diário pendente
+            </h2>
+
+            <p>
+              Existem{' '}
+              <strong>
+                {quantidadeDiasPendentes}{' '}
+                {quantidadeDiasPendentes ===
+                1
+                  ? 'dia'
+                  : 'dias'}
+              </strong>{' '}
+              com fechamento do efetivo
+              alimentado pendente.
+            </p>
+
+            <p className="muted">
+              Informe o comparecimento dos
+              arranchados, os não arranchados
+              atendidos e a sobra pesada de
+              cada refeição.
+            </p>
+
+            <div className="row">
+              <span>
+                Refeições pendentes
+              </span>
+
+              <strong>
+                {
+                  fechamentosPendentes.length
+                }
+              </strong>
+            </div>
+
+            <div
+              className="actions"
+              style={{
+                marginTop: 14,
+              }}
+            >
+              <Link
+                className="btn"
+                href="/efetivo/fechamento"
+              >
+                Realizar Fechamento Diário
+              </Link>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
       {/* ARRANCHAMENTO */}
 
-      {!efetivoAmanhaInformado ? (
-        <div
-          className="card"
-          style={{
-            border:
-              '1px solid #f59e0b',
-            background:
-              'rgba(245, 158, 11, 0.08)',
-          }}
-        >
-          <h2 style={{ marginTop: 0 }}>
-            ⚠ Efetivo do dia seguinte
-          </h2>
-
-          <p>
-            Informe o efetivo arranchado
-            previsto para amanhã. O
-            planejamento deve ser realizado
-            para que o saque dos gêneros
-            ocorra{' '}
-            <strong>
-              antes das 15:00 do dia
-              anterior
-            </strong>
-            .
-          </p>
-
-          <p className="muted">
-            O efetivo informado será
-            utilizado como base para o
-            planejamento das quantidades de
-            gêneros, considerando também a
-            margem de segurança definida no
-            arranchamento.
-          </p>
-
-          <Link
-            className="btn"
-            href="/efetivo"
-          >
-            Informar efetivo de amanhã
-          </Link>
-        </div>
-      ) : (
-        <div
-          className="card"
-          style={{
-            border:
-              '1px solid #22c55e',
-            background:
-              'rgba(34, 197, 94, 0.07)',
-          }}
-        >
-          <h2 style={{ marginTop: 0 }}>
-            ✓ Efetivo do dia seguinte
-          </h2>
-
-          <p>
-            <strong>
-              Efetivo de arranchados para o
-              dia seguinte já relacionado.
-            </strong>
-          </p>
-
-          <div className="row">
-            <span>
-              Refeições relacionadas
-            </span>
-
-            <strong>
-              {arranchamentosAmanha.length}
-            </strong>
-          </div>
-
-          <div className="row">
-            <span>
-              Efetivo previsto relacionado
-            </span>
-
-            <strong>
-              {totalPrevistoAmanha}
-            </strong>
-          </div>
-
-          <div className="row">
-            <span>
-              Efetivo considerado no
-              planejamento
-            </span>
-
-            <strong>
-              {totalPlanejamentoAmanha}
-            </strong>
-          </div>
-
+      {podeVerEfetivo &&
+        (!efetivoAmanhaInformado ? (
           <div
-            className="actions"
-            style={{ marginTop: 14 }}
+            className="card"
+            style={{
+              border:
+                '1px solid #f59e0b',
+              background:
+                'rgba(245, 158, 11, 0.08)',
+            }}
           >
+            <h2
+              style={{
+                marginTop: 0,
+              }}
+            >
+              ⚠ Efetivo do dia seguinte
+            </h2>
+
+            <p>
+              Informe o efetivo arranchado
+              previsto para amanhã. O
+              planejamento deve ser realizado
+              para que o saque dos gêneros
+              ocorra{' '}
+              <strong>
+                antes das 15:00 do dia
+                anterior
+              </strong>
+              .
+            </p>
+
+            <p className="muted">
+              O efetivo informado será
+              utilizado como base para o
+              planejamento das quantidades de
+              gêneros, considerando também a
+              margem de segurança definida no
+              arranchamento.
+            </p>
+
             <Link
-              className="btn secondary"
+              className="btn"
               href="/efetivo"
             >
-              Consultar / alterar
-              arranchamento
+              Informar efetivo de amanhã
             </Link>
           </div>
-        </div>
-      )}
+        ) : (
+          <div
+            className="card"
+            style={{
+              border:
+                '1px solid #22c55e',
+              background:
+                'rgba(34, 197, 94, 0.07)',
+            }}
+          >
+            <h2
+              style={{
+                marginTop: 0,
+              }}
+            >
+              ✓ Efetivo do dia seguinte
+            </h2>
+
+            <p>
+              <strong>
+                Efetivo de arranchados para
+                o dia seguinte já
+                relacionado.
+              </strong>
+            </p>
+
+            <div className="row">
+              <span>
+                Refeições relacionadas
+              </span>
+
+              <strong>
+                {
+                  arranchamentosAmanha.length
+                }
+              </strong>
+            </div>
+
+            <div className="row">
+              <span>
+                Efetivo previsto relacionado
+              </span>
+
+              <strong>
+                {totalPrevistoAmanha}
+              </strong>
+            </div>
+
+            <div className="row">
+              <span>
+                Efetivo considerado no
+                planejamento
+              </span>
+
+              <strong>
+                {totalPlanejamentoAmanha}
+              </strong>
+            </div>
+
+            <div
+              className="actions"
+              style={{
+                marginTop: 14,
+              }}
+            >
+              <Link
+                className="btn secondary"
+                href="/efetivo"
+              >
+                Consultar / alterar
+                arranchamento
+              </Link>
+            </div>
+          </div>
+        ))}
 
       {/* QDAA */}
 
@@ -504,7 +607,11 @@ export default async function Inicio() {
               'rgba(59, 130, 246, 0.08)',
           }}
         >
-          <h2 style={{ marginTop: 0 }}>
+          <h2
+            style={{
+              marginTop: 0,
+            }}
+          >
             📋 Lembrete QDAA
           </h2>
 
@@ -551,60 +658,102 @@ export default async function Inicio() {
 
       {/* PAINEL DE SITUAÇÃO */}
 
-      <div className="card">
-        <h2>Painel de situação</h2>
+      {podeVerPainelEstoque && (
+        <div className="card">
+          <h2>Painel de situação</h2>
 
-        {baixos.length === 0 &&
-        quantidadeProximosDaValidade === 0 &&
-        quantidadeVencidos === 0 ? (
-          <p className="muted">
-            Nenhuma pendência de estoque
-            no momento.
-          </p>
-        ) : (
-          <div className="actions">
-            {baixos.length > 0 && (
-              <Link
-                className="btn secondary"
-                href="/relatorios"
-              >
-                ⚠ {baixos.length}{' '}
-                gênero(s) abaixo do mínimo
-              </Link>
-            )}
+          {baixos.length === 0 &&
+          quantidadeProximosDaValidade ===
+            0 &&
+          quantidadeVencidos === 0 ? (
+            <p className="muted">
+              Nenhuma pendência de estoque
+              no momento.
+            </p>
+          ) : (
+            <div className="actions">
+              {baixos.length > 0 && (
+                administrador ? (
+                  <Link
+                    className="btn secondary"
+                    href="/relatorios"
+                  >
+                    ⚠ {baixos.length}{' '}
+                    gênero(s) abaixo do
+                    mínimo
+                  </Link>
+                ) : (
+                  <Link
+                    className="btn secondary"
+                    href="/estoque"
+                  >
+                    ⚠ {baixos.length}{' '}
+                    gênero(s) abaixo do
+                    mínimo
+                  </Link>
+                )
+              )}
 
-            {quantidadeProximosDaValidade >
-              0 && (
-              <Link
-                className="btn secondary"
-                href="/relatorios"
-              >
-                ⏳{' '}
-                {
-                  quantidadeProximosDaValidade
-                }{' '}
-                lote(s) vencendo em até 30
-                dias
-              </Link>
-            )}
+              {quantidadeProximosDaValidade >
+                0 &&
+                (administrador ? (
+                  <Link
+                    className="btn secondary"
+                    href="/relatorios"
+                  >
+                    ⏳{' '}
+                    {
+                      quantidadeProximosDaValidade
+                    }{' '}
+                    lote(s) vencendo em até
+                    30 dias
+                  </Link>
+                ) : (
+                  <Link
+                    className="btn secondary"
+                    href="/estoque"
+                  >
+                    ⏳{' '}
+                    {
+                      quantidadeProximosDaValidade
+                    }{' '}
+                    lote(s) vencendo em até
+                    30 dias
+                  </Link>
+                ))}
 
-            {quantidadeVencidos > 0 && (
-              <Link
-                className="btn secondary"
-                href="/relatorios"
-                style={{
-                  borderColor:
-                    '#ef4444',
-                  color: '#ef4444',
-                }}
-              >
-                ⚠ {quantidadeVencidos}{' '}
-                lote(s) vencido(s)
-              </Link>
-            )}
-          </div>
-        )}
-      </div>
+              {quantidadeVencidos > 0 &&
+                (administrador ? (
+                  <Link
+                    className="btn secondary"
+                    href="/relatorios"
+                    style={{
+                      borderColor:
+                        '#ef4444',
+                      color: '#ef4444',
+                    }}
+                  >
+                    ⚠ {quantidadeVencidos}{' '}
+                    lote(s) vencido(s)
+                  </Link>
+                ) : (
+                  <Link
+                    className="btn secondary"
+                    href="/estoque"
+                    style={{
+                      borderColor:
+                        '#ef4444',
+                      color: '#ef4444',
+                    }}
+                  >
+                    ⚠ {quantidadeVencidos}{' '}
+                    lote(s) vencido(s)
+                  </Link>
+                ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* OPERAÇÃO */}
 
@@ -612,156 +761,179 @@ export default async function Inicio() {
         <h2>Operação</h2>
 
         <div className="actions">
-          <Link
-            className="btn"
-            style={verdesOperacao[0]}
-            href="/estoque/inicial"
-          >
-            Estoque inicial
-          </Link>
-
-          <Link
-            className="btn"
-            style={verdesOperacao[1]}
-            href="/estoque"
-          >
-            Consultar estoque
-          </Link>
-
-          <Link
-            className="btn"
-            style={verdesOperacao[2]}
-            href="/recebimentos"
-          >
-            Novo recebimento
-          </Link>
-
-          <Link
-            className="btn"
-            style={verdesOperacao[3]}
-            href="/saidas"
-          >
-            Saída de gêneros
-          </Link>
-
-          <Link
-            className="btn"
-            style={verdesOperacao[4]}
-            href="/ajustes"
-          >
-            Devoluções e ajustes
-          </Link>
-
-          <Link
-            className="btn"
-            style={verdesOperacao[5]}
-            href="/efetivo"
-          >
-            Efetivo alimentado
-          </Link>
-
-          <Link
-            className="btn"
-            style={verdesOperacao[0]}
-            href="/relatorios"
-          >
-            Relatórios
-          </Link>
-
-          <Link
-            className="btn"
-            style={verdesOperacao[1]}
-            href="/qdaa"
-          >
-            QDAA / Ressuprimento QS
-          </Link>
-        </div>
-      </div>
-
-      {/* CONFIGURAÇÕES */}
-
-      <div
-        className="card"
-        style={estiloAreaAdministrativa}
-      >
-        <h2>Configurações</h2>
-
-        <p className="muted">
-          Defina a estrutura utilizada pelo
-          sistema para organizar e controlar
-          o estoque.
-        </p>
-
-        <div className="actions">
-          <Link
-            className="btn"
-            style={estiloBotaoAzul}
-            href="/admin/locais"
-          >
-            Locais de armazenamento
-          </Link>
-
-          <Link
-            className="btn"
-            style={estiloBotaoAzul}
-            href="/admin/unidades"
-          >
-            Unidades de medida
-          </Link>
-
-          <Link
-            className="btn"
-            style={estiloBotaoAzul}
-            href="/admin/grupos-generos"
-          >
-            Grupos de gêneros
-          </Link>
-
-          <Link
-            className="btn"
-            style={estiloBotaoAzul}
-            href="/admin/categorias"
-          >
-            Categorias de gêneros
-          </Link>
-
-          {u.perfil ===
-            'ADMIN_PRINCIPAL' && (
+          {podeVerEstoqueInicial && (
             <Link
               className="btn"
-              style={estiloBotaoAzul}
-              href="/admin/usuarios"
+              style={verdesOperacao[0]}
+              href="/estoque/inicial"
             >
-              Usuários e permissões
+              Estoque inicial
+            </Link>
+          )}
+
+          {podeConsultarEstoque && (
+            <Link
+              className="btn"
+              style={verdesOperacao[1]}
+              href="/estoque"
+            >
+              Consultar estoque
+            </Link>
+          )}
+
+          {podeReceber && (
+            <Link
+              className="btn"
+              style={verdesOperacao[2]}
+              href="/recebimentos"
+            >
+              Novo recebimento
+            </Link>
+          )}
+
+          {podeRegistrarSaida && (
+            <Link
+              className="btn"
+              style={verdesOperacao[3]}
+              href="/saidas"
+            >
+              Saída de gêneros
+            </Link>
+          )}
+
+          {podeAjustar && (
+            <Link
+              className="btn"
+              style={verdesOperacao[4]}
+              href="/ajustes"
+            >
+              Devoluções e ajustes
+            </Link>
+          )}
+
+          {podeVerEfetivo && (
+            <Link
+              className="btn"
+              style={verdesOperacao[5]}
+              href="/efetivo"
+            >
+              Efetivo alimentado
+            </Link>
+          )}
+
+          {podeVerRelatorios && (
+            <Link
+              className="btn"
+              style={verdesOperacao[0]}
+              href="/relatorios"
+            >
+              Relatórios
+            </Link>
+          )}
+
+          {podeVerQDAA && (
+            <Link
+              className="btn"
+              style={verdesOperacao[1]}
+              href="/qdaa"
+            >
+              QDAA / Ressuprimento QS
             </Link>
           )}
         </div>
       </div>
 
+      {/* CONFIGURAÇÕES */}
+
+      {administrador && (
+        <div
+          className="card"
+          style={
+            estiloAreaAdministrativa
+          }
+        >
+          <h2>Configurações</h2>
+
+          <p className="muted">
+            Defina a estrutura utilizada
+            pelo sistema para organizar e
+            controlar o estoque.
+          </p>
+
+          <div className="actions">
+            <Link
+              className="btn"
+              style={estiloBotaoAzul}
+              href="/admin/locais"
+            >
+              Locais de armazenamento
+            </Link>
+
+            <Link
+              className="btn"
+              style={estiloBotaoAzul}
+              href="/admin/unidades"
+            >
+              Unidades de medida
+            </Link>
+
+            <Link
+              className="btn"
+              style={estiloBotaoAzul}
+              href="/admin/grupos-generos"
+            >
+              Grupos de gêneros
+            </Link>
+
+            <Link
+              className="btn"
+              style={estiloBotaoAzul}
+              href="/admin/categorias"
+            >
+              Categorias de gêneros
+            </Link>
+
+            {administradorPrincipal && (
+              <Link
+                className="btn"
+                style={estiloBotaoAzul}
+                href="/admin/usuarios"
+              >
+                Usuários e permissões
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* CADASTROS */}
 
-      <div
-        className="card"
-        style={estiloAreaAdministrativa}
-      >
-        <h2>Cadastros</h2>
+      {administrador && (
+        <div
+          className="card"
+          style={
+            estiloAreaAdministrativa
+          }
+        >
+          <h2>Cadastros</h2>
 
-        <p className="muted">
-          Cadastre, consulte e altere os
-          gêneros utilizados pelo
-          Aprovisionamento.
-        </p>
+          <p className="muted">
+            Cadastre, consulte e altere os
+            gêneros utilizados pelo
+            Aprovisionamento.
+          </p>
 
-        <div className="actions">
-          <Link
-            className="btn"
-            style={estiloBotaoAzul}
-            href="/admin/generos"
-          >
-            Gêneros QS/QR
-          </Link>
+          <div className="actions">
+            <Link
+              className="btn"
+              style={estiloBotaoAzul}
+              href="/admin/generos"
+            >
+              Gêneros QS/QR
+            </Link>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* RODAPÉ */}
 
