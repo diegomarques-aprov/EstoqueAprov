@@ -127,9 +127,11 @@ type Dados = {
     detalhes: Array<{
       refeicao: string;
       refeicaoNome: string;
+
       totalAtendido:
         | number
         | null;
+
       fechada: boolean;
     }>;
   }>;
@@ -358,8 +360,7 @@ export default function ConsumoEfetivoClient() {
 
                 <div>
                   {
-                    dados
-                      .resumo
+                    dados.resumo
                       .diasAnalisados
                   }
                 </div>
@@ -372,8 +373,7 @@ export default function ConsumoEfetivoClient() {
 
                 <div>
                   {
-                    dados
-                      .resumo
+                    dados.resumo
                       .diasCompletos
                   }
                 </div>
@@ -386,8 +386,7 @@ export default function ConsumoEfetivoClient() {
 
                 <div>
                   {
-                    dados
-                      .resumo
+                    dados.resumo
                       .diasIncompletos
                   }
                 </div>
@@ -400,8 +399,7 @@ export default function ConsumoEfetivoClient() {
 
                 <div>
                   {
-                    dados
-                      .resumo
+                    dados.resumo
                       .registrosRelacionados
                   }
                 </div>
@@ -426,8 +424,7 @@ export default function ConsumoEfetivoClient() {
 
                 <p>
                   {
-                    dados
-                      .resumo
+                    dados.resumo
                       .registrosSemEfetivoFechado
                   }{' '}
                   registro(s) de
@@ -495,68 +492,74 @@ export default function ConsumoEfetivoClient() {
 
                 <tbody>
                   {dados.dias.map(
-                    (dia) => (
-                      <tr
-                        key={
-                          dia.data
-                        }
-                        style={{
-                          borderTop:
-                            '1px solid rgba(255,255,255,0.12)',
-                        }}
-                      >
-                        <td
-                          style={{
-                            padding:
-                              10,
-                          }}
-                        >
-                          {formatarData(
+                    (dia) => {
+                      const semRegistro =
+                        dia.refeicoesPrevistas ===
+                        0;
+
+                      return (
+                        <tr
+                          key={
                             dia.data
-                          )}
-                        </td>
-
-                        <td
-                          style={{
-                            padding:
-                              10,
-                          }}
-                        >
-                          {
-                            dia.refeicoesFechadas
                           }
-                          /
-                          {
-                            dia.refeicoesPrevistas
-                          }
-                        </td>
-
-                        <td
                           style={{
-                            padding:
-                              10,
-                            textAlign:
-                              'right',
+                            borderTop:
+                              '1px solid rgba(255,255,255,0.12)',
                           }}
                         >
-                          {formatarNumero(
-                            dia.totalAtendido,
-                            0
-                          )}
-                        </td>
+                          <td
+                            style={{
+                              padding:
+                                10,
+                            }}
+                          >
+                            {formatarData(
+                              dia.data
+                            )}
+                          </td>
 
-                        <td
-                          style={{
-                            padding:
-                              10,
-                          }}
-                        >
-                          {dia.completo
-                            ? '✓ Completo'
-                            : '⚠ Incompleto'}
-                        </td>
-                      </tr>
-                    )
+                          <td
+                            style={{
+                              padding:
+                                10,
+                            }}
+                          >
+                            {semRegistro
+                              ? '—'
+                              : `${dia.refeicoesFechadas}/${dia.refeicoesPrevistas}`}
+                          </td>
+
+                          <td
+                            style={{
+                              padding:
+                                10,
+                              textAlign:
+                                'right',
+                            }}
+                          >
+                            {semRegistro
+                              ? '—'
+                              : formatarNumero(
+                                  dia.totalAtendido,
+                                  0
+                                )}
+                          </td>
+
+                          <td
+                            style={{
+                              padding:
+                                10,
+                            }}
+                          >
+                            {semRegistro
+                              ? '— Sem registro'
+                              : dia.completo
+                                ? '✓ Completo'
+                                : '⚠ Incompleto'}
+                          </td>
+                        </tr>
+                      );
+                    }
                   )}
                 </tbody>
               </table>
