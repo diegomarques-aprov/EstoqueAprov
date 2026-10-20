@@ -29,16 +29,15 @@ export default async function Page() {
         <p>
           Área destinada ao acompanhamento dos
           gêneros classificados como QS e ao
-          apoio ao planejamento das necessidades
-          da cadeia de suprimento.
+          planejamento das necessidades da cadeia
+          de suprimento.
         </p>
 
         <p className="muted">
-          O QDAA é apurado mensalmente. O
-          histórico de consumo e o efetivo
-          realmente atendido serão utilizados
-          para auxiliar a análise das
-          necessidades dos próximos ciclos de
+          O QDAA é apurado mensalmente. O histórico
+          de consumo líquido real dos gêneros é
+          utilizado como base para auxiliar o
+          planejamento dos próximos ciclos de
           ressuprimento.
         </p>
 
@@ -46,9 +45,6 @@ export default async function Page() {
           className="actions"
           style={{
             marginTop: 14,
-            display: 'flex',
-            gap: 10,
-            flexWrap: 'wrap',
           }}
         >
           <Link
@@ -56,13 +52,6 @@ export default async function Page() {
             href="/qdaa/historico"
           >
             Histórico de Ressuprimentos QS
-          </Link>
-
-          <Link
-            className="btn"
-            href="/consumo-efetivo"
-          >
-            Consumo × Efetivo
           </Link>
         </div>
       </div>
