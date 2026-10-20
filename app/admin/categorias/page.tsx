@@ -10,6 +10,15 @@ export default async function Page() {
     redirect('/login');
   }
 
+  if (
+    ![
+      'ADMIN_PRINCIPAL',
+      'ADMINISTRADOR',
+    ].includes(usuario.perfil)
+  ) {
+    redirect('/inicio');
+  }
+
   return (
     <main>
       <div
