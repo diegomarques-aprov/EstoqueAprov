@@ -171,38 +171,89 @@ export async function GET(req: Request) {
 
   /*
    * =====================================================
-   * CONSUMO HISTÓRICO
+   * SAÍDAS DO PERÍODO
    * =====================================================
    *
-   * Usamos ItemSaida + Saida.data.
+   * A base oficial do planejamento é o
+   * CONSUMO REAL LÍQUIDO:
    *
-   * Portanto, o consumo pertence ao mês
-   * operacional da saída, independentemente
-   * da data em que ela foi digitada.
+   * SAÍDAS - DEVOLUÇÕES
    *
-   * Saídas canceladas são desconsideradas.
+   * Saídas canceladas não participam.
+   *
+   * A data considerada é a data operacional
+   * da saída.
    */
 
-  const consumos =
-    await prisma.itemSaida.findMany({
+  const saidas =
+    await prisma.saida.findMany({
       where: {
-        saida: {
-          classe: 'QS',
+        classe: 'QS',
 
-          canceladaEm: null,
+        canceladaEm: null,
 
-          data: {
-            gte: inicioHistorico,
-            lt: fimHistoricoExclusivo,
-          },
+        data: {
+          gte: inicioHistorico,
+          lt: fimHistoricoExclusivo,
         },
       },
 
       select: {
-        generoId: true,
-        quantidade: true,
+        id: true,
+
+        itens: {
+          select: {
+            generoId: true,
+            quantidade: true,
+          },
+        },
       },
     });
+
+  /*
+   * =====================================================
+   * DEVOLUÇÕES DAS SAÍDAS DO PERÍODO
+   * =====================================================
+   *
+   * As devoluções são registradas nas
+   * movimentações de estoque com:
+   *
+   * tipo = DEVOLUCAO
+   * referenciaTipo = DevolucaoSaida
+   * referenciaId = ID da saída original
+   *
+   * Portanto, podemos descontá-las diretamente
+   * da saída que originou o consumo.
+   */
+
+  const idsSaidas =
+    saidas.map(
+      (saida) => saida.id
+    );
+
+  const devolucoes =
+    idsSaidas.length > 0
+      ? await prisma.movimentacaoEstoque.findMany(
+          {
+            where: {
+              tipo: 'DEVOLUCAO',
+
+              referenciaTipo:
+                'DevolucaoSaida',
+
+              referenciaId: {
+                in: idsSaidas,
+              },
+            },
+
+            select: {
+              referenciaId: true,
+              generoId: true,
+              quantidade: true,
+            },
+          }
+        )
+      : [];
 
   /*
    * =====================================================
@@ -230,13 +281,12 @@ export async function GET(req: Request) {
    * REFERÊNCIAS INICIAIS
    * =====================================================
    *
-   * Utilizadas quando ainda não existe histórico
-   * suficiente no EstoqueAprov.
+   * A referência inicial é somente um fallback
+   * de implantação.
    *
-   * A referência ativa já possui a média mensal
-   * normalizada, independentemente de ter sido
-   * informada originalmente como mensal ou
-   * bimestral.
+   * Quando existe histórico real válido do
+   * EstoqueAprov, ele passa a ser a única base
+   * automática utilizada no planejamento.
    */
 
   const referencias =
@@ -257,21 +307,79 @@ export async function GET(req: Request) {
 
   /*
    * =====================================================
-   * CONSUMO POR GÊNERO
+   * SAÍDAS POR GÊNERO
    * =====================================================
+   */
+
+  const saidaPorGenero =
+    new Map<string, number>();
+
+  for (const saida of saidas) {
+    for (const item of saida.itens) {
+      saidaPorGenero.set(
+        item.generoId,
+
+        (saidaPorGenero.get(
+          item.generoId
+        ) || 0) +
+          numero(item.quantidade)
+      );
+    }
+  }
+
+  /*
+   * =====================================================
+   * DEVOLUÇÕES POR GÊNERO
+   * =====================================================
+   */
+
+  const devolucaoPorGenero =
+    new Map<string, number>();
+
+  for (const item of devolucoes) {
+    devolucaoPorGenero.set(
+      item.generoId,
+
+      (devolucaoPorGenero.get(
+        item.generoId
+      ) || 0) +
+        numero(item.quantidade)
+    );
+  }
+
+  /*
+   * =====================================================
+   * CONSUMO LÍQUIDO POR GÊNERO
+   * =====================================================
+   *
+   * consumo líquido =
+   * saída efetiva - devolução
+   *
+   * Nunca permitimos resultado negativo.
    */
 
   const consumoPorGenero =
     new Map<string, number>();
 
-  for (const item of consumos) {
-    consumoPorGenero.set(
-      item.generoId,
+  for (const genero of generos) {
+    const quantidadeSaida =
+      saidaPorGenero.get(
+        genero.id
+      ) || 0;
 
-      (consumoPorGenero.get(
-        item.generoId
-      ) || 0) +
-        numero(item.quantidade)
+    const quantidadeDevolvida =
+      devolucaoPorGenero.get(
+        genero.id
+      ) || 0;
+
+    consumoPorGenero.set(
+      genero.id,
+
+      Math.max(
+        0,
+        quantidadeSaida -
+          quantidadeDevolvida
+      )
     );
   }
 
@@ -312,6 +420,7 @@ export async function GET(req: Request) {
      * Como ordenamos da mais recente para
      * a mais antiga, mantemos a primeira.
      */
+
     if (
       !referenciaPorGenero.has(
         referencia.generoId
@@ -342,8 +451,6 @@ export async function GET(req: Request) {
       );
 
     /*
-     * IMPORTANTE:
-     *
      * Consumo zero não significa automaticamente
      * que o gênero não é utilizado.
      *
@@ -358,11 +465,12 @@ export async function GET(req: Request) {
       Boolean(referencia);
 
     /*
-     * Média observada no EstoqueAprov.
+     * Média mensal observada no EstoqueAprov.
      *
-     * Só é considerada válida quando houve
-     * consumo no período.
+     * Esta é calculada exclusivamente a partir
+     * do consumo líquido real.
      */
+
     const mediaHistorica =
       possuiHistoricoConsumo
         ? consumoHistorico /
@@ -370,13 +478,13 @@ export async function GET(req: Request) {
         : null;
 
     /*
-     * Média mensal efetivamente utilizada
-     * para a projeção.
+     * UMA ÚNICA BASE É UTILIZADA.
      *
      * PRIORIDADE:
      *
-     * 1. histórico real do EstoqueAprov;
-     * 2. referência inicial manual;
+     * 1. consumo líquido real do EstoqueAprov;
+     * 2. referência inicial, somente enquanto
+     *    não existir histórico real;
      * 3. sem base de cálculo.
      */
 
@@ -409,11 +517,8 @@ export async function GET(req: Request) {
     }
 
     /*
-     * Se não houver nenhuma base confiável,
-     * NÃO transformamos ausência de dados
-     * em consumo zero.
-     *
-     * Os campos de projeção ficam nulos.
+     * Sem base confiável, nenhuma sugestão
+     * automática é produzida.
      */
 
     const consumoProjetado =
@@ -435,8 +540,11 @@ export async function GET(req: Request) {
 
     /*
      * Futuramente este valor poderá vir
-     * de pedidos QS já programados.
+     * de recebimentos QS já programados.
+     *
+     * Na versão atual permanece zero.
      */
+
     const previstoReceber = 0;
 
     const necessidadeBruta =
@@ -472,8 +580,9 @@ export async function GET(req: Request) {
         genero.unidade.sigla,
 
       /*
-       * Histórico real.
+       * Histórico líquido real.
        */
+
       consumoHistorico:
         arredondar(
           consumoHistorico
@@ -493,6 +602,7 @@ export async function GET(req: Request) {
       /*
        * Referência inicial.
        */
+
       possuiReferenciaInicial,
 
       referenciaInicial:
@@ -529,6 +639,7 @@ export async function GET(req: Request) {
       /*
        * Base realmente utilizada.
        */
+
       origemMedia,
 
       mediaMensalUtilizada:
@@ -541,6 +652,7 @@ export async function GET(req: Request) {
       /*
        * Projeção.
        */
+
       mesesCiclo,
 
       consumoProjetado:
@@ -592,9 +704,6 @@ export async function GET(req: Request) {
               2
             ),
 
-      /*
-       * Estado para a interface.
-       */
       requerReferencia:
         mediaMensalUtilizada == null,
     };
@@ -605,11 +714,7 @@ export async function GET(req: Request) {
    * TOTAIS POR UNIDADE
    * =====================================================
    *
-   * Somente gêneros com base de cálculo entram
-   * nos totais projetados.
-   *
-   * Gêneros sem histórico e sem referência
-   * permanecem explicitamente pendentes.
+   * Nunca somamos unidades diferentes.
    */
 
   const totaisPorUnidade = new Map<
@@ -712,9 +817,10 @@ export async function GET(req: Request) {
 
       /*
        * Se houver algum gênero sem base,
-       * o total daquela unidade ainda é
-       * PARCIAL.
+       * o total daquela unidade permanece
+       * parcial.
        */
+
       totalCompleto:
         item.generosSemBase === 0,
     }));
@@ -770,7 +876,7 @@ export async function GET(req: Request) {
         margemSeguranca,
 
       criterioHistorico:
-        'MESES_COMPLETOS',
+        'CONSUMO_LIQUIDO_MESES_COMPLETOS',
 
       inicioHistorico:
         inicioHistorico
@@ -800,11 +906,14 @@ export async function GET(req: Request) {
     },
 
     formula: {
+      base:
+        'Consumo líquido real = saídas - devoluções',
+
       expressao:
         'Consumo projetado + estoque de segurança - estoque disponível - quantidade prevista para receber',
 
       observacao:
-        'Quando o resultado for negativo, a quantidade sugerida é zero. Quando não houver histórico nem referência inicial, nenhuma quantidade é sugerida.',
+        'O histórico real do EstoqueAprov é a base automática do cálculo. A referência inicial somente é utilizada quando ainda não existe histórico real para o gênero.',
     },
 
     itens,
@@ -813,13 +922,14 @@ export async function GET(req: Request) {
       totais,
 
     avisos: [
-      'O histórico automático utiliza meses completos e a data operacional das saídas.',
+      'O histórico automático utiliza o consumo líquido real dos meses completos.',
+      'As devoluções são descontadas das saídas antes do cálculo do consumo histórico.',
       'Saídas canceladas não são consideradas consumo.',
-      'Na ausência de histórico, pode ser utilizada uma referência inicial de consumo informada pelo Administrador.',
+      'Quando existir histórico real, ele é a única base automática utilizada no cálculo.',
+      'A referência inicial é utilizada somente enquanto não existir histórico real para o gênero.',
       'Ausência de histórico não é interpretada como consumo zero.',
       'Totais que possuam gêneros sem base de cálculo são identificados como parciais.',
       'A quantidade sugerida é apoio à decisão e não constitui pedido automático à cadeia de suprimento.',
-      'Situações extraordinárias, missões, aumento de efetivo e outras necessidades operacionais devem ser avaliadas pelo responsável.',
       'QR não participa deste cálculo.',
     ],
   });
