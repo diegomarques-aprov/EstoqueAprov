@@ -4,8 +4,19 @@ import { currentUser } from '@/lib/auth';
 import QDAAClient from '@/components/QDAAClient';
 
 export default async function Page() {
-  if (!(await currentUser())) {
+  const usuario = await currentUser();
+
+  if (!usuario) {
     redirect('/login');
+  }
+
+  if (
+    ![
+      'ADMIN_PRINCIPAL',
+      'ADMINISTRADOR',
+    ].includes(usuario.perfil)
+  ) {
+    redirect('/inicio');
   }
 
   return (
