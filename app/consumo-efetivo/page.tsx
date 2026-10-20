@@ -14,9 +14,9 @@ export default async function Page() {
     <main>
       <Link
         className="back"
-        href="/qdaa"
+        href="/relatorios"
       >
-        ← QDAA / Ressuprimento QS
+        ← Relatórios
       </Link>
 
       <Link
