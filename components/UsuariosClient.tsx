@@ -18,6 +18,7 @@ type Usuario = {
   postoGraduacao: string | null;
   funcao: string | null;
   login: string;
+  email: string | null;
   perfil: Perfil;
   situacao: Situacao;
   ultimoAcesso: string | null;
@@ -84,8 +85,10 @@ export default function UsuariosClient() {
   const [sucesso, setSucesso] =
     useState('');
 
-  const [mostrarUsuarios, setMostrarUsuarios] =
-    useState(true);
+  const [
+    mostrarUsuarios,
+    setMostrarUsuarios,
+  ] = useState(true);
 
   /*
    * NOVO USUÁRIO
@@ -104,11 +107,16 @@ export default function UsuariosClient() {
   const [login, setLogin] =
     useState('');
 
+  const [email, setEmail] =
+    useState('');
+
   const [senha, setSenha] =
     useState('');
 
   const [perfil, setPerfil] =
-    useState<Perfil>('GRADUADO_SERVICO');
+    useState<Perfil>(
+      'GRADUADO_SERVICO'
+    );
 
   /*
    * EDIÇÃO
@@ -129,21 +137,32 @@ export default function UsuariosClient() {
     setFuncaoEdicao,
   ] = useState('');
 
-  const [loginEdicao, setLoginEdicao] =
-    useState('');
+  const [
+    loginEdicao,
+    setLoginEdicao,
+  ] = useState('');
 
-  const [perfilEdicao, setPerfilEdicao] =
-    useState<Perfil>(
-      'GRADUADO_SERVICO'
-    );
+  const [
+    emailEdicao,
+    setEmailEdicao,
+  ] = useState('');
+
+  const [
+    perfilEdicao,
+    setPerfilEdicao,
+  ] = useState<Perfil>(
+    'GRADUADO_SERVICO'
+  );
 
   const [
     situacaoEdicao,
     setSituacaoEdicao,
   ] = useState<Situacao>('ATIVO');
 
-  const [senhaEdicao, setSenhaEdicao] =
-    useState('');
+  const [
+    senhaEdicao,
+    setSenhaEdicao,
+  ] = useState('');
 
   async function carregar() {
     setCarregando(true);
@@ -215,6 +234,7 @@ export default function UsuariosClient() {
             funcao:
               funcao || null,
             login,
+            email,
             senha,
             perfil,
           }),
@@ -237,6 +257,7 @@ export default function UsuariosClient() {
       setPostoGraduacao('');
       setFuncao('');
       setLogin('');
+      setEmail('');
       setSenha('');
       setPerfil(
         'GRADUADO_SERVICO'
@@ -263,7 +284,9 @@ export default function UsuariosClient() {
 
     setEditandoId(usuario.id);
 
-    setNomeEdicao(usuario.nome);
+    setNomeEdicao(
+      usuario.nome
+    );
 
     setPostoGraduacaoEdicao(
       usuario.postoGraduacao || ''
@@ -273,9 +296,17 @@ export default function UsuariosClient() {
       usuario.funcao || ''
     );
 
-    setLoginEdicao(usuario.login);
+    setLoginEdicao(
+      usuario.login
+    );
 
-    setPerfilEdicao(usuario.perfil);
+    setEmailEdicao(
+      usuario.email || ''
+    );
+
+    setPerfilEdicao(
+      usuario.perfil
+    );
 
     setSituacaoEdicao(
       usuario.situacao
@@ -322,6 +353,7 @@ export default function UsuariosClient() {
             funcao:
               funcaoEdicao || null,
             login: loginEdicao,
+            email: emailEdicao,
             perfil: perfilEdicao,
             situacao:
               situacaoEdicao,
@@ -367,6 +399,8 @@ export default function UsuariosClient() {
         <p className="muted">
           Cadastre os militares ou usuários
           que terão acesso ao EstoqueAprov.
+          O e-mail será utilizado também
+          para recuperação de senha.
         </p>
 
         <form onSubmit={cadastrar}>
@@ -433,6 +467,31 @@ export default function UsuariosClient() {
             autoCapitalize="none"
             autoCorrect="off"
           />
+
+          <label>
+            E-mail
+          </label>
+
+          <input
+            type="email"
+            value={email}
+            onChange={(event) =>
+              setEmail(
+                event.target.value
+              )
+            }
+            required
+            maxLength={150}
+            autoCapitalize="none"
+            autoCorrect="off"
+            autoComplete="email"
+            placeholder="usuario@exemplo.com"
+          />
+
+          <p className="muted">
+            Este e-mail será usado para
+            recuperação da senha.
+          </p>
 
           <label>
             Senha inicial
@@ -686,6 +745,37 @@ export default function UsuariosClient() {
                   />
 
                   <label>
+                    E-mail
+                  </label>
+
+                  <input
+                    type="email"
+                    value={
+                      emailEdicao
+                    }
+                    onChange={(
+                      event
+                    ) =>
+                      setEmailEdicao(
+                        event.target
+                          .value
+                      )
+                    }
+                    required
+                    maxLength={150}
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    autoComplete="email"
+                  />
+
+                  <p className="muted">
+                    O código de
+                    recuperação de senha
+                    será enviado para
+                    este endereço.
+                  </p>
+
+                  <label>
                     Perfil de acesso
                   </label>
 
@@ -846,9 +936,15 @@ export default function UsuariosClient() {
                     <div>
                       Login:{' '}
                       <strong>
-                        {
-                          usuario.login
-                        }
+                        {usuario.login}
+                      </strong>
+                    </div>
+
+                    <div>
+                      E-mail:{' '}
+                      <strong>
+                        {usuario.email ||
+                          'Não cadastrado'}
                       </strong>
                     </div>
 
