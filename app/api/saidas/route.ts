@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
-import { requireAdmin } from '@/lib/guard';
+import { requireOperacaoEstoque } from '@/lib/guard';
 
 const destinos = [
   'CAFE_DA_MANHA',
@@ -106,7 +106,7 @@ export async function POST(
   req: Request
 ) {
   const guard =
-    await requireAdmin();
+    await requireOperacaoEstoque();
 
   if (guard.error) {
     return guard.error;
@@ -408,11 +408,6 @@ export async function POST(
                * relacionar diretamente
                * a movimentação física
                * com a Saída que a gerou.
-               *
-               * Assim os relatórios
-               * conseguem recuperar
-               * destino/finalidade sem
-               * depender da observação.
                */
               await tx.movimentacaoEstoque.create(
                 {
@@ -442,13 +437,6 @@ export async function POST(
                     referenciaId:
                       out.id,
 
-                    /*
-                     * Mantido também na
-                     * observação por
-                     * compatibilidade
-                     * com registros e
-                     * relatórios antigos.
-                     */
                     observacao:
                       `Destino: ${parsed.data.destino}`,
 
