@@ -10,6 +10,12 @@ const perfisPermitidos = [
   'GRADUADO_SERVICO',
 ] as const;
 
+const emailSchema = z
+  .string()
+  .trim()
+  .email('Informe um e-mail válido.')
+  .max(150);
+
 const criarUsuarioSchema = z.object({
   nome: z.string().trim().min(2).max(120),
 
@@ -32,6 +38,8 @@ const criarUsuarioSchema = z.object({
     .trim()
     .min(3)
     .max(50),
+
+  email: emailSchema,
 
   senha: z
     .string()
@@ -65,6 +73,8 @@ const atualizarUsuarioSchema = z.object({
     .trim()
     .min(3)
     .max(50),
+
+  email: emailSchema,
 
   perfil: z.enum(perfisPermitidos),
 
@@ -125,6 +135,14 @@ function textoOpcional(
   return texto || null;
 }
 
+function normalizarEmail(
+  email: string
+) {
+  return email
+    .trim()
+    .toLowerCase();
+}
+
 export async function GET() {
   const acesso =
     await exigirAdministradorPrincipal();
@@ -141,6 +159,7 @@ export async function GET() {
         postoGraduacao: true,
         funcao: true,
         login: true,
+        email: true,
         perfil: true,
         situacao: true,
         ultimoAcesso: true,
@@ -176,7 +195,13 @@ export async function POST(
         await req.json()
       );
 
-    const login = body.login.trim();
+    const login =
+      body.login.trim();
+
+    const email =
+      normalizarEmail(
+        body.email
+      );
 
     const usuarioExistente =
       await prisma.usuario.findUnique({
@@ -195,6 +220,23 @@ export async function POST(
       );
     }
 
+    const emailExistente =
+      await prisma.usuario.findUnique({
+        where: {
+          email,
+        },
+      });
+
+    if (emailExistente) {
+      return Response.json(
+        {
+          error:
+            'Este e-mail já está vinculado a outro usuário.',
+        },
+        { status: 409 }
+      );
+    }
+
     const senhaHash =
       await bcrypt.hash(
         body.senha,
@@ -204,24 +246,30 @@ export async function POST(
     const novoUsuario =
       await prisma.usuario.create({
         data: {
-          nome: body.nome.trim(),
+          nome:
+            body.nome.trim(),
 
           postoGraduacao:
             textoOpcional(
               body.postoGraduacao
             ),
 
-          funcao: textoOpcional(
-            body.funcao
-          ),
+          funcao:
+            textoOpcional(
+              body.funcao
+            ),
 
           login,
 
+          email,
+
           senhaHash,
 
-          perfil: body.perfil,
+          perfil:
+            body.perfil,
 
-          situacao: 'ATIVO',
+          situacao:
+            'ATIVO',
         },
 
         select: {
@@ -230,6 +278,7 @@ export async function POST(
           postoGraduacao: true,
           funcao: true,
           login: true,
+          email: true,
           perfil: true,
           situacao: true,
           ultimoAcesso: true,
@@ -239,20 +288,35 @@ export async function POST(
 
     await prisma.auditoria.create({
       data: {
-        usuarioId: acesso.usuario!.id,
+        usuarioId:
+          acesso.usuario!.id,
+
         acao: 'CRIAR',
+
         entidade: 'Usuario',
+
         entidadeId:
           novoUsuario.id,
 
         dadosNovos: {
-          nome: novoUsuario.nome,
+          nome:
+            novoUsuario.nome,
+
           postoGraduacao:
             novoUsuario.postoGraduacao,
+
           funcao:
             novoUsuario.funcao,
-          login: novoUsuario.login,
-          perfil: novoUsuario.perfil,
+
+          login:
+            novoUsuario.login,
+
+          email:
+            novoUsuario.email,
+
+          perfil:
+            novoUsuario.perfil,
+
           situacao:
             novoUsuario.situacao,
         },
@@ -270,6 +334,8 @@ export async function POST(
       return Response.json(
         {
           error:
+            erro.issues[0]
+              ?.message ||
             'Verifique os dados informados para o novo usuário.',
         },
         { status: 400 }
@@ -321,7 +387,13 @@ export async function PUT(
       );
     }
 
-    const login = body.login.trim();
+    const login =
+      body.login.trim();
+
+    const email =
+      normalizarEmail(
+        body.email
+      );
 
     const loginEmUso =
       await prisma.usuario.findFirst({
@@ -343,12 +415,34 @@ export async function PUT(
       );
     }
 
+    const emailEmUso =
+      await prisma.usuario.findFirst({
+        where: {
+          email,
+          id: {
+            not: body.id,
+          },
+        },
+      });
+
+    if (emailEmUso) {
+      return Response.json(
+        {
+          error:
+            'Este e-mail já está vinculado a outro usuário.',
+        },
+        { status: 409 }
+      );
+    }
+
     /*
      * Proteções do Administrador Principal
      */
     if (
-      body.id === acesso.usuario!.id &&
-      body.situacao === 'INATIVO'
+      body.id ===
+        acesso.usuario!.id &&
+      body.situacao ===
+        'INATIVO'
     ) {
       return Response.json(
         {
@@ -360,7 +454,8 @@ export async function PUT(
     }
 
     if (
-      body.id === acesso.usuario!.id &&
+      body.id ===
+        acesso.usuario!.id &&
       body.perfil !==
         'ADMIN_PRINCIPAL'
     ) {
@@ -384,14 +479,16 @@ export async function PUT(
         'ATIVO' &&
       (body.perfil !==
         'ADMIN_PRINCIPAL' ||
-        body.situacao === 'INATIVO')
+        body.situacao ===
+          'INATIVO')
     ) {
       const quantidadeAdministradoresPrincipais =
         await prisma.usuario.count({
           where: {
             perfil:
               'ADMIN_PRINCIPAL',
-            situacao: 'ATIVO',
+            situacao:
+              'ATIVO',
           },
         });
 
@@ -442,25 +539,42 @@ export async function PUT(
         },
 
         data: {
-          nome: body.nome.trim(),
+          nome:
+            body.nome.trim(),
 
           postoGraduacao:
             textoOpcional(
               body.postoGraduacao
             ),
 
-          funcao: textoOpcional(
-            body.funcao
-          ),
+          funcao:
+            textoOpcional(
+              body.funcao
+            ),
 
           login,
 
-          perfil: body.perfil,
+          email,
 
-          situacao: body.situacao,
+          perfil:
+            body.perfil,
+
+          situacao:
+            body.situacao,
 
           ...(senhaHash
-            ? { senhaHash }
+            ? {
+                senhaHash,
+
+                recuperacaoSenhaHash:
+                  null,
+
+                recuperacaoSenhaExpiraEm:
+                  null,
+
+                recuperacaoSenhaTentativas:
+                  0,
+              }
             : {}),
         },
 
@@ -470,6 +584,7 @@ export async function PUT(
           postoGraduacao: true,
           funcao: true,
           login: true,
+          email: true,
           perfil: true,
           situacao: true,
           ultimoAcesso: true,
@@ -479,20 +594,37 @@ export async function PUT(
 
     await prisma.auditoria.create({
       data: {
-        usuarioId: acesso.usuario!.id,
-        acao: 'ALTERAR',
-        entidade: 'Usuario',
+        usuarioId:
+          acesso.usuario!.id,
+
+        acao:
+          'ALTERAR',
+
+        entidade:
+          'Usuario',
+
         entidadeId:
           usuarioAtualizado.id,
 
         dadosAnteriores: {
-          nome: usuarioAtual.nome,
+          nome:
+            usuarioAtual.nome,
+
           postoGraduacao:
             usuarioAtual.postoGraduacao,
+
           funcao:
             usuarioAtual.funcao,
-          login: usuarioAtual.login,
-          perfil: usuarioAtual.perfil,
+
+          login:
+            usuarioAtual.login,
+
+          email:
+            usuarioAtual.email,
+
+          perfil:
+            usuarioAtual.perfil,
+
           situacao:
             usuarioAtual.situacao,
         },
@@ -500,18 +632,29 @@ export async function PUT(
         dadosNovos: {
           nome:
             usuarioAtualizado.nome,
+
           postoGraduacao:
             usuarioAtualizado.postoGraduacao,
+
           funcao:
             usuarioAtualizado.funcao,
+
           login:
             usuarioAtualizado.login,
+
+          email:
+            usuarioAtualizado.email,
+
           perfil:
             usuarioAtualizado.perfil,
+
           situacao:
             usuarioAtualizado.situacao,
+
           senhaAlterada:
-            Boolean(senhaHash),
+            Boolean(
+              senhaHash
+            ),
         },
       },
     });
@@ -526,6 +669,8 @@ export async function PUT(
       return Response.json(
         {
           error:
+            erro.issues[0]
+              ?.message ||
             'Verifique os dados informados para o usuário.',
         },
         { status: 400 }
