@@ -4,13 +4,27 @@ import { currentUser } from '@/lib/auth';
 import FechamentoDiarioClient from '@/components/FechamentoDiarioClient';
 
 export default async function Page() {
-  if (!(await currentUser())) {
+  const user = await currentUser();
+
+  if (!user) {
     redirect('/login');
+  }
+
+  const podeAcessar =
+    user.perfil === 'ADMIN_PRINCIPAL' ||
+    user.perfil === 'ADMINISTRADOR' ||
+    user.perfil === 'GRADUADO_SERVICO';
+
+  if (!podeAcessar) {
+    redirect('/inicio');
   }
 
   return (
     <main>
-      <Link className="back" href="/efetivo">
+      <Link
+        className="back"
+        href="/efetivo"
+      >
         ← Efetivo alimentado
       </Link>
 
