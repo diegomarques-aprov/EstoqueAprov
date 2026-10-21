@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { requireAdmin } from '@/lib/guard';
+import { requireEfetivo } from '@/lib/guard';
 import { z } from 'zod';
 
 const Refeicao = z.enum([
@@ -34,7 +34,7 @@ function dia(s: string) {
 }
 
 export async function GET(req: Request) {
-  const g = await requireAdmin();
+  const g = await requireEfetivo();
 
   if (g.error) {
     return g.error;
@@ -77,7 +77,7 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const g = await requireAdmin();
+  const g = await requireEfetivo();
 
   if (g.error) {
     return g.error;
@@ -89,7 +89,8 @@ export async function POST(req: Request) {
   if (!validacao.success) {
     return Response.json(
       {
-        error: 'Informe corretamente a data, a refeição e o efetivo previsto.',
+        error:
+          'Informe corretamente a data, a refeição e o efetivo previsto.',
       },
       {
         status: 400,
@@ -112,7 +113,8 @@ export async function POST(req: Request) {
   if (totalPrevisto <= 0) {
     return Response.json(
       {
-        error: 'Informe o total de militares arranchados para esta refeição.',
+        error:
+          'Informe o total de militares arranchados para esta refeição.',
       },
       {
         status: 400,
@@ -123,8 +125,8 @@ export async function POST(req: Request) {
   const margem = dados.margemSegurancaPercent;
 
   const efetivoPlanejamento =
-  totalPrevisto +
-  Math.ceil((totalPrevisto * margem) / 100);
+    totalPrevisto +
+    Math.ceil((totalPrevisto * margem) / 100);
 
   const data = dia(dados.data);
 
@@ -173,9 +175,11 @@ export async function POST(req: Request) {
   await prisma.auditoria.create({
     data: {
       usuarioId: g.user!.id,
+
       acao: anterior
         ? 'ALTERACAO_ARRANCHAMENTO'
         : 'REGISTRO_ARRANCHAMENTO',
+
       entidade: 'Arranchamento',
       entidadeId: row.id,
 
