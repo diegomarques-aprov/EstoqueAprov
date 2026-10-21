@@ -1,6 +1,9 @@
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
-import { requireAdmin } from '@/lib/guard';
+import {
+  requireAdmin,
+  requireOperacaoEstoque,
+} from '@/lib/guard';
 
 const cadastroSchema = z.object({
   nome: z
@@ -99,7 +102,8 @@ async function validarRelacionamentos(
 }
 
 export async function GET(req: Request) {
-  const guard = await requireAdmin();
+  const guard =
+    await requireOperacaoEstoque();
 
   if (guard.error) {
     return guard.error;
