@@ -10,12 +10,6 @@ const perfisPermitidos = [
   'GRADUADO_SERVICO',
 ] as const;
 
-const emailSchema = z
-  .string()
-  .trim()
-  .email('Informe um e-mail válido.')
-  .max(150);
-
 const criarUsuarioSchema = z.object({
   nome: z.string().trim().min(2).max(120),
 
@@ -38,8 +32,6 @@ const criarUsuarioSchema = z.object({
     .trim()
     .min(3)
     .max(50),
-
-  email: emailSchema,
 
   senha: z
     .string()
@@ -73,8 +65,6 @@ const atualizarUsuarioSchema = z.object({
     .trim()
     .min(3)
     .max(50),
-
-  email: emailSchema,
 
   perfil: z.enum(perfisPermitidos),
 
@@ -135,14 +125,6 @@ function textoOpcional(
   return texto || null;
 }
 
-function normalizarEmail(
-  email: string
-) {
-  return email
-    .trim()
-    .toLowerCase();
-}
-
 export async function GET() {
   const acesso =
     await exigirAdministradorPrincipal();
@@ -159,7 +141,6 @@ export async function GET() {
         postoGraduacao: true,
         funcao: true,
         login: true,
-        email: true,
         perfil: true,
         situacao: true,
         ultimoAcesso: true,
@@ -198,11 +179,6 @@ export async function POST(
     const login =
       body.login.trim();
 
-    const email =
-      normalizarEmail(
-        body.email
-      );
-
     const usuarioExistente =
       await prisma.usuario.findUnique({
         where: {
@@ -215,23 +191,6 @@ export async function POST(
         {
           error:
             'Já existe um usuário com este login.',
-        },
-        { status: 409 }
-      );
-    }
-
-    const emailExistente =
-      await prisma.usuario.findUnique({
-        where: {
-          email,
-        },
-      });
-
-    if (emailExistente) {
-      return Response.json(
-        {
-          error:
-            'Este e-mail já está vinculado a outro usuário.',
         },
         { status: 409 }
       );
@@ -261,8 +220,6 @@ export async function POST(
 
           login,
 
-          email,
-
           senhaHash,
 
           perfil:
@@ -278,7 +235,6 @@ export async function POST(
           postoGraduacao: true,
           funcao: true,
           login: true,
-          email: true,
           perfil: true,
           situacao: true,
           ultimoAcesso: true,
@@ -310,9 +266,6 @@ export async function POST(
 
           login:
             novoUsuario.login,
-
-          email:
-            novoUsuario.email,
 
           perfil:
             novoUsuario.perfil,
@@ -390,11 +343,6 @@ export async function PUT(
     const login =
       body.login.trim();
 
-    const email =
-      normalizarEmail(
-        body.email
-      );
-
     const loginEmUso =
       await prisma.usuario.findFirst({
         where: {
@@ -410,26 +358,6 @@ export async function PUT(
         {
           error:
             'Já existe outro usuário com este login.',
-        },
-        { status: 409 }
-      );
-    }
-
-    const emailEmUso =
-      await prisma.usuario.findFirst({
-        where: {
-          email,
-          id: {
-            not: body.id,
-          },
-        },
-      });
-
-    if (emailEmUso) {
-      return Response.json(
-        {
-          error:
-            'Este e-mail já está vinculado a outro usuário.',
         },
         { status: 409 }
       );
@@ -554,8 +482,6 @@ export async function PUT(
 
           login,
 
-          email,
-
           perfil:
             body.perfil,
 
@@ -565,15 +491,6 @@ export async function PUT(
           ...(senhaHash
             ? {
                 senhaHash,
-
-                recuperacaoSenhaHash:
-                  null,
-
-                recuperacaoSenhaExpiraEm:
-                  null,
-
-                recuperacaoSenhaTentativas:
-                  0,
               }
             : {}),
         },
@@ -584,7 +501,6 @@ export async function PUT(
           postoGraduacao: true,
           funcao: true,
           login: true,
-          email: true,
           perfil: true,
           situacao: true,
           ultimoAcesso: true,
@@ -619,9 +535,6 @@ export async function PUT(
           login:
             usuarioAtual.login,
 
-          email:
-            usuarioAtual.email,
-
           perfil:
             usuarioAtual.perfil,
 
@@ -641,9 +554,6 @@ export async function PUT(
 
           login:
             usuarioAtualizado.login,
-
-          email:
-            usuarioAtualizado.email,
 
           perfil:
             usuarioAtualizado.perfil,
