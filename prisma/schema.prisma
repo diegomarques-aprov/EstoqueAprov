@@ -40,11 +40,7 @@ model Usuario {
   postoGraduacao               String?
   funcao                       String?
   login                        String                          @unique
-  email                        String?                         @unique
   senhaHash                    String
-  recuperacaoSenhaHash         String?
-  recuperacaoSenhaExpiraEm     DateTime?
-  recuperacaoSenhaTentativas   Int                             @default(0)
   perfil                       PerfilSistema                   @default(GRADUADO_SERVICO)
   situacao                     Situacao                        @default(ATIVO)
   ultimoAcesso                 DateTime?
