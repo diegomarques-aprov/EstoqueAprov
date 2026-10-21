@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 import { prisma } from '@/lib/prisma';
-import { requireAdmin } from '@/lib/guard';
+import { requireOperacaoEstoque } from '@/lib/guard';
 
 const body = z.object({
   saidaId: z.string().min(1),
@@ -19,7 +19,7 @@ export async function POST(
   req: Request
 ) {
   const guard =
-    await requireAdmin();
+    await requireOperacaoEstoque();
 
   if (guard.error) {
     return guard.error;
