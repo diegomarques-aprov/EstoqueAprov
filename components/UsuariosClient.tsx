@@ -18,7 +18,6 @@ type Usuario = {
   postoGraduacao: string | null;
   funcao: string | null;
   login: string;
-  email: string | null;
   perfil: Perfil;
   situacao: Situacao;
   ultimoAcesso: string | null;
@@ -47,9 +46,7 @@ const perfis: {
   },
 ];
 
-function nomePerfil(
-  perfil: Perfil
-) {
+function nomePerfil(perfil: Perfil) {
   return (
     perfis.find(
       (item) => item.valor === perfil
@@ -107,9 +104,6 @@ export default function UsuariosClient() {
   const [login, setLogin] =
     useState('');
 
-  const [email, setEmail] =
-    useState('');
-
   const [senha, setSenha] =
     useState('');
 
@@ -140,11 +134,6 @@ export default function UsuariosClient() {
   const [
     loginEdicao,
     setLoginEdicao,
-  ] = useState('');
-
-  const [
-    emailEdicao,
-    setEmailEdicao,
   ] = useState('');
 
   const [
@@ -234,7 +223,6 @@ export default function UsuariosClient() {
             funcao:
               funcao || null,
             login,
-            email,
             senha,
             perfil,
           }),
@@ -257,7 +245,6 @@ export default function UsuariosClient() {
       setPostoGraduacao('');
       setFuncao('');
       setLogin('');
-      setEmail('');
       setSenha('');
       setPerfil(
         'GRADUADO_SERVICO'
@@ -298,10 +285,6 @@ export default function UsuariosClient() {
 
     setLoginEdicao(
       usuario.login
-    );
-
-    setEmailEdicao(
-      usuario.email || ''
     );
 
     setPerfilEdicao(
@@ -353,7 +336,6 @@ export default function UsuariosClient() {
             funcao:
               funcaoEdicao || null,
             login: loginEdicao,
-            email: emailEdicao,
             perfil: perfilEdicao,
             situacao:
               situacaoEdicao,
@@ -399,8 +381,10 @@ export default function UsuariosClient() {
         <p className="muted">
           Cadastre os militares ou usuários
           que terão acesso ao EstoqueAprov.
-          O e-mail será utilizado também
-          para recuperação de senha.
+          Em caso de esquecimento da senha,
+          o Administrador Principal poderá
+          redefini-la sem alterar o histórico
+          do usuário.
         </p>
 
         <form onSubmit={cadastrar}>
@@ -467,31 +451,6 @@ export default function UsuariosClient() {
             autoCapitalize="none"
             autoCorrect="off"
           />
-
-          <label>
-            E-mail
-          </label>
-
-          <input
-            type="email"
-            value={email}
-            onChange={(event) =>
-              setEmail(
-                event.target.value
-              )
-            }
-            required
-            maxLength={150}
-            autoCapitalize="none"
-            autoCorrect="off"
-            autoComplete="email"
-            placeholder="usuario@exemplo.com"
-          />
-
-          <p className="muted">
-            Este e-mail será usado para
-            recuperação da senha.
-          </p>
 
           <label>
             Senha inicial
@@ -745,37 +704,6 @@ export default function UsuariosClient() {
                   />
 
                   <label>
-                    E-mail
-                  </label>
-
-                  <input
-                    type="email"
-                    value={
-                      emailEdicao
-                    }
-                    onChange={(
-                      event
-                    ) =>
-                      setEmailEdicao(
-                        event.target
-                          .value
-                      )
-                    }
-                    required
-                    maxLength={150}
-                    autoCapitalize="none"
-                    autoCorrect="off"
-                    autoComplete="email"
-                  />
-
-                  <p className="muted">
-                    O código de
-                    recuperação de senha
-                    será enviado para
-                    este endereço.
-                  </p>
-
-                  <label>
                     Perfil de acesso
                   </label>
 
@@ -859,12 +787,12 @@ export default function UsuariosClient() {
                   />
 
                   <p className="muted">
-                    Preencha a nova
-                    senha somente se
-                    desejar redefini-la.
-                    A nova senha deve
-                    possuir pelo menos
-                    8 caracteres.
+                    Em caso de esquecimento,
+                    o Administrador Principal
+                    pode definir uma nova senha
+                    para este mesmo usuário.
+                    O histórico de movimentações
+                    permanece preservado.
                   </p>
 
                   <div className="actions">
@@ -937,14 +865,6 @@ export default function UsuariosClient() {
                       Login:{' '}
                       <strong>
                         {usuario.login}
-                      </strong>
-                    </div>
-
-                    <div>
-                      E-mail:{' '}
-                      <strong>
-                        {usuario.email ||
-                          'Não cadastrado'}
                       </strong>
                     </div>
 
