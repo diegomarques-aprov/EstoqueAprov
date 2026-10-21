@@ -4,8 +4,19 @@ import { currentUser } from '@/lib/auth';
 import EfetivoClient from '@/components/EfetivoClient';
 
 export default async function Page() {
-  if (!(await currentUser())) {
+  const user = await currentUser();
+
+  if (!user) {
     redirect('/login');
+  }
+
+  const podeAcessar =
+    user.perfil === 'ADMIN_PRINCIPAL' ||
+    user.perfil === 'ADMINISTRADOR' ||
+    user.perfil === 'GRADUADO_SERVICO';
+
+  if (!podeAcessar) {
+    redirect('/inicio');
   }
 
   return (
