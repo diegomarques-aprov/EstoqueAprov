@@ -1,8 +1,8 @@
 import { prisma } from '@/lib/prisma';
-import { requireAdmin } from '@/lib/guard';
+import { requireOperacaoEstoque } from '@/lib/guard';
 
 export async function GET(req: Request) {
-  const guard = await requireAdmin();
+  const guard = await requireOperacaoEstoque();
 
   if (guard.error) {
     return guard.error;
@@ -17,6 +17,7 @@ export async function GET(req: Request) {
       where: {
         genero: {
           situacao: 'ATIVO',
+
           ...(classe === 'QS' ||
           classe === 'QR'
             ? { classe }
@@ -51,6 +52,7 @@ export async function GET(req: Request) {
             },
           },
         },
+
         {
           genero: {
             categoria: {
@@ -58,6 +60,7 @@ export async function GET(req: Request) {
             },
           },
         },
+
         {
           genero: {
             nome: 'asc',
@@ -69,6 +72,7 @@ export async function GET(req: Request) {
   return Response.json(
     rows.map((item) => ({
       ...item,
+
       quantidade: Number(
         item.quantidade
       ),
