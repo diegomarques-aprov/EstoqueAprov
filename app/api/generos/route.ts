@@ -34,65 +34,104 @@ const cadastroSchema = z.object({
     ])
     .optional(),
 
+  /*
+   * Valor apenas de referência.
+   *
+   * Não representa crédito,
+   * empenho ou saldo financeiro.
+   *
+   * Pode ser utilizado futuramente
+   * para uma consulta opcional de
+   * orçamento estimado.
+   */
+  valorUnitarioReferencia: z
+    .union([
+      z.number().nonnegative(),
+      z.null(),
+    ])
+    .optional(),
+
   localPadraoId: z
     .string()
     .nullable()
     .optional(),
 });
 
-const alteracaoSchema = cadastroSchema.extend({
-  id: z.string().min(1, 'Gênero inválido.'),
+const alteracaoSchema =
+  cadastroSchema.extend({
+    id: z
+      .string()
+      .min(
+        1,
+        'Gênero inválido.'
+      ),
 
-  situacao: z.enum([
-    'ATIVO',
-    'INATIVO',
-  ]),
-});
+    situacao: z.enum([
+      'ATIVO',
+      'INATIVO',
+    ]),
+  });
 
 async function validarRelacionamentos(
-  dados: z.infer<typeof cadastroSchema>
+  dados: z.infer<
+    typeof cadastroSchema
+  >
 ) {
   const unidade =
-    await prisma.unidadeMedida.findUnique({
-      where: {
-        id: dados.unidadeId,
-      },
-    });
+    await prisma.unidadeMedida.findUnique(
+      {
+        where: {
+          id:
+            dados.unidadeId,
+        },
+      }
+    );
 
   if (
     !unidade ||
-    unidade.situacao !== 'ATIVO'
+    unidade.situacao !==
+      'ATIVO'
   ) {
     return 'A unidade de medida informada não existe ou está inativa.';
   }
 
   if (dados.categoriaId) {
     const categoria =
-      await prisma.categoria.findUnique({
-        where: {
-          id: dados.categoriaId,
-        },
-      });
+      await prisma.categoria.findUnique(
+        {
+          where: {
+            id:
+              dados.categoriaId,
+          },
+        }
+      );
 
     if (
       !categoria ||
-      categoria.situacao !== 'ATIVO'
+      categoria.situacao !==
+        'ATIVO'
     ) {
       return 'A categoria informada não existe ou está inativa.';
     }
   }
 
-  if (dados.localPadraoId) {
+  if (
+    dados.localPadraoId
+  ) {
     const local =
-      await prisma.localArmazenamento.findUnique({
-        where: {
-          id: dados.localPadraoId,
-        },
-      });
+      await prisma.localArmazenamento.findUnique(
+        {
+          where: {
+            id:
+              dados.localPadraoId,
+          },
+        }
+      );
 
     if (
       !local ||
-      local.situacao !== 'ATIVO'
+      local.situacao !==
+        'ATIVO'
     ) {
       return 'O local habitual informado não existe ou está inativo.';
     }
@@ -101,7 +140,9 @@ async function validarRelacionamentos(
   return null;
 }
 
-export async function GET(req: Request) {
+export async function GET(
+  req: Request
+) {
   const guard =
     await requireOperacaoEstoque();
 
@@ -110,45 +151,56 @@ export async function GET(req: Request) {
   }
 
   const classe =
-    new URL(req.url).searchParams.get(
+    new URL(
+      req.url
+    ).searchParams.get(
       'classe'
     );
 
   const generos =
-    await prisma.genero.findMany({
-      where: {
-        ...(classe === 'QS' ||
-        classe === 'QR'
-          ? { classe }
-          : {}),
-      },
+    await prisma.genero.findMany(
+      {
+        where: {
+          ...(classe ===
+            'QS' ||
+          classe === 'QR'
+            ? { classe }
+            : {}),
+        },
 
-      include: {
-        categoria: {
-          include: {
-            grupo: true,
+        include: {
+          categoria: {
+            include: {
+              grupo: true,
+            },
           },
+
+          unidade: true,
+          localPadrao: true,
         },
 
-        unidade: true,
-        localPadrao: true,
-      },
+        orderBy: [
+          {
+            situacao:
+              'asc',
+          },
+          {
+            nome: 'asc',
+          },
+        ],
+      }
+    );
 
-      orderBy: [
-        {
-          situacao: 'asc',
-        },
-        {
-          nome: 'asc',
-        },
-      ],
-    });
-
-  return Response.json(generos);
+  return Response.json(
+    generos
+  );
 }
 
-export async function POST(req: Request) {
-  const guard = await requireAdmin();
+export async function POST(
+  req: Request
+) {
+  const guard =
+    await requireAdmin();
 
   if (guard.error) {
     return guard.error;
@@ -159,11 +211,14 @@ export async function POST(req: Request) {
       await req.json()
     );
 
-  if (!resultado.success) {
+  if (
+    !resultado.success
+  ) {
     return Response.json(
       {
         error:
-          resultado.error.issues[0]
+          resultado.error
+            .issues[0]
             ?.message ||
           'Faltam informações obrigatórias no gênero.',
       },
@@ -173,15 +228,21 @@ export async function POST(req: Request) {
     );
   }
 
-  const dados = resultado.data;
+  const dados =
+    resultado.data;
 
   const erroRelacionamento =
-    await validarRelacionamentos(dados);
+    await validarRelacionamentos(
+      dados
+    );
 
-  if (erroRelacionamento) {
+  if (
+    erroRelacionamento
+  ) {
     return Response.json(
       {
-        error: erroRelacionamento,
+        error:
+          erroRelacionamento,
       },
       {
         status: 400,
@@ -191,71 +252,97 @@ export async function POST(req: Request) {
 
   try {
     const genero =
-      await prisma.genero.create({
+      await prisma.genero.create(
+        {
+          data: {
+            nome:
+              dados.nome,
+
+            classe:
+              dados.classe,
+
+            categoriaId:
+              dados.categoriaId ||
+              null,
+
+            unidadeId:
+              dados.unidadeId,
+
+            controlaLote:
+              dados.controlaLote,
+
+            controlaValidade:
+              dados.controlaValidade,
+
+            estoqueMinimo:
+              dados.estoqueMinimo ??
+              undefined,
+
+            valorUnitarioReferencia:
+              dados.valorUnitarioReferencia ??
+              null,
+
+            localPadraoId:
+              dados.localPadraoId ||
+              null,
+
+            situacao:
+              'ATIVO',
+
+            criadoPorId:
+              guard.user!.id,
+          },
+        }
+      );
+
+    await prisma.auditoria.create(
+      {
         data: {
-          nome: dados.nome,
-
-          classe: dados.classe,
-
-          categoriaId:
-            dados.categoriaId || null,
-
-          unidadeId:
-            dados.unidadeId,
-
-          controlaLote:
-            dados.controlaLote,
-
-          controlaValidade:
-            dados.controlaValidade,
-
-          estoqueMinimo:
-            dados.estoqueMinimo ??
-            undefined,
-
-          localPadraoId:
-            dados.localPadraoId ||
-            null,
-
-          situacao: 'ATIVO',
-
-          criadoPorId:
+          usuarioId:
             guard.user!.id,
+
+          acao: 'CRIAR',
+
+          entidade:
+            'Genero',
+
+          entidadeId:
+            genero.id,
+
+          dadosNovos: {
+            nome:
+              genero.nome,
+
+            classe:
+              genero.classe,
+
+            categoriaId:
+              genero.categoriaId,
+
+            unidadeId:
+              genero.unidadeId,
+
+            controlaLote:
+              genero.controlaLote,
+
+            controlaValidade:
+              genero.controlaValidade,
+
+            estoqueMinimo:
+              genero.estoqueMinimo,
+
+            valorUnitarioReferencia:
+              genero.valorUnitarioReferencia,
+
+            localPadraoId:
+              genero.localPadraoId,
+
+            situacao:
+              genero.situacao,
+          },
         },
-      });
-
-    await prisma.auditoria.create({
-      data: {
-        usuarioId:
-          guard.user!.id,
-
-        acao: 'CRIAR',
-
-        entidade: 'Genero',
-
-        entidadeId:
-          genero.id,
-
-        dadosNovos: {
-          nome: genero.nome,
-          classe: genero.classe,
-          categoriaId:
-            genero.categoriaId,
-          unidadeId:
-            genero.unidadeId,
-          controlaLote:
-            genero.controlaLote,
-          controlaValidade:
-            genero.controlaValidade,
-          estoqueMinimo:
-            genero.estoqueMinimo,
-          localPadraoId:
-            genero.localPadraoId,
-          situacao:
-            genero.situacao,
-        },
-      },
-    });
+      }
+    );
 
     return Response.json(
       genero,
@@ -276,8 +363,11 @@ export async function POST(req: Request) {
   }
 }
 
-export async function PUT(req: Request) {
-  const guard = await requireAdmin();
+export async function PUT(
+  req: Request
+) {
+  const guard =
+    await requireAdmin();
 
   if (guard.error) {
     return guard.error;
@@ -288,11 +378,14 @@ export async function PUT(req: Request) {
       await req.json()
     );
 
-  if (!resultado.success) {
+  if (
+    !resultado.success
+  ) {
     return Response.json(
       {
         error:
-          resultado.error.issues[0]
+          resultado.error
+            .issues[0]
             ?.message ||
           'Dados inválidos para alteração do gênero.',
       },
@@ -302,14 +395,18 @@ export async function PUT(req: Request) {
     );
   }
 
-  const dados = resultado.data;
+  const dados =
+    resultado.data;
 
   const atual =
-    await prisma.genero.findUnique({
-      where: {
-        id: dados.id,
-      },
-    });
+    await prisma.genero.findUnique(
+      {
+        where: {
+          id:
+            dados.id,
+        },
+      }
+    );
 
   if (!atual) {
     return Response.json(
@@ -324,12 +421,17 @@ export async function PUT(req: Request) {
   }
 
   const erroRelacionamento =
-    await validarRelacionamentos(dados);
+    await validarRelacionamentos(
+      dados
+    );
 
-  if (erroRelacionamento) {
+  if (
+    erroRelacionamento
+  ) {
     return Response.json(
       {
-        error: erroRelacionamento,
+        error:
+          erroRelacionamento,
       },
       {
         status: 400,
@@ -339,92 +441,132 @@ export async function PUT(req: Request) {
 
   try {
     const genero =
-      await prisma.genero.update({
-        where: {
-          id: dados.id,
-        },
+      await prisma.genero.update(
+        {
+          where: {
+            id:
+              dados.id,
+          },
 
+          data: {
+            nome:
+              dados.nome,
+
+            classe:
+              dados.classe,
+
+            categoriaId:
+              dados.categoriaId ||
+              null,
+
+            unidadeId:
+              dados.unidadeId,
+
+            controlaLote:
+              dados.controlaLote,
+
+            controlaValidade:
+              dados.controlaValidade,
+
+            estoqueMinimo:
+              dados.estoqueMinimo ??
+              null,
+
+            valorUnitarioReferencia:
+              dados.valorUnitarioReferencia ??
+              null,
+
+            localPadraoId:
+              dados.localPadraoId ||
+              null,
+
+            situacao:
+              dados.situacao,
+          },
+        }
+      );
+
+    await prisma.auditoria.create(
+      {
         data: {
-          nome: dados.nome,
+          usuarioId:
+            guard.user!.id,
 
-          classe: dados.classe,
+          acao:
+            'ALTERAR',
 
-          categoriaId:
-            dados.categoriaId || null,
+          entidade:
+            'Genero',
 
-          unidadeId:
-            dados.unidadeId,
+          entidadeId:
+            genero.id,
 
-          controlaLote:
-            dados.controlaLote,
+          dadosAnteriores: {
+            nome:
+              atual.nome,
 
-          controlaValidade:
-            dados.controlaValidade,
+            classe:
+              atual.classe,
 
-          estoqueMinimo:
-            dados.estoqueMinimo ??
-            null,
+            categoriaId:
+              atual.categoriaId,
 
-          localPadraoId:
-            dados.localPadraoId ||
-            null,
+            unidadeId:
+              atual.unidadeId,
 
-          situacao:
-            dados.situacao,
+            controlaLote:
+              atual.controlaLote,
+
+            controlaValidade:
+              atual.controlaValidade,
+
+            estoqueMinimo:
+              atual.estoqueMinimo,
+
+            valorUnitarioReferencia:
+              atual.valorUnitarioReferencia,
+
+            localPadraoId:
+              atual.localPadraoId,
+
+            situacao:
+              atual.situacao,
+          },
+
+          dadosNovos: {
+            nome:
+              genero.nome,
+
+            classe:
+              genero.classe,
+
+            categoriaId:
+              genero.categoriaId,
+
+            unidadeId:
+              genero.unidadeId,
+
+            controlaLote:
+              genero.controlaLote,
+
+            controlaValidade:
+              genero.controlaValidade,
+
+            estoqueMinimo:
+              genero.estoqueMinimo,
+
+            valorUnitarioReferencia:
+              genero.valorUnitarioReferencia,
+
+            localPadraoId:
+              genero.localPadraoId,
+
+            situacao:
+              genero.situacao,
+          },
         },
-      });
-
-    await prisma.auditoria.create({
-      data: {
-        usuarioId:
-          guard.user!.id,
-
-        acao: 'ALTERAR',
-
-        entidade: 'Genero',
-
-        entidadeId:
-          genero.id,
-
-        dadosAnteriores: {
-          nome: atual.nome,
-          classe: atual.classe,
-          categoriaId:
-            atual.categoriaId,
-          unidadeId:
-            atual.unidadeId,
-          controlaLote:
-            atual.controlaLote,
-          controlaValidade:
-            atual.controlaValidade,
-          estoqueMinimo:
-            atual.estoqueMinimo,
-          localPadraoId:
-            atual.localPadraoId,
-          situacao:
-            atual.situacao,
-        },
-
-        dadosNovos: {
-          nome: genero.nome,
-          classe: genero.classe,
-          categoriaId:
-            genero.categoriaId,
-          unidadeId:
-            genero.unidadeId,
-          controlaLote:
-            genero.controlaLote,
-          controlaValidade:
-            genero.controlaValidade,
-          estoqueMinimo:
-            genero.estoqueMinimo,
-          localPadraoId:
-            genero.localPadraoId,
-          situacao:
-            genero.situacao,
-        },
-      },
-    });
+      }
+    );
 
     return Response.json({
       ok: true,
