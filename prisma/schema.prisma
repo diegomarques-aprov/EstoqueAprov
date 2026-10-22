@@ -118,6 +118,7 @@ model Genero {
   controlaLote                     Boolean                           @default(false)
   controlaValidade                 Boolean                           @default(false)
   estoqueMinimo                    Decimal?                          @db.Decimal(14, 3)
+  valorUnitarioReferencia          Decimal?                          @db.Decimal(14, 4)
   localPadraoId                    String?
   localPadrao                      LocalArmazenamento?               @relation(fields: [localPadraoId], references: [id])
   situacao                         Situacao                          @default(ATIVO)
