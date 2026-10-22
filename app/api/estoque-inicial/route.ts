@@ -3,24 +3,50 @@ import { prisma } from '@/lib/prisma';
 import { requireEstoqueInicial } from '@/lib/guard';
 
 const item = z.object({
-  generoId: z.string(),
-  localId: z.string(),
-  quantidade: z.number().positive(),
-  lote: z.string().optional().nullable(),
-  validade: z.string().optional().nullable(),
-  valorUnitario: z.number().nonnegative().optional().nullable(),
+  generoId: z
+    .string()
+    .min(1),
+
+  localId: z
+    .string()
+    .min(1),
+
+  quantidade: z
+    .number()
+    .positive(),
+
+  lote: z
+    .string()
+    .trim()
+    .optional()
+    .nullable(),
+
+  validade: z
+    .string()
+    .optional()
+    .nullable(),
+
+  valorUnitario: z
+    .number()
+    .nonnegative()
+    .optional()
+    .nullable(),
 });
 
-export async function POST(req: Request) {
-  const g = await requireEstoqueInicial();
+export async function POST(
+  req: Request
+) {
+  const g =
+    await requireEstoqueInicial();
 
   if (g.error) {
     return g.error;
   }
 
-  const p = item.safeParse(
-    await req.json()
-  );
+  const p =
+    item.safeParse(
+      await req.json()
+    );
 
   if (!p.success) {
     return Response.json(
@@ -34,18 +60,26 @@ export async function POST(req: Request) {
     );
   }
 
-  const gen =
-    await prisma.genero.findUnique({
+  /*
+   * Somente gêneros ativos podem
+   * receber saldo inicial.
+   */
+  const genero =
+    await prisma.genero.findFirst({
       where: {
-        id: p.data.generoId,
+        id:
+          p.data.generoId,
+
+        situacao:
+          'ATIVO',
       },
     });
 
-  if (!gen) {
+  if (!genero) {
     return Response.json(
       {
         error:
-          'Gênero não encontrado.',
+          'O gênero informado não existe ou está inativo.',
       },
       {
         status: 404,
@@ -53,14 +87,50 @@ export async function POST(req: Request) {
     );
   }
 
+  /*
+   * O local também precisa existir
+   * e estar ativo.
+   */
+  const local =
+    await prisma.localArmazenamento.findFirst({
+      where: {
+        id:
+          p.data.localId,
+
+        situacao:
+          'ATIVO',
+      },
+
+      select: {
+        id: true,
+        nome: true,
+      },
+    });
+
+  if (!local) {
+    return Response.json(
+      {
+        error:
+          'O local de armazenamento informado não existe ou está inativo.',
+      },
+      {
+        status: 400,
+      }
+    );
+  }
+
+  const numeroLote =
+    p.data.lote?.trim() ||
+    null;
+
   if (
-    gen.controlaLote &&
-    !p.data.lote
+    genero.controlaLote &&
+    !numeroLote
   ) {
     return Response.json(
       {
         error:
-          'Este gênero possui controle por lote. Informe o lote para prosseguir.',
+          `${genero.nome}: informe o lote para prosseguir.`,
       },
       {
         status: 400,
@@ -69,13 +139,13 @@ export async function POST(req: Request) {
   }
 
   if (
-    gen.controlaValidade &&
+    genero.controlaValidade &&
     !p.data.validade
   ) {
     return Response.json(
       {
         error:
-          'Este gênero possui controle de validade. Informe a validade para prosseguir.',
+          `${genero.nome}: informe a validade para prosseguir.`,
       },
       {
         status: 400,
@@ -83,176 +153,244 @@ export async function POST(req: Request) {
     );
   }
 
-  const r =
-    await prisma.$transaction(
-      async (tx) => {
-        let loteId:
-          | string
-          | undefined;
+  /*
+   * Se houver validade informada,
+   * ela precisa representar uma
+   * data válida.
+   */
+  if (
+    p.data.validade &&
+    Number.isNaN(
+      new Date(
+        p.data.validade
+      ).getTime()
+    )
+  ) {
+    return Response.json(
+      {
+        error:
+          `${genero.nome}: a validade informada é inválida.`,
+      },
+      {
+        status: 400,
+      }
+    );
+  }
 
-        if (
-          gen.controlaLote &&
-          p.data.lote
-        ) {
-          const numeroLote =
-            p.data.lote;
+  try {
+    const resultado =
+      await prisma.$transaction(
+        async (tx) => {
+          let loteId:
+            | string
+            | undefined;
 
-          const l =
-            await tx.lote.upsert({
-              where: {
-                generoId_numero: {
+          /*
+           * Localiza ou cria o lote
+           * quando o gênero possui
+           * controle por lote.
+           */
+          if (
+            genero.controlaLote &&
+            numeroLote
+          ) {
+            const lote =
+              await tx.lote.upsert({
+                where: {
+                  generoId_numero: {
+                    generoId:
+                      genero.id,
+
+                    numero:
+                      numeroLote,
+                  },
+                },
+
+                update: {
+                  validade:
+                    p.data.validade
+                      ? new Date(
+                          p.data.validade
+                        )
+                      : undefined,
+                },
+
+                create: {
                   generoId:
-                    gen.id,
+                    genero.id,
+
                   numero:
                     numeroLote,
+
+                  validade:
+                    p.data.validade
+                      ? new Date(
+                          p.data.validade
+                        )
+                      : undefined,
                 },
-              },
+              });
 
-              update: {
-                validade:
-                  p.data.validade
-                    ? new Date(
-                        p.data.validade
-                      )
-                    : undefined,
-              },
+            loteId =
+              lote.id;
+          }
 
-              create: {
+          /*
+           * Proteção contra lançamento
+           * duplicado do estoque inicial.
+           *
+           * A combinação física é:
+           *
+           * gênero + local + lote.
+           *
+           * Para gênero sem lote:
+           * gênero + local.
+           */
+          const saldoInicialAnterior =
+            await tx.movimentacaoEstoque.findFirst({
+              where: {
+                tipo:
+                  'SALDO_INICIAL',
+
                 generoId:
-                  gen.id,
+                  genero.id,
 
-                numero:
-                  numeroLote,
+                localDestinoId:
+                  local.id,
 
-                validade:
-                  p.data.validade
-                    ? new Date(
-                        p.data.validade
-                      )
-                    : undefined,
+                loteId:
+                  loteId ?? null,
+              },
+
+              select: {
+                id: true,
               },
             });
 
-          loteId = l.id;
-        }
+          if (
+            saldoInicialAnterior
+          ) {
+            throw new Error(
+              'SALDO_INICIAL_DUPLICADO'
+            );
+          }
 
-        if (loteId) {
-          await tx.estoqueLocal.upsert({
-            where: {
-              generoId_localId_loteId:
-                {
-                  generoId:
-                    gen.id,
+          /*
+           * Localiza o saldo físico
+           * correspondente.
+           */
+          const estoqueExistente =
+            await tx.estoqueLocal.findFirst({
+              where: {
+                generoId:
+                  genero.id,
 
-                  localId:
-                    p.data.localId,
+                localId:
+                  local.id,
 
-                  loteId,
-                },
-            },
-
-            update: {
-              quantidade: {
-                increment:
-                  p.data
-                    .quantidade,
+                loteId:
+                  loteId ?? null,
               },
-            },
+            });
 
-            create: {
-              generoId:
-                gen.id,
+          /*
+           * Durante a implantação,
+           * se já existir saldo físico
+           * nessa mesma combinação sem
+           * um SALDO_INICIAL correspondente,
+           * não somamos silenciosamente.
+           *
+           * Isso evita misturar estoque
+           * anterior com inventário inicial.
+           */
+          if (
+            estoqueExistente &&
+            Number(
+              estoqueExistente.quantidade
+            ) > 0
+          ) {
+            throw new Error(
+              'SALDO_EXISTENTE'
+            );
+          }
 
-              localId:
-                p.data.localId,
+          let estoqueId:
+            string;
 
-              loteId,
-
-              quantidade:
-                p.data
-                  .quantidade,
-            },
-          });
-        } else {
-          const estoqueSemLote =
-            await tx.estoqueLocal.findFirst(
-              {
+          if (
+            estoqueExistente
+          ) {
+            const atualizado =
+              await tx.estoqueLocal.update({
                 where: {
-                  generoId:
-                    gen.id,
+                  id:
+                    estoqueExistente.id,
+                },
 
-                  localId:
-                    p.data.localId,
-
-                  loteId:
-                    null,
+                data: {
+                  quantidade:
+                    p.data.quantidade,
                 },
 
                 select: {
                   id: true,
                 },
-              }
-            );
+              });
 
-          if (estoqueSemLote) {
-            await tx.estoqueLocal.update({
-              where: {
-                id:
-                  estoqueSemLote.id,
-              },
-
-              data: {
-                quantidade: {
-                  increment:
-                    p.data
-                      .quantidade,
-                },
-              },
-            });
+            estoqueId =
+              atualizado.id;
           } else {
-            await tx.estoqueLocal.create({
-              data: {
-                generoId:
-                  gen.id,
+            const criado =
+              await tx.estoqueLocal.create({
+                data: {
+                  generoId:
+                    genero.id,
 
-                localId:
-                  p.data.localId,
+                  localId:
+                    local.id,
 
-                loteId: null,
+                  loteId:
+                    loteId ?? null,
 
-                quantidade:
-                  p.data
-                    .quantidade,
-              },
-            });
+                  quantidade:
+                    p.data.quantidade,
+                },
+
+                select: {
+                  id: true,
+                },
+              });
+
+            estoqueId =
+              criado.id;
           }
-        }
 
-        const m =
-          await tx.movimentacaoEstoque.create(
-            {
+          /*
+           * Movimentação oficial de
+           * implantação do estoque.
+           */
+          const movimento =
+            await tx.movimentacaoEstoque.create({
               data: {
                 tipo:
                   'SALDO_INICIAL',
 
                 classe:
-                  gen.classe,
+                  genero.classe,
 
                 generoId:
-                  gen.id,
+                  genero.id,
 
                 loteId,
 
                 localDestinoId:
-                  p.data.localId,
+                  local.id,
 
                 quantidade:
-                  p.data
-                    .quantidade,
+                  p.data.quantidade,
 
                 valorUnitario:
-                  p.data
-                    .valorUnitario ??
+                  p.data.valorUnitario ??
                   undefined,
 
                 usuarioId:
@@ -261,40 +399,114 @@ export async function POST(req: Request) {
                 observacao:
                   'Saldo inicial de implantação',
               },
-            }
-          );
+            });
 
-        await tx.auditoria.create({
-          data: {
-            usuarioId:
-              g.user!.id,
+          /*
+           * Auditoria do lançamento
+           * inicial.
+           */
+          await tx.auditoria.create({
+            data: {
+              usuarioId:
+                g.user!.id,
 
-            acao:
-              'SALDO_INICIAL',
+              acao:
+                'SALDO_INICIAL',
 
-            entidade:
-              'Genero',
+              entidade:
+                'EstoqueLocal',
 
-            entidadeId:
-              gen.id,
+              entidadeId:
+                estoqueId,
 
-            dadosNovos: {
-              quantidade:
-                p.data
-                  .quantidade,
+              dadosNovos: {
+                generoId:
+                  genero.id,
 
-              localId:
-                p.data.localId,
+                genero:
+                  genero.nome,
 
-              lote:
-                p.data.lote,
+                quantidade:
+                  p.data.quantidade,
+
+                localId:
+                  local.id,
+
+                local:
+                  local.nome,
+
+                lote:
+                  numeroLote,
+
+                loteId:
+                  loteId ?? null,
+
+                validade:
+                  p.data.validade ??
+                  null,
+
+                valorUnitario:
+                  p.data.valorUnitario ??
+                  null,
+              },
             },
-          },
-        });
+          });
 
-        return m;
-      }
+          return movimento;
+        }
+      );
+
+    return Response.json(
+      resultado
+    );
+  } catch (error) {
+    const mensagem =
+      error instanceof Error
+        ? error.message
+        : '';
+
+    if (
+      mensagem ===
+      'SALDO_INICIAL_DUPLICADO'
+    ) {
+      return Response.json(
+        {
+          error:
+            'Já existe saldo inicial lançado para este gênero, local e lote. Para corrigir uma quantidade já lançada, utilize a função de correção de estoque.',
+        },
+        {
+          status: 409,
+        }
+      );
+    }
+
+    if (
+      mensagem ===
+      'SALDO_EXISTENTE'
+    ) {
+      return Response.json(
+        {
+          error:
+            'Já existe saldo físico para este gênero, local e lote. Verifique o estoque antes de registrar o saldo inicial.',
+        },
+        {
+          status: 409,
+        }
+      );
+    }
+
+    console.error(
+      error
     );
 
-  return Response.json(r);
+    return Response.json(
+      {
+        error:
+          'Não foi possível registrar o saldo inicial. Nenhuma alteração foi efetivada.',
+      },
+      {
+        status: 500,
+      }
+    );
+  }
 }
