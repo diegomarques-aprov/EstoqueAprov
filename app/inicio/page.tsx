@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { currentUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import LogoutButton from '@/components/LogoutButton';
+import ConferenciaFLVClient from '@/components/ConferenciaFLVClient';
 import packageJson from '@/package.json';
 
 function inicioDoDiaUTC(data: Date) {
@@ -398,7 +399,11 @@ export default async function Inicio() {
       </header>
 
       <h1>Início</h1>
+{/* CONFERÊNCIA DIÁRIA FLV */}
 
+{podeConsultarEstoque && (
+  <ConferenciaFLVClient />
+)}
       {/* FECHAMENTOS PENDENTES */}
 
       {podeVerEfetivo &&
