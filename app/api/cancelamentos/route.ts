@@ -3,8 +3,14 @@ import { prisma } from '@/lib/prisma';
 import { requireOperacaoEstoque } from '@/lib/guard';
 
 const body = z.object({
-  saidaId: z.string(),
-  motivo: z.string().min(3),
+  saidaId: z
+    .string()
+    .min(1),
+
+  motivo: z
+    .string()
+    .trim()
+    .min(3),
 });
 
 export async function POST(
@@ -26,7 +32,7 @@ export async function POST(
     return Response.json(
       {
         error:
-          'Informe a saída e o motivo do cancelamento.',
+          'Informe a saída e descreva o motivo do cancelamento.',
       },
       {
         status: 400,
@@ -37,7 +43,11 @@ export async function POST(
   try {
     await prisma.$transaction(
       async (tx) => {
-        const s =
+        /*
+         * Localiza a saída que será
+         * cancelada.
+         */
+        const saida =
           await tx.saida.findUnique({
             where: {
               id:
@@ -45,12 +55,17 @@ export async function POST(
             },
           });
 
+        if (!saida) {
+          throw new Error(
+            'NAO_ENCONTRADA'
+          );
+        }
+
         if (
-          !s ||
-          s.canceladaEm
+          saida.canceladaEm
         ) {
           throw new Error(
-            'INV'
+            'JA_CANCELADA'
           );
         }
 
@@ -59,81 +74,142 @@ export async function POST(
          * devolução não pode ser
          * cancelada diretamente.
          *
-         * Isso evita duplicidade na
-         * recomposição do estoque.
+         * Isso evita recomposição
+         * duplicada do estoque.
          */
-        const dev =
+        const devolucoes =
           await tx.movimentacaoEstoque.count({
             where: {
               referenciaTipo:
                 'DevolucaoSaida',
 
               referenciaId:
-                s.id,
+                saida.id,
 
               tipo:
                 'DEVOLUCAO',
             },
           });
 
-        if (dev) {
+        if (
+          devolucoes > 0
+        ) {
           throw new Error(
-            'DEV'
+            'DEVOLUCAO_EXISTENTE'
           );
         }
 
         /*
          * Recupera exatamente as
-         * movimentações físicas
-         * realizadas pela saída.
+         * movimentações físicas que
+         * foram produzidas pela saída.
          */
-        const movs =
+        const movimentos =
           await tx.movimentacaoEstoque.findMany({
             where: {
               referenciaTipo:
                 'Saida',
 
               referenciaId:
-                s.id,
+                saida.id,
 
               tipo:
                 'SAIDA',
             },
+
+            orderBy: [
+              {
+                criadoEm:
+                  'asc',
+              },
+              {
+                id:
+                  'asc',
+              },
+            ],
           });
 
+        if (
+          movimentos.length === 0
+        ) {
+          throw new Error(
+            'SEM_MOVIMENTACAO'
+          );
+        }
+
         /*
-         * Recompõe cada lote no
-         * mesmo local de origem
-         * utilizado na saída.
+         * Antes de alterar qualquer
+         * saldo, valida todas as
+         * movimentações físicas.
+         *
+         * Toda SAÍDA precisa possuir
+         * um local de origem.
          */
         for (
-          const m of movs
+          const movimento of
+            movimentos
         ) {
-          const row =
+          if (
+            !movimento.localOrigemId
+          ) {
+            throw new Error(
+              'ORIGEM_INVALIDA'
+            );
+          }
+        }
+
+        /*
+         * Recompõe cada quantidade
+         * exatamente no mesmo:
+         *
+         * gênero + lote + local
+         *
+         * utilizados originalmente.
+         */
+        for (
+          const movimento of
+            movimentos
+        ) {
+          const localOrigemId =
+            movimento.localOrigemId;
+
+          /*
+           * Já foi validado acima,
+           * mas esta proteção mantém
+           * o TypeScript e a regra
+           * operacional alinhados.
+           */
+          if (!localOrigemId) {
+            throw new Error(
+              'ORIGEM_INVALIDA'
+            );
+          }
+
+          const estoque =
             await tx.estoqueLocal.findFirst({
               where: {
                 generoId:
-                  m.generoId,
+                  movimento.generoId,
 
                 localId:
-                  m.localOrigemId!,
+                  localOrigemId,
 
                 loteId:
-                  m.loteId,
+                  movimento.loteId,
               },
             });
 
-          if (row) {
+          if (estoque) {
             await tx.estoqueLocal.update({
               where: {
                 id:
-                  row.id,
+                  estoque.id,
               },
 
               data: {
                 quantidade: {
                   increment:
-                    m.quantidade,
+                    movimento.quantidade,
                 },
               },
             });
@@ -141,29 +217,24 @@ export async function POST(
             await tx.estoqueLocal.create({
               data: {
                 generoId:
-                  m.generoId,
+                  movimento.generoId,
 
                 localId:
-                  m.localOrigemId!,
+                  localOrigemId,
 
                 loteId:
-                  m.loteId,
+                  movimento.loteId,
 
                 quantidade:
-                  m.quantidade,
+                  movimento.quantidade,
               },
             });
           }
 
           /*
-           * A recomposição fica
-           * registrada como CORRECAO
-           * vinculada ao cancelamento.
-           *
-           * Essa referência também
-           * permite aos relatórios
-           * desconsiderarem corretamente
-           * a saída cancelada.
+           * Registra fisicamente
+           * a recomposição produzida
+           * pelo cancelamento.
            */
           await tx.movimentacaoEstoque.create({
             data: {
@@ -171,28 +242,28 @@ export async function POST(
                 'CORRECAO',
 
               classe:
-                s.classe,
+                saida.classe,
 
               generoId:
-                m.generoId,
+                movimento.generoId,
 
               loteId:
-                m.loteId,
+                movimento.loteId,
 
               localDestinoId:
-                m.localOrigemId,
+                localOrigemId,
 
               quantidade:
-                m.quantidade,
+                movimento.quantidade,
 
               referenciaTipo:
                 'CancelamentoSaida',
 
               referenciaId:
-                s.id,
+                saida.id,
 
               observacao:
-                `Cancelamento: ${p.data.motivo}`,
+                `Cancelamento: ${p.data.motivo.trim()}`,
 
               usuarioId:
                 g.user!.id,
@@ -200,18 +271,83 @@ export async function POST(
           });
         }
 
+        const canceladaEm =
+          new Date();
+
+        /*
+         * Marca documentalmente
+         * a saída como cancelada.
+         */
         await tx.saida.update({
           where: {
             id:
-              s.id,
+              saida.id,
           },
 
           data: {
-            canceladaEm:
-              new Date(),
+            canceladaEm,
 
             motivoCancelamento:
-              p.data.motivo,
+              p.data.motivo.trim(),
+          },
+        });
+
+        /*
+         * Auditoria administrativa
+         * do cancelamento.
+         *
+         * A movimentação acima registra
+         * o efeito físico no estoque.
+         *
+         * Esta auditoria registra o ato
+         * administrativo de cancelar.
+         */
+        await tx.auditoria.create({
+          data: {
+            usuarioId:
+              g.user!.id,
+
+            acao:
+              'CANCELAMENTO_SAIDA',
+
+            entidade:
+              'Saida',
+
+            entidadeId:
+              saida.id,
+
+            dadosAnteriores: {
+              numero:
+                saida.numero,
+
+              classe:
+                saida.classe,
+
+              destino:
+                saida.destino,
+
+              data:
+                saida.data,
+
+              canceladaEm:
+                saida.canceladaEm,
+
+              motivoCancelamento:
+                saida.motivoCancelamento,
+            },
+
+            dadosNovos: {
+              numero:
+                saida.numero,
+
+              canceladaEm,
+
+              motivo:
+                p.data.motivo.trim(),
+
+              movimentacoesEstornadas:
+                movimentos.length,
+            },
           },
         });
       }
@@ -226,15 +362,79 @@ export async function POST(
         ? error.message
         : '';
 
+    if (
+      mensagem ===
+      'DEVOLUCAO_EXISTENTE'
+    ) {
+      return Response.json(
+        {
+          error:
+            'Esta saída já possui devolução. Faça a regularização por correção, preservando o histórico.',
+        },
+        {
+          status: 409,
+        }
+      );
+    }
+
+    if (
+      mensagem ===
+      'JA_CANCELADA'
+    ) {
+      return Response.json(
+        {
+          error:
+            'Esta saída já foi cancelada anteriormente.',
+        },
+        {
+          status: 409,
+        }
+      );
+    }
+
+    if (
+      mensagem ===
+      'NAO_ENCONTRADA'
+    ) {
+      return Response.json(
+        {
+          error:
+            'A saída informada não foi encontrada.',
+        },
+        {
+          status: 404,
+        }
+      );
+    }
+
+    if (
+      mensagem ===
+        'SEM_MOVIMENTACAO' ||
+      mensagem ===
+        'ORIGEM_INVALIDA'
+    ) {
+      return Response.json(
+        {
+          error:
+            'A saída possui inconsistência na movimentação física e não pode ser cancelada automaticamente. Faça a regularização por correção para preservar o histórico.',
+        },
+        {
+          status: 409,
+        }
+      );
+    }
+
+    console.error(
+      error
+    );
+
     return Response.json(
       {
         error:
-          mensagem === 'DEV'
-            ? 'Esta saída já possui devolução. Faça a regularização por correção, preservando o histórico.'
-            : 'A saída não pode ser cancelada ou já foi cancelada.',
+          'Não foi possível cancelar a saída. Nenhuma alteração foi efetivada.',
       },
       {
-        status: 409,
+        status: 500,
       }
     );
   }
