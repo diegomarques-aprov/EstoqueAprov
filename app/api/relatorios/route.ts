@@ -150,6 +150,53 @@ function tipoServico(
     : 'mesmo dia';
 }
 
+/*
+ * =====================================================
+ * IMPACTO DA CORREÇÃO
+ * =====================================================
+ *
+ * Quantidade física é sempre positiva.
+ *
+ * localDestino = acréscimo
+ * localOrigem = redução
+ */
+function impactoCorrecao(
+  movimento: {
+    quantidade: unknown;
+
+    localOrigemId?:
+      | string
+      | null;
+
+    localDestinoId?:
+      | string
+      | null;
+  }
+) {
+  const quantidade =
+    Math.abs(
+      Number(
+        movimento.quantidade
+      )
+    );
+
+  if (
+    movimento.localOrigemId &&
+    !movimento.localDestinoId
+  ) {
+    return -quantidade;
+  }
+
+  if (
+    movimento.localDestinoId &&
+    !movimento.localOrigemId
+  ) {
+    return quantidade;
+  }
+
+  return 0;
+}
+
 export async function GET(
   req: Request
 ) {
@@ -399,6 +446,12 @@ export async function GET(
       }
     ),
 
+    /*
+     * Somente saídas válidas.
+     *
+     * Uma saída cancelada não pode
+     * participar dos totais de consumo.
+     */
     prisma.saida.findMany(
       {
         where: {
@@ -439,12 +492,11 @@ export async function GET(
   ]);
 
   /*
-   * MAPA DAS SAÍDAS
-   *
-   * Permite relacionar cada
-   * MovimentacaoEstoque com a
-   * Saida que realmente a gerou.
+   * =====================================================
+   * MAPA DAS SAÍDAS VÁLIDAS
+   * =====================================================
    */
+
   const saidasPorId =
     new Map(
       saidasFisicas.map(
@@ -456,8 +508,58 @@ export async function GET(
     );
 
   /*
-   * POSIÇÃO ATUAL
+   * =====================================================
+   * MOVIMENTAÇÕES VÁLIDAS PARA RESUMOS
+   * =====================================================
+   *
+   * O histórico detalhado permanece preservado.
+   *
+   * Porém:
+   *
+   * - saída cancelada não é consumo;
+   * - correção automática do cancelamento
+   *   não é uma correção operacional.
+   *
+   * Os dois movimentos continuam visíveis
+   * no histórico, mas não distorcem os totais.
    */
+
+  const movimentacoesResumo =
+    movimentacoes.filter(
+      (movimento) => {
+        if (
+          movimento.tipo ===
+            'SAIDA' &&
+          movimento.referenciaTipo ===
+            'Saida'
+        ) {
+          return Boolean(
+            movimento.referenciaId &&
+              saidasPorId.has(
+                movimento.referenciaId
+              )
+          );
+        }
+
+        if (
+          movimento.tipo ===
+            'CORRECAO' &&
+          movimento.referenciaTipo ===
+            'CancelamentoSaida'
+        ) {
+          return false;
+        }
+
+        return true;
+      }
+    );
+
+  /*
+   * =====================================================
+   * POSIÇÃO ATUAL
+   * =====================================================
+   */
+
   const saldoPorGenero =
     new Map<
       string,
@@ -530,8 +632,11 @@ export async function GET(
     );
 
   /*
+   * =====================================================
    * RESUMO POR GÊNERO
+   * =====================================================
    */
+
   const porGenero =
     new Map<
       string,
@@ -582,18 +687,25 @@ export async function GET(
           tipo: string;
           quantidade: number;
           dataHora: Date;
+
           lote:
             string | null;
+
           localOrigem:
             string | null;
+
           localDestino:
             string | null;
+
           observacao:
             string | null;
+
           destino:
             string | null;
+
           destinoNome:
             string | null;
+
           referenciaServico:
             string | null;
         }[];
@@ -671,9 +783,13 @@ export async function GET(
     );
   }
 
+  /*
+   * Os totais por gênero utilizam somente
+   * movimentações válidas para resumo.
+   */
   for (
     const movimento of
-      movimentacoes
+      movimentacoesResumo
   ) {
     let registro =
       porGenero.get(
@@ -788,8 +904,17 @@ export async function GET(
         break;
 
       case 'CORRECAO':
+        /*
+         * Correção de acréscimo:
+         * valor positivo.
+         *
+         * Correção de redução:
+         * valor negativo.
+         */
         registro.correcoes +=
-          quantidade;
+          impactoCorrecao(
+            movimento
+          );
         break;
 
       case 'TRANSFERENCIA':
@@ -817,7 +942,13 @@ export async function GET(
         tipo:
           movimento.tipo,
 
-        quantidade,
+        quantidade:
+          movimento.tipo ===
+          'CORRECAO'
+            ? impactoCorrecao(
+                movimento
+              )
+            : quantidade,
 
         dataHora:
           movimento.criadoEm,
@@ -901,8 +1032,15 @@ export async function GET(
     );
 
   /*
+   * =====================================================
    * MOVIMENTAÇÕES DETALHADAS
+   * =====================================================
+   *
+   * Aqui preservamos todo o histórico,
+   * inclusive os movimentos vinculados
+   * a cancelamentos.
    */
+
   const movimentosDetalhados =
     movimentacoes.map(
       (item) => {
@@ -916,6 +1054,35 @@ export async function GET(
                 item.referenciaId
               )
             : undefined;
+
+        const cancelamentoSaida =
+          item.tipo ===
+            'CORRECAO' &&
+          item.referenciaTipo ===
+            'CancelamentoSaida';
+
+        const saidaCancelada =
+          item.tipo ===
+            'SAIDA' &&
+          item.referenciaTipo ===
+            'Saida' &&
+          Boolean(
+            item.referenciaId
+          ) &&
+          !saidaRelacionada;
+
+        const quantidadeFisica =
+          Number(
+            item.quantidade
+          );
+
+        const quantidadeRelatorio =
+          item.tipo ===
+          'CORRECAO'
+            ? impactoCorrecao(
+                item
+              )
+            : quantidadeFisica;
 
         return {
           id:
@@ -946,10 +1113,18 @@ export async function GET(
               ?.nome ||
             'Sem categoria',
 
+          /*
+           * Mantém quantidade física
+           * positiva para os movimentos
+           * normais.
+           *
+           * CORRECAO é apresentada com
+           * sinal no relatório.
+           */
           quantidade:
-            Number(
-              item.quantidade
-            ),
+            quantidadeRelatorio,
+
+          quantidadeFisica,
 
           unidade:
             item.genero
@@ -1015,10 +1190,28 @@ export async function GET(
                   saidaRelacionada.data
                 )
               : null,
+
+          /*
+           * Informações explícitas para
+           * a interface distinguir o
+           * histórico de cancelamento
+           * dos movimentos operacionais.
+           */
+          saidaCancelada,
+
+          cancelamentoSaida,
+
+          consideraNosTotais:
+            !saidaCancelada &&
+            !cancelamentoSaida,
         };
       }
     );
 
+  /*
+   * Entradas e devoluções continuam
+   * sendo movimentos operacionais.
+   */
   const entradas =
     movimentosDetalhados.filter(
       (item) =>
@@ -1026,11 +1219,20 @@ export async function GET(
         'RECEBIMENTO'
     );
 
+  /*
+   * Somente saídas ainda válidas
+   * aparecem na relação operacional
+   * de saídas.
+   *
+   * A saída cancelada permanece
+   * disponível em movimentacoes.
+   */
   const saidas =
     movimentosDetalhados.filter(
       (item) =>
         item.tipo ===
-        'SAIDA'
+          'SAIDA' &&
+        !item.saidaCancelada
     );
 
   const devolucoes =
@@ -1041,8 +1243,11 @@ export async function GET(
     );
 
   /*
+   * =====================================================
    * EFETIVO
+   * =====================================================
    */
+
   const efetivos =
     arranchamentos.map(
       (item) => ({
@@ -1191,20 +1396,27 @@ export async function GET(
   };
 
   /*
+   * =====================================================
    * REFEIÇÕES RELACIONADAS
+   * =====================================================
    *
-   * A referência é a saída física.
+   * A referência é a saída física válida.
+   *
    * Vários gêneros da mesma saída
    * não multiplicam a refeição.
    */
+
   const refeicoesMap =
     new Map<
       string,
       {
         data: string;
+
         destino:
           DestinoSaida;
+
         nome: string;
+
         referencia:
           string;
       }
@@ -1273,8 +1485,11 @@ export async function GET(
     );
 
   /*
+   * =====================================================
    * ALERTAS
+   * =====================================================
    */
+
   const estoqueBaixo =
     posicaoEstoque
       .filter(
@@ -1369,14 +1584,24 @@ export async function GET(
       );
 
   /*
+   * =====================================================
    * RESUMO LEGADO
+   * =====================================================
    *
-   * Mantido apenas para
-   * compatibilidade.
+   * Mantido para compatibilidade
+   * com a interface existente.
    *
-   * A interface não deve somar
-   * unidades diferentes.
+   * IMPORTANTE:
+   *
+   * - saída cancelada não entra;
+   * - estorno automático de cancelamento
+   *   não entra como correção operacional;
+   * - correção negativa aparece negativa.
+   *
+   * A interface não deve somar unidades
+   * de medida diferentes entre si.
    */
+
   const resumo: Record<
     string,
     number
@@ -1405,20 +1630,34 @@ export async function GET(
 
   for (
     const movimento of
-      movimentacoes
+      movimentacoesResumo
   ) {
     if (
       resumo[
         movimento.tipo
-      ] !== undefined
+      ] === undefined
     ) {
-      resumo[
-        movimento.tipo
-      ] +=
-        Number(
-          movimento.quantidade
-        );
+      continue;
     }
+
+    if (
+      movimento.tipo ===
+      'CORRECAO'
+    ) {
+      resumo.CORRECAO +=
+        impactoCorrecao(
+          movimento
+        );
+
+      continue;
+    }
+
+    resumo[
+      movimento.tipo
+    ] +=
+      Number(
+        movimento.quantidade
+      );
   }
 
   return Response.json({
@@ -1439,6 +1678,12 @@ export async function GET(
     saidas,
     devolucoes,
 
+    /*
+     * Histórico completo.
+     *
+     * Inclui cancelamentos para
+     * rastreabilidade.
+     */
     movimentacoes:
       movimentosDetalhados,
 
