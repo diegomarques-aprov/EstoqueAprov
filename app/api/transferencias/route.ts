@@ -3,13 +3,29 @@ import { prisma } from '@/lib/prisma';
 import { requireOperacaoEstoque } from '@/lib/guard';
 
 const body = z.object({
-  estoqueId: z.string(),
-  localDestinoId: z.string(),
-  quantidade: z.number().positive(),
-  observacao: z.string().optional(),
+  estoqueId: z
+    .string()
+    .min(1),
+
+  localDestinoId: z
+    .string()
+    .min(1),
+
+  quantidade: z
+    .number()
+    .positive(),
+
+  observacao: z
+    .string()
+    .trim()
+    .optional(),
 });
 
-export async function POST(req: Request) {
+const EPSILON = 1e-9;
+
+export async function POST(
+  req: Request
+) {
   const g =
     await requireOperacaoEstoque();
 
@@ -17,15 +33,16 @@ export async function POST(req: Request) {
     return g.error;
   }
 
-  const p = body.safeParse(
-    await req.json()
-  );
+  const p =
+    body.safeParse(
+      await req.json()
+    );
 
   if (!p.success) {
     return Response.json(
       {
         error:
-          'Informe item, destino e quantidade para a transferência.',
+          'Informe o item, o local de destino e a quantidade para a transferência.',
       },
       {
         status: 400,
@@ -36,90 +53,170 @@ export async function POST(req: Request) {
   try {
     await prisma.$transaction(
       async (tx) => {
-        const r =
+        /*
+         * Saldo físico de origem.
+         *
+         * O registro define exatamente
+         * gênero, lote e local de origem
+         * da transferência.
+         */
+        const origem =
           await tx.estoqueLocal.findUnique({
             where: {
-              id: p.data.estoqueId,
+              id:
+                p.data.estoqueId,
             },
 
             include: {
               genero: true,
+              local: true,
             },
           });
 
-        if (!r) {
-          throw new Error('NAO');
-        }
-
-        if (
-          r.localId ===
-          p.data.localDestinoId
-        ) {
-          throw new Error('MESMO');
-        }
-
-        if (
-          Number(r.quantidade) <
-          p.data.quantidade
-        ) {
+        if (!origem) {
           throw new Error(
-            `SALDO:${Number(
-              r.quantidade
-            )}`
+            'ORIGEM_NAO_ENCONTRADA'
           );
         }
 
-        await tx.estoqueLocal.update({
-          where: {
-            id: r.id,
-          },
-
-          data: {
-            quantidade: {
-              decrement:
-                p.data.quantidade,
-            },
-          },
-        });
-
-        const dest =
-          await tx.estoqueLocal.findFirst({
+        /*
+         * O destino precisa existir
+         * e estar ativo.
+         */
+        const localDestino =
+          await tx.localArmazenamento.findFirst({
             where: {
-              generoId:
-                r.generoId,
-
-              localId:
+              id:
                 p.data.localDestinoId,
 
-              loteId:
-                r.loteId,
+              situacao:
+                'ATIVO',
+            },
+
+            select: {
+              id: true,
+              nome: true,
             },
           });
 
-        if (dest) {
+        if (!localDestino) {
+          throw new Error(
+            'DESTINO_INVALIDO'
+          );
+        }
+
+        /*
+         * Não existe transferência
+         * física entre o mesmo local.
+         */
+        if (
+          origem.localId ===
+          localDestino.id
+        ) {
+          throw new Error(
+            'MESMO_LOCAL'
+          );
+        }
+
+        const saldoAnteriorOrigem =
+          Number(
+            origem.quantidade
+          );
+
+        /*
+         * Impede retirada superior
+         * ao saldo físico disponível.
+         */
+        if (
+          p.data.quantidade >
+          saldoAnteriorOrigem +
+            EPSILON
+        ) {
+          throw new Error(
+            `SALDO:${saldoAnteriorOrigem}`
+          );
+        }
+
+        const saldoCalculadoOrigem =
+          saldoAnteriorOrigem -
+          p.data.quantidade;
+
+        const saldoFinalOrigem =
+          Math.abs(
+            saldoCalculadoOrigem
+          ) <= EPSILON
+            ? 0
+            : saldoCalculadoOrigem;
+
+        /*
+         * Retira da origem.
+         */
+        await tx.estoqueLocal.update({
+          where: {
+            id:
+              origem.id,
+          },
+
+          data: {
+            quantidade:
+              saldoFinalOrigem,
+          },
+        });
+
+        /*
+         * Procura no destino exatamente
+         * a mesma combinação:
+         *
+         * gênero + local + lote.
+         */
+        const destino =
+          await tx.estoqueLocal.findFirst({
+            where: {
+              generoId:
+                origem.generoId,
+
+              localId:
+                localDestino.id,
+
+              loteId:
+                origem.loteId,
+            },
+          });
+
+        const saldoAnteriorDestino =
+          destino
+            ? Number(
+                destino.quantidade
+              )
+            : 0;
+
+        const saldoFinalDestino =
+          saldoAnteriorDestino +
+          p.data.quantidade;
+
+        if (destino) {
           await tx.estoqueLocal.update({
             where: {
-              id: dest.id,
+              id:
+                destino.id,
             },
 
             data: {
-              quantidade: {
-                increment:
-                  p.data.quantidade,
-              },
+              quantidade:
+                saldoFinalDestino,
             },
           });
         } else {
           await tx.estoqueLocal.create({
             data: {
               generoId:
-                r.generoId,
+                origem.generoId,
 
               localId:
-                p.data.localDestinoId,
+                localDestino.id,
 
               loteId:
-                r.loteId,
+                origem.loteId,
 
               quantidade:
                 p.data.quantidade,
@@ -127,34 +224,105 @@ export async function POST(req: Request) {
           });
         }
 
+        /*
+         * Movimentação física.
+         *
+         * Mantém gênero, lote,
+         * origem, destino e quantidade.
+         */
         await tx.movimentacaoEstoque.create({
           data: {
             tipo:
               'TRANSFERENCIA',
 
             classe:
-              r.genero.classe,
+              origem.genero.classe,
 
             generoId:
-              r.generoId,
+              origem.generoId,
 
             loteId:
-              r.loteId,
+              origem.loteId,
 
             localOrigemId:
-              r.localId,
+              origem.localId,
 
             localDestinoId:
-              p.data.localDestinoId,
+              localDestino.id,
 
             quantidade:
               p.data.quantidade,
 
             observacao:
-              p.data.observacao,
+              p.data.observacao?.trim() ||
+              undefined,
 
             usuarioId:
               g.user!.id,
+          },
+        });
+
+        /*
+         * Auditoria administrativa
+         * da transferência.
+         *
+         * Registra os saldos dos dois
+         * locais antes e depois.
+         */
+        await tx.auditoria.create({
+          data: {
+            usuarioId:
+              g.user!.id,
+
+            acao:
+              'TRANSFERENCIA_ESTOQUE',
+
+            entidade:
+              'EstoqueLocal',
+
+            entidadeId:
+              origem.id,
+
+            dadosAnteriores: {
+              generoId:
+                origem.generoId,
+
+              loteId:
+                origem.loteId,
+
+              localOrigemId:
+                origem.localId,
+
+              localOrigem:
+                origem.local.nome,
+
+              saldoOrigem:
+                saldoAnteriorOrigem,
+
+              localDestinoId:
+                localDestino.id,
+
+              localDestino:
+                localDestino.nome,
+
+              saldoDestino:
+                saldoAnteriorDestino,
+            },
+
+            dadosNovos: {
+              quantidadeTransferida:
+                p.data.quantidade,
+
+              saldoOrigem:
+                saldoFinalOrigem,
+
+              saldoDestino:
+                saldoFinalDestino,
+
+              observacao:
+                p.data.observacao?.trim() ||
+                null,
+            },
           },
         });
       }
@@ -170,7 +338,38 @@ export async function POST(req: Request) {
         : '';
 
     if (
-      mensagem === 'MESMO'
+      mensagem ===
+      'ORIGEM_NAO_ENCONTRADA'
+    ) {
+      return Response.json(
+        {
+          error:
+            'O saldo de estoque de origem não foi encontrado.',
+        },
+        {
+          status: 404,
+        }
+      );
+    }
+
+    if (
+      mensagem ===
+      'DESTINO_INVALIDO'
+    ) {
+      return Response.json(
+        {
+          error:
+            'O local de destino não existe ou está inativo. Selecione um local ativo para prosseguir.',
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    if (
+      mensagem ===
+      'MESMO_LOCAL'
     ) {
       return Response.json(
         {
@@ -188,10 +387,22 @@ export async function POST(req: Request) {
         'SALDO:'
       )
     ) {
+      const saldo =
+        Number(
+          mensagem.split(':')[1] ||
+            0
+        );
+
       return Response.json(
         {
           error:
-            `Quantidade superior ao saldo disponível (${mensagem.split(':')[1]}).`,
+            `A quantidade da transferência é superior ao saldo disponível (${saldo.toLocaleString(
+              'pt-BR',
+              {
+                maximumFractionDigits:
+                  3,
+              }
+            )}).`,
         },
         {
           status: 409,
@@ -199,10 +410,14 @@ export async function POST(req: Request) {
       );
     }
 
+    console.error(
+      error
+    );
+
     return Response.json(
       {
         error:
-          'Não foi possível concluir a transferência.',
+          'Não foi possível concluir a transferência. Nenhuma movimentação foi efetivada.',
       },
       {
         status: 500,
