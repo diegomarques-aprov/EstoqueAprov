@@ -43,10 +43,28 @@ type Genero = {
   controlaLote: boolean;
   controlaValidade: boolean;
   estoqueMinimo: string | number | null;
+  valorUnitarioReferencia:
+    | string
+    | number
+    | null;
   localPadraoId: string | null;
   localPadrao?: Local | null;
   situacao: Situacao;
 };
+
+function formatarMoeda(
+  valor: string | number
+) {
+  return Number(valor).toLocaleString(
+    'pt-BR',
+    {
+      style: 'currency',
+      currency: 'BRL',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 4,
+    }
+  );
+}
 
 export default function GenerosClient() {
   const [classe, setClasse] =
@@ -65,10 +83,13 @@ export default function GenerosClient() {
     useState<Local[]>([]);
 
   const [erro, setErro] = useState('');
-  const [sucesso, setSucesso] = useState('');
+  const [sucesso, setSucesso] =
+    useState('');
 
-  const [mostrarGeneros, setMostrarGeneros] =
-    useState(false);
+  const [
+    mostrarGeneros,
+    setMostrarGeneros,
+  ] = useState(false);
 
   const [editando, setEditando] =
     useState<Genero | null>(null);
@@ -76,31 +97,49 @@ export default function GenerosClient() {
   const [nomeEdicao, setNomeEdicao] =
     useState('');
 
-  const [classeEdicao, setClasseEdicao] =
-    useState<Classe>('QS');
+  const [
+    classeEdicao,
+    setClasseEdicao,
+  ] = useState<Classe>('QS');
 
-  const [categoriaEdicao, setCategoriaEdicao] =
-    useState('');
+  const [
+    categoriaEdicao,
+    setCategoriaEdicao,
+  ] = useState('');
 
-  const [unidadeEdicao, setUnidadeEdicao] =
-    useState('');
+  const [
+    unidadeEdicao,
+    setUnidadeEdicao,
+  ] = useState('');
 
   const [loteEdicao, setLoteEdicao] =
     useState(false);
 
-  const [validadeEdicao, setValidadeEdicao] =
-    useState(false);
+  const [
+    validadeEdicao,
+    setValidadeEdicao,
+  ] = useState(false);
 
-  const [estoqueMinimoEdicao, setEstoqueMinimoEdicao] =
-    useState('');
+  const [
+    estoqueMinimoEdicao,
+    setEstoqueMinimoEdicao,
+  ] = useState('');
+
+  const [
+    valorUnitarioEdicao,
+    setValorUnitarioEdicao,
+  ] = useState('');
 
   const [localEdicao, setLocalEdicao] =
     useState('');
 
-  const [situacaoEdicao, setSituacaoEdicao] =
-    useState<Situacao>('ATIVO');
+  const [
+    situacaoEdicao,
+    setSituacaoEdicao,
+  ] = useState<Situacao>('ATIVO');
 
-  const nomeRef = useRef<HTMLInputElement>(null);
+  const nomeRef =
+    useRef<HTMLInputElement>(null);
 
   async function carregarDados() {
     setErro('');
@@ -114,7 +153,9 @@ export default function GenerosClient() {
       ] = await Promise.all([
         fetch(
           `/api/generos?classe=${classe}`,
-          { cache: 'no-store' }
+          {
+            cache: 'no-store',
+          }
         ),
         fetch('/api/categorias', {
           cache: 'no-store',
@@ -190,7 +231,9 @@ export default function GenerosClient() {
     carregarDados();
   }, [classe]);
 
-  function alterarClasse(novaClasse: Classe) {
+  function alterarClasse(
+    novaClasse: Classe
+  ) {
     setClasse(novaClasse);
     setEditando(null);
     setErro('');
@@ -201,29 +244,35 @@ export default function GenerosClient() {
     categoriaId: string,
     form: HTMLFormElement
   ) {
-    const categoria = categorias.find(
-      (item) => item.id === categoriaId
-    );
+    const categoria =
+      categorias.find(
+        (item) =>
+          item.id === categoriaId
+      );
 
     if (!categoria) {
       return;
     }
 
-    const lote = form.elements.namedItem(
-      'controlaLote'
-    ) as HTMLInputElement | null;
+    const lote =
+      form.elements.namedItem(
+        'controlaLote'
+      ) as HTMLInputElement | null;
 
-    const validade = form.elements.namedItem(
-      'controlaValidade'
-    ) as HTMLInputElement | null;
+    const validade =
+      form.elements.namedItem(
+        'controlaValidade'
+      ) as HTMLInputElement | null;
 
-    const local = form.elements.namedItem(
-      'localPadraoId'
-    ) as HTMLSelectElement | null;
+    const local =
+      form.elements.namedItem(
+        'localPadraoId'
+      ) as HTMLSelectElement | null;
 
     if (
       lote &&
-      categoria.controlaLotePadrao !== null
+      categoria.controlaLotePadrao !==
+        null
     ) {
       lote.checked =
         categoria.controlaLotePadrao;
@@ -231,7 +280,8 @@ export default function GenerosClient() {
 
     if (
       validade &&
-      categoria.controlaValidadePadrao !== null
+      categoria.controlaValidadePadrao !==
+        null
     ) {
       validade.checked =
         categoria.controlaValidadePadrao;
@@ -252,13 +302,19 @@ export default function GenerosClient() {
     ev.preventDefault();
 
     const form = ev.currentTarget;
-    const dados = new FormData(form);
+    const dados =
+      new FormData(form);
 
     setErro('');
     setSucesso('');
 
     const estoqueMinimo =
       dados.get('estoqueMinimo');
+
+    const valorUnitario =
+      dados.get(
+        'valorUnitarioReferencia'
+      );
 
     const payload = {
       nome: String(
@@ -269,7 +325,8 @@ export default function GenerosClient() {
 
       categoriaId:
         String(
-          dados.get('categoriaId') || ''
+          dados.get('categoriaId') ||
+            ''
         ) || null,
 
       unidadeId: String(
@@ -277,11 +334,13 @@ export default function GenerosClient() {
       ),
 
       controlaLote:
-        dados.get('controlaLote') === 'on',
+        dados.get('controlaLote') ===
+        'on',
 
       controlaValidade:
-        dados.get('controlaValidade') ===
-        'on',
+        dados.get(
+          'controlaValidade'
+        ) === 'on',
 
       estoqueMinimo:
         estoqueMinimo !== null &&
@@ -289,24 +348,35 @@ export default function GenerosClient() {
           ? Number(estoqueMinimo)
           : null,
 
+      valorUnitarioReferencia:
+        valorUnitario !== null &&
+        String(valorUnitario) !== ''
+          ? Number(valorUnitario)
+          : null,
+
       localPadraoId:
         String(
-          dados.get('localPadraoId') || ''
+          dados.get(
+            'localPadraoId'
+          ) || ''
         ) || null,
     };
 
     try {
-      const resposta = await fetch(
-        '/api/generos',
-        {
-          method: 'POST',
-          headers: {
-            'content-type':
-              'application/json',
-          },
-          body: JSON.stringify(payload),
-        }
-      );
+      const resposta =
+        await fetch(
+          '/api/generos',
+          {
+            method: 'POST',
+            headers: {
+              'content-type':
+                'application/json',
+            },
+            body: JSON.stringify(
+              payload
+            ),
+          }
+        );
 
       const resultado =
         await resposta.json();
@@ -335,12 +405,18 @@ export default function GenerosClient() {
     }
   }
 
-  function iniciarEdicao(genero: Genero) {
+  function iniciarEdicao(
+    genero: Genero
+  ) {
     setEditando(genero);
 
-    setNomeEdicao(genero.nome);
+    setNomeEdicao(
+      genero.nome
+    );
 
-    setClasseEdicao(genero.classe);
+    setClasseEdicao(
+      genero.classe
+    );
 
     setCategoriaEdicao(
       genero.categoriaId || ''
@@ -361,7 +437,18 @@ export default function GenerosClient() {
     setEstoqueMinimoEdicao(
       genero.estoqueMinimo === null
         ? ''
-        : String(genero.estoqueMinimo)
+        : String(
+            genero.estoqueMinimo
+          )
+    );
+
+    setValorUnitarioEdicao(
+      genero.valorUnitarioReferencia ===
+        null
+        ? ''
+        : String(
+            genero.valorUnitarioReferencia
+          )
     );
 
     setLocalEdicao(
@@ -384,18 +471,23 @@ export default function GenerosClient() {
   function aplicarPadraoCategoriaEdicao(
     categoriaId: string
   ) {
-    setCategoriaEdicao(categoriaId);
-
-    const categoria = categorias.find(
-      (item) => item.id === categoriaId
+    setCategoriaEdicao(
+      categoriaId
     );
+
+    const categoria =
+      categorias.find(
+        (item) =>
+          item.id === categoriaId
+      );
 
     if (!categoria) {
       return;
     }
 
     if (
-      categoria.controlaLotePadrao !== null
+      categoria.controlaLotePadrao !==
+      null
     ) {
       setLoteEdicao(
         categoria.controlaLotePadrao
@@ -403,14 +495,17 @@ export default function GenerosClient() {
     }
 
     if (
-      categoria.controlaValidadePadrao !== null
+      categoria.controlaValidadePadrao !==
+      null
     ) {
       setValidadeEdicao(
         categoria.controlaValidadePadrao
       );
     }
 
-    if (categoria.localPadraoId) {
+    if (
+      categoria.localPadraoId
+    ) {
       setLocalEdicao(
         categoria.localPadraoId
       );
@@ -432,45 +527,61 @@ export default function GenerosClient() {
     const minimo =
       estoqueMinimoEdicao.trim();
 
+    const valorUnitario =
+      valorUnitarioEdicao.trim();
+
     try {
-      const resposta = await fetch(
-        '/api/generos',
-        {
-          method: 'PUT',
-          headers: {
-            'content-type':
-              'application/json',
-          },
-          body: JSON.stringify({
-            id: editando.id,
-            nome: nomeEdicao.trim(),
-            classe: classeEdicao,
+      const resposta =
+        await fetch(
+          '/api/generos',
+          {
+            method: 'PUT',
+            headers: {
+              'content-type':
+                'application/json',
+            },
+            body: JSON.stringify({
+              id: editando.id,
 
-            categoriaId:
-              categoriaEdicao || null,
+              nome:
+                nomeEdicao.trim(),
 
-            unidadeId:
-              unidadeEdicao,
+              classe:
+                classeEdicao,
 
-            controlaLote:
-              loteEdicao,
+              categoriaId:
+                categoriaEdicao ||
+                null,
 
-            controlaValidade:
-              validadeEdicao,
+              unidadeId:
+                unidadeEdicao,
 
-            estoqueMinimo:
-              minimo === ''
-                ? null
-                : Number(minimo),
+              controlaLote:
+                loteEdicao,
 
-            localPadraoId:
-              localEdicao || null,
+              controlaValidade:
+                validadeEdicao,
 
-            situacao:
-              situacaoEdicao,
-          }),
-        }
-      );
+              estoqueMinimo:
+                minimo === ''
+                  ? null
+                  : Number(minimo),
+
+              valorUnitarioReferencia:
+                valorUnitario === ''
+                  ? null
+                  : Number(
+                      valorUnitario
+                    ),
+
+              localPadraoId:
+                localEdicao || null,
+
+              situacao:
+                situacaoEdicao,
+            }),
+          }
+        );
 
       const resultado =
         await resposta.json();
@@ -489,8 +600,12 @@ export default function GenerosClient() {
         'Gênero atualizado com sucesso.'
       );
 
-      if (classeEdicao !== classe) {
-        setClasse(classeEdicao);
+      if (
+        classeEdicao !== classe
+      ) {
+        setClasse(
+          classeEdicao
+        );
       } else {
         await carregarDados();
       }
@@ -534,9 +649,13 @@ export default function GenerosClient() {
       </div>
 
       <div className="card">
-        <h2>Novo gênero {classe}</h2>
+        <h2>
+          Novo gênero {classe}
+        </h2>
 
-        <form onSubmit={adicionar}>
+        <form
+          onSubmit={adicionar}
+        >
           <label>Nome</label>
 
           <input
@@ -547,14 +666,17 @@ export default function GenerosClient() {
             maxLength={120}
           />
 
-          <label>Categoria</label>
+          <label>
+            Categoria
+          </label>
 
           <select
             name="categoriaId"
             onChange={(ev) =>
               aplicarPadraoCategoria(
                 ev.target.value,
-                ev.currentTarget.form!
+                ev.currentTarget
+                  .form!
               )
             }
           >
@@ -565,16 +687,24 @@ export default function GenerosClient() {
             {categorias.map(
               (categoria) => (
                 <option
-                  key={categoria.id}
-                  value={categoria.id}
+                  key={
+                    categoria.id
+                  }
+                  value={
+                    categoria.id
+                  }
                 >
-                  {categoria.nome}
+                  {
+                    categoria.nome
+                  }
                 </option>
               )
             )}
           </select>
 
-          <label>Unidade de medida</label>
+          <label>
+            Unidade de medida
+          </label>
 
           <select
             name="unidadeId"
@@ -587,11 +717,20 @@ export default function GenerosClient() {
             {unidades.map(
               (unidade) => (
                 <option
-                  key={unidade.id}
-                  value={unidade.id}
+                  key={
+                    unidade.id
+                  }
+                  value={
+                    unidade.id
+                  }
                 >
-                  {unidade.sigla} —{' '}
-                  {unidade.nome}
+                  {
+                    unidade.sigla
+                  }{' '}
+                  —{' '}
+                  {
+                    unidade.nome
+                  }
                 </option>
               )
             )}
@@ -616,7 +755,8 @@ export default function GenerosClient() {
           </div>
 
           <label>
-            Estoque mínimo (opcional)
+            Estoque mínimo
+            (opcional)
           </label>
 
           <input
@@ -626,21 +766,48 @@ export default function GenerosClient() {
             step="0.001"
           />
 
-          <label>Local habitual</label>
+          <label>
+            Valor unitário de
+            referência (opcional)
+          </label>
 
-          <select name="localPadraoId">
+          <input
+            name="valorUnitarioReferencia"
+            type="number"
+            min="0"
+            step="0.0001"
+            placeholder="R$ 0,00"
+          />
+
+          <p className="muted">
+            Utilizado somente para
+            consultas de orçamento
+            estimado. Não representa
+            crédito, empenho ou saldo
+            financeiro.
+          </p>
+
+          <label>
+            Local habitual
+          </label>
+
+          <select
+            name="localPadraoId"
+          >
             <option value="">
               Não definido
             </option>
 
-            {locais.map((local) => (
-              <option
-                key={local.id}
-                value={local.id}
-              >
-                {local.nome}
-              </option>
-            ))}
+            {locais.map(
+              (local) => (
+                <option
+                  key={local.id}
+                  value={local.id}
+                >
+                  {local.nome}
+                </option>
+              )
+            )}
           </select>
 
           <button
@@ -650,22 +817,24 @@ export default function GenerosClient() {
             Salvar gênero {classe}
           </button>
 
-          {sucesso && !editando && (
-            <p role="status">
-              <strong>
-                ✓ {sucesso}
-              </strong>
-            </p>
-          )}
+          {sucesso &&
+            !editando && (
+              <p role="status">
+                <strong>
+                  ✓ {sucesso}
+                </strong>
+              </p>
+            )}
 
-          {erro && !editando && (
-            <p
-              className="error"
-              role="alert"
-            >
-              {erro}
-            </p>
-          )}
+          {erro &&
+            !editando && (
+              <p
+                className="error"
+                role="alert"
+              >
+                {erro}
+              </p>
+            )}
         </form>
       </div>
 
@@ -690,379 +859,500 @@ export default function GenerosClient() {
               Gêneros {classe}
             </h2>
 
-            {generos.length > 0 ? (
-              generos.map((genero) => (
-                <div
-                  className="row"
-                  key={genero.id}
-                >
-                  {editando?.id ===
-                  genero.id ? (
-                    <form
-                      onSubmit={
-                        salvarEdicao
-                      }
-                      style={{
-                        width: '100%',
-                      }}
-                    >
-                      <h3>
-                        Editar gênero
-                      </h3>
-
-                      <label>Nome</label>
-
-                      <input
-                        value={
-                          nomeEdicao
+            {generos.length >
+            0 ? (
+              generos.map(
+                (genero) => (
+                  <div
+                    className="row"
+                    key={
+                      genero.id
+                    }
+                  >
+                    {editando?.id ===
+                    genero.id ? (
+                      <form
+                        onSubmit={
+                          salvarEdicao
                         }
-                        onChange={(ev) =>
-                          setNomeEdicao(
-                            ev.target.value
-                          )
-                        }
-                        required
-                        maxLength={120}
-                        autoFocus
-                      />
-
-                      <label>
-                        Classificação
-                      </label>
-
-                      <select
-                        value={
-                          classeEdicao
-                        }
-                        onChange={(ev) =>
-                          setClasseEdicao(
-                            ev.target
-                              .value as Classe
-                          )
-                        }
-                      >
-                        <option value="QS">
-                          QS
-                        </option>
-
-                        <option value="QR">
-                          QR
-                        </option>
-                      </select>
-
-                      <label>
-                        Categoria
-                      </label>
-
-                      <select
-                        value={
-                          categoriaEdicao
-                        }
-                        onChange={(ev) =>
-                          aplicarPadraoCategoriaEdicao(
-                            ev.target.value
-                          )
-                        }
-                      >
-                        <option value="">
-                          Sem categoria
-                        </option>
-
-                        {categorias.map(
-                          (categoria) => (
-                            <option
-                              key={
-                                categoria.id
-                              }
-                              value={
-                                categoria.id
-                              }
-                            >
-                              {
-                                categoria.nome
-                              }
-                            </option>
-                          )
-                        )}
-                      </select>
-
-                      <label>
-                        Unidade de medida
-                      </label>
-
-                      <select
-                        value={
-                          unidadeEdicao
-                        }
-                        onChange={(ev) =>
-                          setUnidadeEdicao(
-                            ev.target.value
-                          )
-                        }
-                        required
-                      >
-                        <option value="">
-                          Selecione
-                        </option>
-
-                        {unidades.map(
-                          (unidade) => (
-                            <option
-                              key={
-                                unidade.id
-                              }
-                              value={
-                                unidade.id
-                              }
-                            >
-                              {
-                                unidade.sigla
-                              }{' '}
-                              —{' '}
-                              {
-                                unidade.nome
-                              }
-                            </option>
-                          )
-                        )}
-                      </select>
-
-                      <div className="checks">
-                        <label>
-                          <input
-                            type="checkbox"
-                            checked={
-                              loteEdicao
-                            }
-                            onChange={(ev) =>
-                              setLoteEdicao(
-                                ev.target
-                                  .checked
-                              )
-                            }
-                          />{' '}
-                          Controla lote
-                        </label>
-
-                        <label>
-                          <input
-                            type="checkbox"
-                            checked={
-                              validadeEdicao
-                            }
-                            onChange={(ev) =>
-                              setValidadeEdicao(
-                                ev.target
-                                  .checked
-                              )
-                            }
-                          />{' '}
-                          Controla validade
-                        </label>
-                      </div>
-
-                      <label>
-                        Estoque mínimo
-                      </label>
-
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.001"
-                        value={
-                          estoqueMinimoEdicao
-                        }
-                        onChange={(ev) =>
-                          setEstoqueMinimoEdicao(
-                            ev.target.value
-                          )
-                        }
-                      />
-
-                      <label>
-                        Local habitual
-                      </label>
-
-                      <select
-                        value={
-                          localEdicao
-                        }
-                        onChange={(ev) =>
-                          setLocalEdicao(
-                            ev.target.value
-                          )
-                        }
-                      >
-                        <option value="">
-                          Não definido
-                        </option>
-
-                        {locais.map(
-                          (local) => (
-                            <option
-                              key={local.id}
-                              value={local.id}
-                            >
-                              {local.nome}
-                            </option>
-                          )
-                        )}
-                      </select>
-
-                      <label>
-                        Situação
-                      </label>
-
-                      <select
-                        value={
-                          situacaoEdicao
-                        }
-                        onChange={(ev) =>
-                          setSituacaoEdicao(
-                            ev.target
-                              .value as Situacao
-                          )
-                        }
-                      >
-                        <option value="ATIVO">
-                          Ativo
-                        </option>
-
-                        <option value="INATIVO">
-                          Inativo
-                        </option>
-                      </select>
-
-                      <div
                         style={{
-                          display: 'flex',
-                          gap: '8px',
-                          marginTop:
-                            '12px',
-                          flexWrap:
-                            'wrap',
+                          width:
+                            '100%',
                         }}
                       >
-                        <button
-                          className="btn"
-                          type="submit"
-                        >
-                          Salvar alterações
-                        </button>
+                        <h3>
+                          Editar
+                          gênero
+                        </h3>
 
-                        <button
-                          className="linkbtn"
-                          type="button"
-                          onClick={
-                            cancelarEdicao
+                        <label>
+                          Nome
+                        </label>
+
+                        <input
+                          value={
+                            nomeEdicao
                           }
-                        >
-                          Cancelar
-                        </button>
-                      </div>
-
-                      {erro && (
-                        <p
-                          className="error"
-                          role="alert"
-                        >
-                          {erro}
-                        </p>
-                      )}
-                    </form>
-                  ) : (
-                    <>
-                      <div>
-                        <b>
-                          {genero.nome}
-                        </b>
-
-                        <div className="muted">
-                          {genero.categoria
-                            ?.nome ||
-                            'Sem categoria'}
-                          {' · '}
-                          {
-                            genero.unidade
-                              .sigla
+                          onChange={(
+                            ev
+                          ) =>
+                            setNomeEdicao(
+                              ev
+                                .target
+                                .value
+                            )
                           }
-                        </div>
-
-                        <div className="muted">
-                          Lote:{' '}
-                          {genero.controlaLote
-                            ? 'Sim'
-                            : 'Não'}
-                          {' · '}
-                          Validade:{' '}
-                          {genero.controlaValidade
-                            ? 'Sim'
-                            : 'Não'}
-                        </div>
-
-                        <div className="muted">
-                          Estoque mínimo:{' '}
-                          {genero.estoqueMinimo ===
-                          null
-                            ? 'Não definido'
-                            : `${genero.estoqueMinimo} ${genero.unidade.sigla}`}
-                        </div>
-
-                        <div className="muted">
-                          Local habitual:{' '}
-                          {genero
-                            .localPadrao
-                            ?.nome ||
-                            'Não definido'}
-                        </div>
-                      </div>
-
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems:
-                            'center',
-                          gap: '8px',
-                          flexWrap:
-                            'wrap',
-                        }}
-                      >
-                        <span className="tag">
-                          {
-                            genero.situacao
+                          required
+                          maxLength={
+                            120
                           }
-                        </span>
+                          autoFocus
+                        />
 
-                        <button
-                          type="button"
-                          className="linkbtn"
-                          onClick={() =>
-                            iniciarEdicao(
-                              genero
+                        <label>
+                          Classificação
+                        </label>
+
+                        <select
+                          value={
+                            classeEdicao
+                          }
+                          onChange={(
+                            ev
+                          ) =>
+                            setClasseEdicao(
+                              ev
+                                .target
+                                .value as Classe
                             )
                           }
                         >
-                          Editar
-                        </button>
-                      </div>
-                    </>
-                  )}
-                </div>
-              ))
+                          <option value="QS">
+                            QS
+                          </option>
+
+                          <option value="QR">
+                            QR
+                          </option>
+                        </select>
+
+                        <label>
+                          Categoria
+                        </label>
+
+                        <select
+                          value={
+                            categoriaEdicao
+                          }
+                          onChange={(
+                            ev
+                          ) =>
+                            aplicarPadraoCategoriaEdicao(
+                              ev
+                                .target
+                                .value
+                            )
+                          }
+                        >
+                          <option value="">
+                            Sem
+                            categoria
+                          </option>
+
+                          {categorias.map(
+                            (
+                              categoria
+                            ) => (
+                              <option
+                                key={
+                                  categoria.id
+                                }
+                                value={
+                                  categoria.id
+                                }
+                              >
+                                {
+                                  categoria.nome
+                                }
+                              </option>
+                            )
+                          )}
+                        </select>
+
+                        <label>
+                          Unidade de
+                          medida
+                        </label>
+
+                        <select
+                          value={
+                            unidadeEdicao
+                          }
+                          onChange={(
+                            ev
+                          ) =>
+                            setUnidadeEdicao(
+                              ev
+                                .target
+                                .value
+                            )
+                          }
+                          required
+                        >
+                          <option value="">
+                            Selecione
+                          </option>
+
+                          {unidades.map(
+                            (
+                              unidade
+                            ) => (
+                              <option
+                                key={
+                                  unidade.id
+                                }
+                                value={
+                                  unidade.id
+                                }
+                              >
+                                {
+                                  unidade.sigla
+                                }{' '}
+                                —{' '}
+                                {
+                                  unidade.nome
+                                }
+                              </option>
+                            )
+                          )}
+                        </select>
+
+                        <div className="checks">
+                          <label>
+                            <input
+                              type="checkbox"
+                              checked={
+                                loteEdicao
+                              }
+                              onChange={(
+                                ev
+                              ) =>
+                                setLoteEdicao(
+                                  ev
+                                    .target
+                                    .checked
+                                )
+                              }
+                            />{' '}
+                            Controla
+                            lote
+                          </label>
+
+                          <label>
+                            <input
+                              type="checkbox"
+                              checked={
+                                validadeEdicao
+                              }
+                              onChange={(
+                                ev
+                              ) =>
+                                setValidadeEdicao(
+                                  ev
+                                    .target
+                                    .checked
+                                )
+                              }
+                            />{' '}
+                            Controla
+                            validade
+                          </label>
+                        </div>
+
+                        <label>
+                          Estoque
+                          mínimo
+                        </label>
+
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.001"
+                          value={
+                            estoqueMinimoEdicao
+                          }
+                          onChange={(
+                            ev
+                          ) =>
+                            setEstoqueMinimoEdicao(
+                              ev
+                                .target
+                                .value
+                            )
+                          }
+                        />
+
+                        <label>
+                          Valor
+                          unitário de
+                          referência
+                        </label>
+
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.0001"
+                          value={
+                            valorUnitarioEdicao
+                          }
+                          onChange={(
+                            ev
+                          ) =>
+                            setValorUnitarioEdicao(
+                              ev
+                                .target
+                                .value
+                            )
+                          }
+                          placeholder="R$ 0,00"
+                        />
+
+                        <p className="muted">
+                          Valor
+                          opcional,
+                          utilizado
+                          somente para
+                          orçamento
+                          estimado.
+                        </p>
+
+                        <label>
+                          Local
+                          habitual
+                        </label>
+
+                        <select
+                          value={
+                            localEdicao
+                          }
+                          onChange={(
+                            ev
+                          ) =>
+                            setLocalEdicao(
+                              ev
+                                .target
+                                .value
+                            )
+                          }
+                        >
+                          <option value="">
+                            Não
+                            definido
+                          </option>
+
+                          {locais.map(
+                            (
+                              local
+                            ) => (
+                              <option
+                                key={
+                                  local.id
+                                }
+                                value={
+                                  local.id
+                                }
+                              >
+                                {
+                                  local.nome
+                                }
+                              </option>
+                            )
+                          )}
+                        </select>
+
+                        <label>
+                          Situação
+                        </label>
+
+                        <select
+                          value={
+                            situacaoEdicao
+                          }
+                          onChange={(
+                            ev
+                          ) =>
+                            setSituacaoEdicao(
+                              ev
+                                .target
+                                .value as Situacao
+                            )
+                          }
+                        >
+                          <option value="ATIVO">
+                            Ativo
+                          </option>
+
+                          <option value="INATIVO">
+                            Inativo
+                          </option>
+                        </select>
+
+                        <div
+                          style={{
+                            display:
+                              'flex',
+                            gap:
+                              '8px',
+                            marginTop:
+                              '12px',
+                            flexWrap:
+                              'wrap',
+                          }}
+                        >
+                          <button
+                            className="btn"
+                            type="submit"
+                          >
+                            Salvar
+                            alterações
+                          </button>
+
+                          <button
+                            className="linkbtn"
+                            type="button"
+                            onClick={
+                              cancelarEdicao
+                            }
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+
+                        {erro && (
+                          <p
+                            className="error"
+                            role="alert"
+                          >
+                            {erro}
+                          </p>
+                        )}
+                      </form>
+                    ) : (
+                      <>
+                        <div>
+                          <b>
+                            {
+                              genero.nome
+                            }
+                          </b>
+
+                          <div className="muted">
+                            {genero
+                              .categoria
+                              ?.nome ||
+                              'Sem categoria'}
+                            {' · '}
+                            {
+                              genero
+                                .unidade
+                                .sigla
+                            }
+                          </div>
+
+                          <div className="muted">
+                            Lote:{' '}
+                            {genero.controlaLote
+                              ? 'Sim'
+                              : 'Não'}
+                            {' · '}
+                            Validade:{' '}
+                            {genero.controlaValidade
+                              ? 'Sim'
+                              : 'Não'}
+                          </div>
+
+                          <div className="muted">
+                            Estoque
+                            mínimo:{' '}
+                            {genero.estoqueMinimo ===
+                            null
+                              ? 'Não definido'
+                              : `${genero.estoqueMinimo} ${genero.unidade.sigla}`}
+                          </div>
+
+                          <div className="muted">
+                            Valor
+                            unitário de
+                            referência:{' '}
+                            {genero.valorUnitarioReferencia ===
+                            null
+                              ? 'Não definido'
+                              : `${formatarMoeda(
+                                  genero.valorUnitarioReferencia
+                                )}/${genero.unidade.sigla}`}
+                          </div>
+
+                          <div className="muted">
+                            Local
+                            habitual:{' '}
+                            {genero
+                              .localPadrao
+                              ?.nome ||
+                              'Não definido'}
+                          </div>
+                        </div>
+
+                        <div
+                          style={{
+                            display:
+                              'flex',
+                            alignItems:
+                              'center',
+                            gap:
+                              '8px',
+                            flexWrap:
+                              'wrap',
+                          }}
+                        >
+                          <span className="tag">
+                            {
+                              genero.situacao
+                            }
+                          </span>
+
+                          <button
+                            type="button"
+                            className="linkbtn"
+                            onClick={() =>
+                              iniciarEdicao(
+                                genero
+                              )
+                            }
+                          >
+                            Editar
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )
+              )
             ) : (
               <p className="muted">
-                Nenhum gênero {classe}{' '}
+                Nenhum gênero{' '}
+                {classe}{' '}
                 cadastrado.
               </p>
             )}
 
-            {sucesso && !editando && (
-              <p role="status">
-                <strong>
-                  ✓ {sucesso}
-                </strong>
-              </p>
-            )}
+            {sucesso &&
+              !editando && (
+                <p role="status">
+                  <strong>
+                    ✓ {sucesso}
+                  </strong>
+                </p>
+              )}
           </>
         )}
       </div>
