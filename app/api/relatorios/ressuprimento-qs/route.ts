@@ -214,16 +214,6 @@ export async function GET(req: Request) {
    * =====================================================
    * DEVOLUÇÕES DAS SAÍDAS DO PERÍODO
    * =====================================================
-   *
-   * As devoluções são registradas nas
-   * movimentações de estoque com:
-   *
-   * tipo = DEVOLUCAO
-   * referenciaTipo = DevolucaoSaida
-   * referenciaId = ID da saída original
-   *
-   * Portanto, podemos descontá-las diretamente
-   * da saída que originou o consumo.
    */
 
   const idsSaidas =
@@ -280,13 +270,6 @@ export async function GET(req: Request) {
    * =====================================================
    * REFERÊNCIAS INICIAIS
    * =====================================================
-   *
-   * A referência inicial é somente um fallback
-   * de implantação.
-   *
-   * Quando existe histórico real válido do
-   * EstoqueAprov, ele passa a ser a única base
-   * automática utilizada no planejamento.
    */
 
   const referencias =
@@ -351,11 +334,6 @@ export async function GET(req: Request) {
    * =====================================================
    * CONSUMO LÍQUIDO POR GÊNERO
    * =====================================================
-   *
-   * consumo líquido =
-   * saída efetiva - devolução
-   *
-   * Nunca permitimos resultado negativo.
    */
 
   const consumoPorGenero =
@@ -416,11 +394,6 @@ export async function GET(req: Request) {
     >();
 
   for (const referencia of referencias) {
-    /*
-     * Como ordenamos da mais recente para
-     * a mais antiga, mantemos a primeira.
-     */
-
     if (
       !referenciaPorGenero.has(
         referencia.generoId
@@ -450,43 +423,17 @@ export async function GET(req: Request) {
         genero.id
       );
 
-    /*
-     * Consumo zero não significa automaticamente
-     * que o gênero não é utilizado.
-     *
-     * Na implantação do sistema pode simplesmente
-     * não existir histórico suficiente.
-     */
-
     const possuiHistoricoConsumo =
       consumoHistorico > 0;
 
     const possuiReferenciaInicial =
       Boolean(referencia);
 
-    /*
-     * Média mensal observada no EstoqueAprov.
-     *
-     * Esta é calculada exclusivamente a partir
-     * do consumo líquido real.
-     */
-
     const mediaHistorica =
       possuiHistoricoConsumo
         ? consumoHistorico /
           mesesHistorico
         : null;
-
-    /*
-     * UMA ÚNICA BASE É UTILIZADA.
-     *
-     * PRIORIDADE:
-     *
-     * 1. consumo líquido real do EstoqueAprov;
-     * 2. referência inicial, somente enquanto
-     *    não existir histórico real;
-     * 3. sem base de cálculo.
-     */
 
     let mediaMensalUtilizada:
       | number
@@ -516,11 +463,6 @@ export async function GET(req: Request) {
         'SEM_BASE_CALCULO';
     }
 
-    /*
-     * Sem base confiável, nenhuma sugestão
-     * automática é produzida.
-     */
-
     const consumoProjetado =
       mediaMensalUtilizada == null
         ? null
@@ -539,12 +481,9 @@ export async function GET(req: Request) {
       ) || 0;
 
     /*
-     * Futuramente este valor poderá vir
-     * de recebimentos QS já programados.
-     *
-     * Na versão atual permanece zero.
+     * Na versão atual ainda não há
+     * recebimentos QS futuros programados.
      */
-
     const previstoReceber = 0;
 
     const necessidadeBruta =
@@ -571,6 +510,24 @@ export async function GET(req: Request) {
           mediaMensalUtilizada
         : null;
 
+    /*
+     * Valor unitário de referência.
+     *
+     * Este valor NÃO representa crédito,
+     * empenho ou saldo financeiro.
+     *
+     * Ele é disponibilizado apenas para
+     * eventual consulta de orçamento
+     * estimado pelo usuário.
+     */
+    const valorUnitarioReferencia =
+      genero.valorUnitarioReferencia ==
+      null
+        ? null
+        : Number(
+            genero.valorUnitarioReferencia
+          );
+
     return {
       generoId: genero.id,
 
@@ -578,6 +535,8 @@ export async function GET(req: Request) {
 
       unidade:
         genero.unidade.sigla,
+
+      valorUnitarioReferencia,
 
       /*
        * Histórico líquido real.
@@ -930,6 +889,7 @@ export async function GET(req: Request) {
       'Ausência de histórico não é interpretada como consumo zero.',
       'Totais que possuam gêneros sem base de cálculo são identificados como parciais.',
       'A quantidade sugerida é apoio à decisão e não constitui pedido automático à cadeia de suprimento.',
+      'O valor unitário de referência é opcional e serve somente para eventual consulta de orçamento estimado.',
       'QR não participa deste cálculo.',
     ],
   });
