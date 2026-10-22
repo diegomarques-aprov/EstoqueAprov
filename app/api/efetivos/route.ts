@@ -14,11 +14,23 @@ const ArranchamentoSchema = z.object({
   data: z.string().min(10),
   refeicao: Refeicao,
 
-  oficiaisStenSgt: z.coerce.number().int().min(0).default(0),
-  cabosSoldados: z.coerce.number().int().min(0).default(0),
-  outrosPrevistos: z.coerce.number().int().min(0).default(0),
+  oficiaisStenSgt: z.coerce
+    .number()
+    .int()
+    .min(0)
+    .default(0),
 
-  totalPrevisto: z.coerce.number().int().min(0).optional(),
+  cabosSoldados: z.coerce
+    .number()
+    .int()
+    .min(0)
+    .default(0),
+
+  outrosPrevistos: z.coerce
+    .number()
+    .int()
+    .min(0)
+    .default(0),
 
   margemSegurancaPercent: z.coerce
     .number()
@@ -26,11 +38,16 @@ const ArranchamentoSchema = z.object({
     .max(100)
     .default(10),
 
-  observacao: z.string().optional(),
+  observacao: z
+    .string()
+    .optional(),
 });
 
 function dia(s: string) {
-  return new Date(s.slice(0, 10) + 'T12:00:00.000Z');
+  return new Date(
+    s.slice(0, 10) +
+      'T12:00:00.000Z'
+  );
 }
 
 export async function GET(req: Request) {
@@ -42,36 +59,42 @@ export async function GET(req: Request) {
 
   const url = new URL(req.url);
 
-  const inicio = url.searchParams.get('inicio');
-  const fim = url.searchParams.get('fim');
+  const inicio =
+    url.searchParams.get('inicio');
 
-  const rows = await prisma.arranchamento.findMany({
-    where:
-      inicio && fim
-        ? {
-            data: {
-              gte: dia(inicio),
-              lte: dia(fim),
-            },
-          }
-        : {},
-    include: {
-      usuario: {
-        select: {
-          nome: true,
-          postoGraduacao: true,
+  const fim =
+    url.searchParams.get('fim');
+
+  const rows =
+    await prisma.arranchamento.findMany({
+      where:
+        inicio && fim
+          ? {
+              data: {
+                gte: dia(inicio),
+                lte: dia(fim),
+              },
+            }
+          : {},
+
+      include: {
+        usuario: {
+          select: {
+            nome: true,
+            postoGraduacao: true,
+          },
         },
       },
-    },
-    orderBy: [
-      {
-        data: 'desc',
-      },
-      {
-        refeicao: 'asc',
-      },
-    ],
-  });
+
+      orderBy: [
+        {
+          data: 'desc',
+        },
+        {
+          refeicao: 'asc',
+        },
+      ],
+    });
 
   return Response.json(rows);
 }
@@ -84,7 +107,9 @@ export async function POST(req: Request) {
   }
 
   const body = await req.json();
-  const validacao = ArranchamentoSchema.safeParse(body);
+
+  const validacao =
+    ArranchamentoSchema.safeParse(body);
 
   if (!validacao.success) {
     return Response.json(
@@ -100,21 +125,23 @@ export async function POST(req: Request) {
 
   const dados = validacao.data;
 
-  const somaCategorias =
+  /*
+   * O total previsto é sempre calculado
+   * pelo servidor.
+   *
+   * Assim não pode existir divergência entre
+   * as categorias informadas e o total salvo.
+   */
+  const totalPrevisto =
     dados.oficiaisStenSgt +
     dados.cabosSoldados +
     dados.outrosPrevistos;
-
-  const totalPrevisto =
-    dados.totalPrevisto !== undefined
-      ? dados.totalPrevisto
-      : somaCategorias;
 
   if (totalPrevisto <= 0) {
     return Response.json(
       {
         error:
-          'Informe o total de militares arranchados para esta refeição.',
+          'Para registrar o efetivo previsto, informe pelo menos um militar em uma das categorias.',
       },
       {
         status: 400,
@@ -122,89 +149,162 @@ export async function POST(req: Request) {
     );
   }
 
-  const margem = dados.margemSegurancaPercent;
+  const margem =
+    dados.margemSegurancaPercent;
 
+  /*
+   * Efetivo utilizado para planejamento
+   * da alimentação:
+   *
+   * total previsto + margem de segurança.
+   */
   const efetivoPlanejamento =
     totalPrevisto +
-    Math.ceil((totalPrevisto * margem) / 100);
+    Math.ceil(
+      (totalPrevisto * margem) / 100
+    );
 
   const data = dia(dados.data);
 
-  const anterior = await prisma.arranchamento.findUnique({
-    where: {
-      data_refeicao: {
-        data,
-        refeicao: dados.refeicao,
+  const anterior =
+    await prisma.arranchamento.findUnique({
+      where: {
+        data_refeicao: {
+          data,
+          refeicao:
+            dados.refeicao,
+        },
       },
-    },
-  });
+    });
 
-  const row = await prisma.arranchamento.upsert({
-    where: {
-      data_refeicao: {
-        data,
-        refeicao: dados.refeicao,
+  const row =
+    await prisma.arranchamento.upsert({
+      where: {
+        data_refeicao: {
+          data,
+          refeicao:
+            dados.refeicao,
+        },
       },
-    },
 
-    update: {
-      oficiaisStenSgt: dados.oficiaisStenSgt,
-      cabosSoldados: dados.cabosSoldados,
-      outrosPrevistos: dados.outrosPrevistos,
-      totalPrevisto,
-      margemSegurancaPercent: margem,
-      efetivoPlanejamento,
-      observacao: dados.observacao,
-      usuarioId: g.user!.id,
-    },
+      update: {
+        oficiaisStenSgt:
+          dados.oficiaisStenSgt,
 
-    create: {
-      data,
-      refeicao: dados.refeicao,
-      oficiaisStenSgt: dados.oficiaisStenSgt,
-      cabosSoldados: dados.cabosSoldados,
-      outrosPrevistos: dados.outrosPrevistos,
-      totalPrevisto,
-      margemSegurancaPercent: margem,
-      efetivoPlanejamento,
-      observacao: dados.observacao,
-      usuarioId: g.user!.id,
-    },
-  });
+        cabosSoldados:
+          dados.cabosSoldados,
+
+        outrosPrevistos:
+          dados.outrosPrevistos,
+
+        totalPrevisto,
+
+        margemSegurancaPercent:
+          margem,
+
+        efetivoPlanejamento,
+
+        observacao:
+          dados.observacao,
+
+        usuarioId:
+          g.user!.id,
+      },
+
+      create: {
+        data,
+
+        refeicao:
+          dados.refeicao,
+
+        oficiaisStenSgt:
+          dados.oficiaisStenSgt,
+
+        cabosSoldados:
+          dados.cabosSoldados,
+
+        outrosPrevistos:
+          dados.outrosPrevistos,
+
+        totalPrevisto,
+
+        margemSegurancaPercent:
+          margem,
+
+        efetivoPlanejamento,
+
+        observacao:
+          dados.observacao,
+
+        usuarioId:
+          g.user!.id,
+      },
+    });
 
   await prisma.auditoria.create({
     data: {
-      usuarioId: g.user!.id,
+      usuarioId:
+        g.user!.id,
 
       acao: anterior
         ? 'ALTERACAO_ARRANCHAMENTO'
         : 'REGISTRO_ARRANCHAMENTO',
 
-      entidade: 'Arranchamento',
-      entidadeId: row.id,
+      entidade:
+        'Arranchamento',
+
+      entidadeId:
+        row.id,
 
       dadosAnteriores: anterior
         ? {
-            data: dados.data,
-            refeicao: anterior.refeicao,
-            oficiaisStenSgt: anterior.oficiaisStenSgt,
-            cabosSoldados: anterior.cabosSoldados,
-            outrosPrevistos: anterior.outrosPrevistos,
-            totalPrevisto: anterior.totalPrevisto,
+            data:
+              dados.data,
+
+            refeicao:
+              anterior.refeicao,
+
+            oficiaisStenSgt:
+              anterior.oficiaisStenSgt,
+
+            cabosSoldados:
+              anterior.cabosSoldados,
+
+            outrosPrevistos:
+              anterior.outrosPrevistos,
+
+            totalPrevisto:
+              anterior.totalPrevisto,
+
             margemSegurancaPercent:
               anterior.margemSegurancaPercent.toString(),
-            efetivoPlanejamento: anterior.efetivoPlanejamento,
+
+            efetivoPlanejamento:
+              anterior.efetivoPlanejamento,
           }
         : undefined,
 
       dadosNovos: {
-        data: dados.data,
-        refeicao: dados.refeicao,
-        oficiaisStenSgt: dados.oficiaisStenSgt,
-        cabosSoldados: dados.cabosSoldados,
-        outrosPrevistos: dados.outrosPrevistos,
+        data:
+          dados.data,
+
+        refeicao:
+          dados.refeicao,
+
+        oficiaisStenSgt:
+          dados.oficiaisStenSgt,
+
+        cabosSoldados:
+          dados.cabosSoldados,
+
+        outrosPrevistos:
+          dados.outrosPrevistos,
+
         totalPrevisto,
-        margemSegurancaPercent: margem,
+
+        margemSegurancaPercent:
+          margem,
+
         efetivoPlanejamento,
       },
     },
