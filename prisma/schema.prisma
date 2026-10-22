@@ -57,6 +57,7 @@ model Usuario {
   recursosQR                   RecursoQR[]                      @relation("RecursoQRCriador")
   movimentosFinanceirosQR      MovimentacaoFinanceiraQR[]       @relation("MovFinanceiraQRUsuario")
   comprasQR                    CompraQR[]                       @relation("CompraQRCriador")
+  conferenciasFLV              ConferenciaFLV[]                 @relation("ConferenciaFLVUsuario")
 }
 
 model LocalArmazenamento {
@@ -393,7 +394,16 @@ enum StatusCompraQR {
   RECEBIDA
   CANCELADA
 }
+model ConferenciaFLV {
+  id          String   @id @default(cuid())
+  data        DateTime @unique
+  observacao  String?
+  usuarioId   String
+  usuario     Usuario  @relation("ConferenciaFLVUsuario", fields: [usuarioId], references: [id])
+  criadoEm    DateTime @default(now())
 
+  @@index([data])
+}
 model RecursoQR {
   id           String   @id @default(cuid())
   descricao    String
