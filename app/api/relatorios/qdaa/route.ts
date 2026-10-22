@@ -36,8 +36,12 @@ function inicioDoMesSeguinte(
   );
 }
 
-function numero(valor: unknown) {
-  return Number(valor || 0);
+function numero(
+  valor: unknown
+) {
+  return Number(
+    valor || 0
+  );
 }
 
 type MovimentoQDAA = {
@@ -45,6 +49,14 @@ type MovimentoQDAA = {
   tipo: string;
   quantidade: number;
   dataOperacional: Date;
+
+  localOrigemId?:
+    | string
+    | null;
+
+  localDestinoId?:
+    | string
+    | null;
 };
 
 type ConsolidadoGenero = {
@@ -68,11 +80,67 @@ type ConsolidadoGenero = {
   movimentacoesNoMes: number;
 };
 
-function impactoEstoque(
-  tipo: string,
-  quantidade: number
+/*
+ * =====================================================
+ * DIREÇÃO DA CORREÇÃO
+ * =====================================================
+ *
+ * As correções de estoque são registradas com
+ * quantidade sempre positiva.
+ *
+ * A direção física é determinada pelos locais:
+ *
+ * localDestinoId preenchido
+ * = acréscimo de estoque.
+ *
+ * localOrigemId preenchido
+ * = redução de estoque.
+ *
+ * Isso mantém MovimentacaoEstoque consistente:
+ * quantidade representa magnitude e os campos
+ * origem/destino representam direção.
+ */
+function impactoCorrecao(
+  movimento: MovimentoQDAA
 ) {
-  switch (tipo) {
+  if (
+    movimento.localOrigemId &&
+    !movimento.localDestinoId
+  ) {
+    return -Math.abs(
+      movimento.quantidade
+    );
+  }
+
+  if (
+    movimento.localDestinoId &&
+    !movimento.localOrigemId
+  ) {
+    return Math.abs(
+      movimento.quantidade
+    );
+  }
+
+  /*
+   * Uma correção operacional válida deve
+   * possuir somente origem ou somente destino.
+   *
+   * Se houver registro histórico inconsistente,
+   * ele não altera silenciosamente o cálculo
+   * do QDAA.
+   */
+  return 0;
+}
+
+function impactoEstoque(
+  movimento: MovimentoQDAA
+) {
+  const quantidade =
+    movimento.quantidade;
+
+  switch (
+    movimento.tipo
+  ) {
     case 'SALDO_INICIAL':
     case 'RECEBIMENTO':
     case 'DEVOLUCAO':
@@ -83,13 +151,9 @@ function impactoEstoque(
       return -quantidade;
 
     case 'CORRECAO':
-      /*
-       * A correção já é gravada com sinal:
-       *
-       * positivo = acréscimo;
-       * negativo = redução.
-       */
-      return quantidade;
+      return impactoCorrecao(
+        movimento
+      );
 
     case 'TRANSFERENCIA':
       return 0;
@@ -130,7 +194,9 @@ export async function GET(
     );
 
   if (
-    !Number.isInteger(ano) ||
+    !Number.isInteger(
+      ano
+    ) ||
     ano < 2000 ||
     ano > 2100
   ) {
@@ -146,7 +212,9 @@ export async function GET(
   }
 
   if (
-    !Number.isInteger(mes) ||
+    !Number.isInteger(
+      mes
+    ) ||
     mes < 1 ||
     mes > 12
   ) {
@@ -182,15 +250,18 @@ export async function GET(
   const generos =
     await prisma.genero.findMany({
       where: {
-        classe: 'QS',
+        classe:
+          'QS',
       },
 
       include: {
-        unidade: true,
+        unidade:
+          true,
       },
 
       orderBy: {
-        nome: 'asc',
+        nome:
+          'asc',
       },
     });
 
@@ -228,7 +299,8 @@ export async function GET(
   const movimentosGerais =
     await prisma.movimentacaoEstoque.findMany({
       where: {
-        classe: 'QS',
+        classe:
+          'QS',
 
         tipo: {
           in: [
@@ -254,19 +326,34 @@ export async function GET(
         },
 
         criadoEm: {
-          lt: fimExclusivo,
+          lt:
+            fimExclusivo,
         },
       },
 
       select: {
-        generoId: true,
-        tipo: true,
-        quantidade: true,
-        criadoEm: true,
+        generoId:
+          true,
+
+        tipo:
+          true,
+
+        quantidade:
+          true,
+
+        criadoEm:
+          true,
+
+        localOrigemId:
+          true,
+
+        localDestinoId:
+          true,
       },
 
       orderBy: {
-        criadoEm: 'asc',
+        criadoEm:
+          'asc',
       },
     });
 
@@ -289,21 +376,27 @@ export async function GET(
     await prisma.itemRecebimento.findMany({
       where: {
         recebimento: {
-          classe: 'QS',
+          classe:
+            'QS',
 
           data: {
-            lt: fimExclusivo,
+            lt:
+              fimExclusivo,
           },
         },
       },
 
       select: {
-        generoId: true,
-        quantidade: true,
+        generoId:
+          true,
+
+        quantidade:
+          true,
 
         recebimento: {
           select: {
-            data: true,
+            data:
+              true,
           },
         },
       },
@@ -325,23 +418,30 @@ export async function GET(
     await prisma.itemSaida.findMany({
       where: {
         saida: {
-          classe: 'QS',
+          classe:
+            'QS',
 
-          canceladaEm: null,
+          canceladaEm:
+            null,
 
           data: {
-            lt: fimExclusivo,
+            lt:
+              fimExclusivo,
           },
         },
       },
 
       select: {
-        generoId: true,
-        quantidade: true,
+        generoId:
+          true,
+
+        quantidade:
+          true,
 
         saida: {
           select: {
-            data: true,
+            data:
+              true,
           },
         },
       },
@@ -374,11 +474,18 @@ export async function GET(
 
       dataOperacional:
         movimento.criadoEm,
+
+      localOrigemId:
+        movimento.localOrigemId,
+
+      localDestinoId:
+        movimento.localDestinoId,
     });
   }
 
   for (
-    const item of recebimentos
+    const item of
+      recebimentos
   ) {
     movimentos.push({
       generoId:
@@ -394,11 +501,18 @@ export async function GET(
 
       dataOperacional:
         item.recebimento.data,
+
+      localOrigemId:
+        null,
+
+      localDestinoId:
+        null,
     });
   }
 
   for (
-    const item of saidas
+    const item of
+      saidas
   ) {
     movimentos.push({
       generoId:
@@ -414,6 +528,12 @@ export async function GET(
 
       dataOperacional:
         item.saida.data,
+
+      localOrigemId:
+        null,
+
+      localDestinoId:
+        null,
     });
   }
 
@@ -452,13 +572,17 @@ export async function GET(
     await prisma.estoqueLocal.findMany({
       where: {
         genero: {
-          classe: 'QS',
+          classe:
+            'QS',
         },
       },
 
       select: {
-        generoId: true,
-        quantidade: true,
+        generoId:
+          true,
+
+        quantidade:
+          true,
       },
     });
 
@@ -507,8 +631,7 @@ export async function GET(
 
     const impacto =
       impactoEstoque(
-        movimento.tipo,
-        movimento.quantidade
+        movimento
       );
 
     estoqueInicialPorGenero.set(
@@ -530,7 +653,8 @@ export async function GET(
     >();
 
   for (
-    const genero of generos
+    const genero of
+      generos
   ) {
     const estoqueInicial =
       estoqueInicialPorGenero.get(
@@ -607,9 +731,11 @@ export async function GET(
       movimento.quantidade;
 
     /*
-     * Transferência muda somente o local físico.
-     * Não é considerada movimentação de consumo
-     * ou entrada no QDAA.
+     * Transferência muda somente
+     * o local físico.
+     *
+     * Não representa entrada,
+     * consumo ou perda para o QDAA.
      */
     if (
       movimento.tipo !==
@@ -648,15 +774,26 @@ export async function GET(
         break;
 
       case 'CORRECAO':
+        /*
+         * No relatório, correção mantém
+         * o sinal econômico/contábil:
+         *
+         * + quantidade = acréscimo
+         * - quantidade = redução
+         *
+         * A direção é reconstruída pelos
+         * campos físicos origem/destino.
+         */
         item.correcoes +=
-          quantidade;
+          impactoCorrecao(
+            movimento
+          );
         break;
     }
 
     item.estoqueFinalCalculado +=
       impactoEstoque(
-        movimento.tipo,
-        quantidade
+        movimento
       );
   }
 
@@ -690,7 +827,8 @@ export async function GET(
     >();
 
   for (
-    const item of itens
+    const item of
+      itens
   ) {
     let total =
       totaisPorUnidade.get(
@@ -795,14 +933,21 @@ export async function GET(
       inicio:
         inicio
           .toISOString()
-          .slice(0, 10),
+          .slice(
+            0,
+            10
+          ),
 
-      fim: new Date(
-        fimExclusivo.getTime() -
-          1
-      )
-        .toISOString()
-        .slice(0, 10),
+      fim:
+        new Date(
+          fimExclusivo.getTime() -
+            1
+        )
+          .toISOString()
+          .slice(
+            0,
+            10
+          ),
     },
 
     classe:
@@ -848,7 +993,8 @@ export async function GET(
       'Saídas canceladas não são consideradas consumo.',
       'Correções automáticas geradas pelo cancelamento de saída não são contabilizadas novamente no QDAA.',
       'Transferências entre locais não alteram o estoque total do gênero.',
-      'Correções operacionais positivas acrescentam estoque e correções negativas reduzem estoque.',
+      'Correções operacionais são registradas fisicamente com quantidade positiva; sua direção é determinada pelo local de origem ou destino.',
+      'No QDAA, correções que acrescentam estoque aparecem positivas e correções que reduzem estoque aparecem negativas.',
       'Os totais são separados por unidade de medida para evitar soma entre kg, litros e unidades.',
       'O relatório serve como apoio à conferência e elaboração do QDAA.',
     ],
