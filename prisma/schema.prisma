@@ -59,6 +59,7 @@ model Usuario {
   comprasQR                    CompraQR[]                       @relation("CompraQRCriador")
   conferenciasFLV              ConferenciaFLV[]                 @relation("ConferenciaFLVUsuario")
 }
+  cardapios                    Cardapio[]                       @relation("CardapioUsuario")
 
 model LocalArmazenamento {
   id                   String                @id @default(cuid())
@@ -402,6 +403,25 @@ model ConferenciaFLV {
   usuario     Usuario  @relation("ConferenciaFLVUsuario", fields: [usuarioId], references: [id])
   criadoEm    DateTime @default(now())
 
+model Cardapio {
+  id           String   @id @default(cuid())
+  data         DateTime @unique
+
+  cafe         String?
+  almoco       String?
+  jantar       String?
+  ceia         String?
+
+  observacao   String?
+
+  usuarioId    String
+  usuario      Usuario  @relation("CardapioUsuario", fields: [usuarioId], references: [id])
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@index([data])
+}
   @@index([data])
 }
 model RecursoQR {
