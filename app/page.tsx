@@ -7,31 +7,29 @@ export default function Home() {
     <div
       style={{
         position: 'fixed',
-        top: 0,
-        left: 0,
+        inset: 0,
         width: '100vw',
-        height: '100vh',
+        height: '100dvh',
         margin: 0,
         padding: 0,
         zIndex: 9999,
-        background: '#000',
+        background: '#07110b',
         overflow: 'hidden',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
       }}
     >
-      {/* Imagem de abertura — mantém exatamente
-          o preenchimento de tela que já funcionava */}
       <img
         src="/abertura-estoqueaprov.jpg.jpeg"
         alt="EstoqueAprov"
         draggable={false}
         style={{
           position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100vw',
-          height: '100vh',
-          maxWidth: 'none',
-          objectFit: 'cover',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          objectFit: 'contain',
           objectPosition: 'center',
           margin: 0,
           padding: 0,
@@ -41,7 +39,6 @@ export default function Home() {
         }}
       />
 
-      {/* Somente a região do botão ENTRAR é clicável */}
       <Link
         href="/login"
         aria-label="Entrar no EstoqueAprov"
@@ -56,10 +53,6 @@ export default function Home() {
         .botao-entrar {
           position: absolute;
 
-          /*
-           * Posição do botão existente
-           * na própria imagem.
-           */
           left: 50%;
           top: 48.4%;
 
@@ -96,10 +89,6 @@ export default function Home() {
             filter 90ms ease;
         }
 
-        /*
-         * Efeito físico ao pressionar:
-         * o botão "afunda" alguns pixels.
-         */
         .botao-entrar:active {
           transform:
             translate(-50%, calc(-50% + 6px))
@@ -125,14 +114,9 @@ export default function Home() {
           border: 0;
         }
 
-        /*
-         * No iPhone mantemos o mesmo centro
-         * do botão da arte, aumentando apenas
-         * a área de toque.
-         */
         @media (max-width: 600px) {
           .botao-entrar {
-            width: 46vw;
+            width: 48vw;
             max-width: 290px;
             min-width: 170px;
 
