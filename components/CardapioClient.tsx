@@ -29,6 +29,43 @@ type Props = {
   podeEditar: boolean;
 };
 
+const estiloCampo = {
+  width: '100%',
+  minHeight: '125px',
+  boxSizing: 'border-box' as const,
+  padding: '14px 16px',
+  borderRadius: '10px',
+  border: '1px solid #315846',
+  background: '#071a12',
+  color: '#f8fafc',
+  fontSize: '16px',
+  lineHeight: '1.5',
+  resize: 'vertical' as const,
+};
+
+const estiloObservacao = {
+  ...estiloCampo,
+  minHeight: '90px',
+};
+
+const estiloBlocoRefeicao = {
+  marginTop: '20px',
+};
+
+const estiloLabel = {
+  display: 'block',
+  marginBottom: '8px',
+  fontWeight: 700,
+  fontSize: '15px',
+};
+
+const estiloContador = {
+  textAlign: 'right' as const,
+  fontSize: '12px',
+  marginTop: '5px',
+  marginBottom: '4px',
+};
+
 function hojeLocal() {
   const agora = new Date();
 
@@ -169,23 +206,10 @@ export default function CardapioClient({
         dados.cardapio as Cardapio;
 
       setCardapio(encontrado);
-
-      setCafe(
-        encontrado.cafe || ''
-      );
-
-      setAlmoco(
-        encontrado.almoco || ''
-      );
-
-      setJantar(
-        encontrado.jantar || ''
-      );
-
-      setCeia(
-        encontrado.ceia || ''
-      );
-
+      setCafe(encontrado.cafe || '');
+      setAlmoco(encontrado.almoco || '');
+      setJantar(encontrado.jantar || '');
+      setCeia(encontrado.ceia || '');
       setObservacao(
         encontrado.observacao || ''
       );
@@ -279,23 +303,10 @@ export default function CardapioClient({
           dados.cardapio as Cardapio;
 
         setCardapio(salvo);
-
-        setCafe(
-          salvo.cafe || ''
-        );
-
-        setAlmoco(
-          salvo.almoco || ''
-        );
-
-        setJantar(
-          salvo.jantar || ''
-        );
-
-        setCeia(
-          salvo.ceia || ''
-        );
-
+        setCafe(salvo.cafe || '');
+        setAlmoco(salvo.almoco || '');
+        setJantar(salvo.jantar || '');
+        setCeia(salvo.ceia || '');
         setObservacao(
           salvo.observacao || ''
         );
@@ -373,8 +384,6 @@ export default function CardapioClient({
 
   return (
     <>
-      {/* SELEÇÃO DA DATA */}
-
       <div className="card">
         <h2>
           Cadastro / Consulta de
@@ -396,9 +405,7 @@ export default function CardapioClient({
           type="date"
           value={data}
           onChange={(e) =>
-            setData(
-              e.target.value
-            )
+            setData(e.target.value)
           }
           disabled={
             carregando ||
@@ -430,9 +437,7 @@ export default function CardapioClient({
             type="button"
             className="btn secondary"
             onClick={() =>
-              setData(
-                hojeLocal()
-              )
+              setData(hojeLocal())
             }
             disabled={
               carregando ||
@@ -457,8 +462,6 @@ export default function CardapioClient({
           </button>
         </div>
       </div>
-
-      {/* SITUAÇÃO */}
 
       {carregando && (
         <div className="card">
@@ -526,8 +529,6 @@ export default function CardapioClient({
         </div>
       )}
 
-      {/* CARDÁPIO */}
-
       {!carregando && (
         <div className="card">
           <h2>
@@ -541,186 +542,218 @@ export default function CardapioClient({
             refeição.
           </p>
 
-          <label>
-            Café
-          </label>
-
-          <textarea
-            value={cafe}
-            onChange={(e) =>
-              setCafe(
-                e.target.value
-              )
-            }
-            maxLength={1000}
-            rows={5}
-            disabled={
-              !podeEditar ||
-              salvando
-            }
-            placeholder={
-              podeEditar
-                ? 'Ex.: Café com leite\nPão com margarina\nFrutas'
-                : 'Não informado'
-            }
-          />
-
           <div
-            className="muted"
-            style={{
-              textAlign: 'right',
-              fontSize: 12,
-              marginBottom: 16,
-            }}
+            style={
+              estiloBlocoRefeicao
+            }
           >
-            {cafe.length}/1000
+            <label
+              style={estiloLabel}
+            >
+              ☕ Café
+            </label>
+
+            <textarea
+              value={cafe}
+              onChange={(e) =>
+                setCafe(
+                  e.target.value
+                )
+              }
+              maxLength={1000}
+              disabled={
+                !podeEditar ||
+                salvando
+              }
+              style={estiloCampo}
+              placeholder={
+                podeEditar
+                  ? 'Ex.: Café com leite\nPão com margarina\nFrutas'
+                  : 'Não informado'
+              }
+            />
+
+            <div
+              className="muted"
+              style={
+                estiloContador
+              }
+            >
+              {cafe.length}/1000
+            </div>
           </div>
 
-          <label>
-            Almoço
-          </label>
-
-          <textarea
-            value={almoco}
-            onChange={(e) =>
-              setAlmoco(
-                e.target.value
-              )
-            }
-            maxLength={1000}
-            rows={5}
-            disabled={
-              !podeEditar ||
-              salvando
-            }
-            placeholder={
-              podeEditar
-                ? 'Ex.: Arroz\nFeijão\nCarne com mandioca\nSalada'
-                : 'Não informado'
-            }
-          />
-
           <div
-            className="muted"
-            style={{
-              textAlign: 'right',
-              fontSize: 12,
-              marginBottom: 16,
-            }}
+            style={
+              estiloBlocoRefeicao
+            }
           >
-            {almoco.length}/1000
+            <label
+              style={estiloLabel}
+            >
+              🍽️ Almoço
+            </label>
+
+            <textarea
+              value={almoco}
+              onChange={(e) =>
+                setAlmoco(
+                  e.target.value
+                )
+              }
+              maxLength={1000}
+              disabled={
+                !podeEditar ||
+                salvando
+              }
+              style={estiloCampo}
+              placeholder={
+                podeEditar
+                  ? 'Ex.: Arroz\nFeijão\nCarne com mandioca\nSalada'
+                  : 'Não informado'
+              }
+            />
+
+            <div
+              className="muted"
+              style={
+                estiloContador
+              }
+            >
+              {almoco.length}/1000
+            </div>
           </div>
 
-          <label>
-            Jantar
-          </label>
-
-          <textarea
-            value={jantar}
-            onChange={(e) =>
-              setJantar(
-                e.target.value
-              )
-            }
-            maxLength={1000}
-            rows={5}
-            disabled={
-              !podeEditar ||
-              salvando
-            }
-            placeholder={
-              podeEditar
-                ? 'Informe o cardápio do jantar'
-                : 'Não informado'
-            }
-          />
-
           <div
-            className="muted"
-            style={{
-              textAlign: 'right',
-              fontSize: 12,
-              marginBottom: 16,
-            }}
+            style={
+              estiloBlocoRefeicao
+            }
           >
-            {jantar.length}/1000
+            <label
+              style={estiloLabel}
+            >
+              🍲 Jantar
+            </label>
+
+            <textarea
+              value={jantar}
+              onChange={(e) =>
+                setJantar(
+                  e.target.value
+                )
+              }
+              maxLength={1000}
+              disabled={
+                !podeEditar ||
+                salvando
+              }
+              style={estiloCampo}
+              placeholder={
+                podeEditar
+                  ? 'Informe o cardápio do jantar'
+                  : 'Não informado'
+              }
+            />
+
+            <div
+              className="muted"
+              style={
+                estiloContador
+              }
+            >
+              {jantar.length}/1000
+            </div>
           </div>
 
-          <label>
-            Ceia
-          </label>
-
-          <textarea
-            value={ceia}
-            onChange={(e) =>
-              setCeia(
-                e.target.value
-              )
-            }
-            maxLength={1000}
-            rows={5}
-            disabled={
-              !podeEditar ||
-              salvando
-            }
-            placeholder={
-              podeEditar
-                ? 'Informe o cardápio da ceia'
-                : 'Não informado'
-            }
-          />
-
           <div
-            className="muted"
-            style={{
-              textAlign: 'right',
-              fontSize: 12,
-              marginBottom: 16,
-            }}
+            style={
+              estiloBlocoRefeicao
+            }
           >
-            {ceia.length}/1000
+            <label
+              style={estiloLabel}
+            >
+              🌙 Ceia
+            </label>
+
+            <textarea
+              value={ceia}
+              onChange={(e) =>
+                setCeia(
+                  e.target.value
+                )
+              }
+              maxLength={1000}
+              disabled={
+                !podeEditar ||
+                salvando
+              }
+              style={estiloCampo}
+              placeholder={
+                podeEditar
+                  ? 'Informe o cardápio da ceia'
+                  : 'Não informado'
+              }
+            />
+
+            <div
+              className="muted"
+              style={
+                estiloContador
+              }
+            >
+              {ceia.length}/1000
+            </div>
           </div>
 
-          <label>
-            Observação
-          </label>
-
-          <textarea
-            value={observacao}
-            onChange={(e) =>
-              setObservacao(
-                e.target.value
-              )
-            }
-            maxLength={1000}
-            rows={3}
-            disabled={
-              !podeEditar ||
-              salvando
-            }
-            placeholder={
-              podeEditar
-                ? 'Observação opcional'
-                : 'Sem observação'
-            }
-          />
-
           <div
-            className="muted"
-            style={{
-              textAlign: 'right',
-              fontSize: 12,
-              marginBottom: 16,
-            }}
+            style={
+              estiloBlocoRefeicao
+            }
           >
-            {observacao.length}
-            /1000
+            <label
+              style={estiloLabel}
+            >
+              📝 Observação
+            </label>
+
+            <textarea
+              value={observacao}
+              onChange={(e) =>
+                setObservacao(
+                  e.target.value
+                )
+              }
+              maxLength={1000}
+              disabled={
+                !podeEditar ||
+                salvando
+              }
+              style={
+                estiloObservacao
+              }
+              placeholder={
+                podeEditar
+                  ? 'Observação opcional'
+                  : 'Sem observação'
+              }
+            />
+
+            <div
+              className="muted"
+              style={
+                estiloContador
+              }
+            >
+              {observacao.length}
+              /1000
+            </div>
           </div>
 
           {erro && (
             <div
               style={{
-                marginTop: 12,
+                marginTop: 16,
                 padding: 12,
                 border:
                   '1px solid #ef4444',
@@ -736,7 +769,7 @@ export default function CardapioClient({
           {mensagem && (
             <div
               style={{
-                marginTop: 12,
+                marginTop: 16,
                 padding: 12,
                 border:
                   '1px solid #22c55e',
@@ -753,7 +786,7 @@ export default function CardapioClient({
             <div
               className="actions"
               style={{
-                marginTop: 16,
+                marginTop: 20,
               }}
             >
               <button
