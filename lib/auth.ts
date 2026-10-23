@@ -2,55 +2,69 @@ import { cookies } from 'next/headers';
 import { SignJWT, jwtVerify } from 'jose';
 import { prisma } from './prisma';
 
-const authSecret = process.env.AUTH_SECRET;
-
-if (!authSecret) {
-  throw new Error(
-    'AUTH_SECRET não está configurado. Defina uma chave segura nas variáveis de ambiente.'
-  );
-}
-
-const secret = new TextEncoder().encode(
-  authSecret
-);
-
 const COOKIE =
   'estoqueaprov_session';
+
+function getSecret() {
+  const authSecret =
+    process.env.AUTH_SECRET;
+
+  if (!authSecret) {
+    throw new Error(
+      'AUTH_SECRET não está configurado. Defina uma chave segura nas variáveis de ambiente.'
+    );
+  }
+
+  return new TextEncoder().encode(
+    authSecret
+  );
+}
 
 export async function createSession(
   userId: string
 ) {
-  const token = await new SignJWT({
-    userId,
-  })
-    .setProtectedHeader({
-      alg: 'HS256',
+  const secret = getSecret();
+
+  const token =
+    await new SignJWT({
+      userId,
     })
-    .setIssuedAt()
-    .setExpirationTime('12h')
-    .sign(secret);
+      .setProtectedHeader({
+        alg: 'HS256',
+      })
+      .setIssuedAt()
+      .setExpirationTime('12h')
+      .sign(secret);
 
-  const store = await cookies();
+  const store =
+    await cookies();
 
-  store.set(COOKIE, token, {
-    httpOnly: true,
-    sameSite: 'lax',
-    secure:
-      process.env.NODE_ENV ===
-      'production',
-    path: '/',
-    maxAge: 60 * 60 * 12,
-  });
+  store.set(
+    COOKIE,
+    token,
+    {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure:
+        process.env.NODE_ENV ===
+        'production',
+      path: '/',
+      maxAge:
+        60 * 60 * 12,
+    }
+  );
 }
 
 export async function clearSession() {
-  const store = await cookies();
+  const store =
+    await cookies();
 
   store.delete(COOKIE);
 }
 
 export async function currentUser() {
-  const store = await cookies();
+  const store =
+    await cookies();
 
   const token =
     store.get(COOKIE)?.value;
@@ -60,6 +74,9 @@ export async function currentUser() {
   }
 
   try {
+    const secret =
+      getSecret();
+
     const { payload } =
       await jwtVerify(
         token,
