@@ -63,6 +63,7 @@ export default async function AvisosPage() {
     inicioDoDiaUTC(hoje);
 
   const amanha = new Date(hoje);
+
   amanha.setDate(
     amanha.getDate() + 1
   );
@@ -281,6 +282,22 @@ export default async function AvisosPage() {
 
   const quantidadeDiasPendentes =
     diasPendentes.size;
+
+  /*
+   * CARDÁPIO SEMANAL
+   *
+   * Sexta-feira:
+   * lembra o Administrador de
+   * preparar o cardápio da
+   * próxima semana.
+   */
+
+  const diaDaSemana =
+    hoje.getDay();
+
+  const exibirLembreteCardapio =
+    administrador &&
+    diaDaSemana === 5;
 
   /*
    * QDAA
@@ -567,7 +584,7 @@ export default async function AvisosPage() {
           </div>
         )}
 
-      {/* VALIDADE */}
+      {/* VALIDADE PRÓXIMA */}
 
       {podeVerEstoque &&
         quantidadeProximosDaValidade >
@@ -615,6 +632,8 @@ export default async function AvisosPage() {
           </div>
         )}
 
+      {/* LOTES VENCIDOS */}
+
       {podeVerEstoque &&
         quantidadeVencidos > 0 && (
           <div
@@ -660,6 +679,56 @@ export default async function AvisosPage() {
             </div>
           </div>
         )}
+
+      {/* CARDÁPIO DA PRÓXIMA SEMANA */}
+
+      {exibirLembreteCardapio && (
+        <div
+          className="card"
+          style={{
+            border:
+              '1px solid #3b82f6',
+
+            background:
+              'rgba(59, 130, 246, 0.08)',
+          }}
+        >
+          <h2
+            style={{
+              marginTop: 0,
+            }}
+          >
+            📅 Cardápio da próxima
+            semana
+          </h2>
+
+          <p>
+            <strong>
+              Hoje é sexta-feira.
+            </strong>
+          </p>
+
+          <p className="muted">
+            Verifique e cadastre o
+            cardápio previsto para a
+            próxima semana. Esse
+            planejamento auxilia a
+            organização do
+            Aprovisionamento e o
+            consumo dos gêneros,
+            especialmente os FLV.
+          </p>
+
+          <div className="actions">
+            <Link
+              className="btn secondary"
+              href="/cardapio"
+            >
+              Acessar Cardápio
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* QDAA */}
 
@@ -725,6 +794,7 @@ export default async function AvisosPage() {
         fechamentosPendentes.length ===
           0 &&
         efetivoAmanhaInformado &&
+        !exibirLembreteCardapio &&
         !exibirLembreteQDAA && (
           <div className="card">
             <h2
