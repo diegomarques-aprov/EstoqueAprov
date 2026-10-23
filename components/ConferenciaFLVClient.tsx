@@ -20,6 +20,21 @@ type Conferencia = {
   usuario: UsuarioConferencia;
 };
 
+const estiloCampoObservacao = {
+  width: '100%',
+  minHeight: '105px',
+  boxSizing: 'border-box' as const,
+  marginTop: '8px',
+  padding: '14px 16px',
+  borderRadius: '10px',
+  border: '1px solid #315846',
+  background: '#071a12',
+  color: '#f8fafc',
+  fontSize: '16px',
+  lineHeight: '1.5',
+  resize: 'vertical' as const,
+};
+
 export default function ConferenciaFLVClient() {
   const [carregando, setCarregando] =
     useState(true);
@@ -233,6 +248,8 @@ export default function ConferenciaFLVClient() {
             <p
               style={{
                 marginBottom: 0,
+                whiteSpace:
+                  'pre-wrap',
               }}
             >
               {
@@ -289,9 +306,29 @@ export default function ConferenciaFLVClient() {
         de Resfriamento.
       </p>
 
-      <label>
-        Observação da conferência
-        (opcional)
+      <div
+        style={{
+          marginTop: 18,
+        }}
+      >
+        <label
+          style={{
+            display: 'block',
+            fontWeight: 700,
+            fontSize: '15px',
+          }}
+        >
+          📝 Observação da conferência
+          <span
+            className="muted"
+            style={{
+              fontWeight: 400,
+            }}
+          >
+            {' '}
+            (opcional)
+          </span>
+        </label>
 
         <textarea
           value={observacao}
@@ -302,11 +339,22 @@ export default function ConferenciaFLVClient() {
             )
           }
           placeholder="Ex.: tomate com amadurecimento avançado; priorizar consumo."
-          style={{
-            minHeight: 80,
-          }}
+          style={
+            estiloCampoObservacao
+          }
         />
-      </label>
+
+        <div
+          className="muted"
+          style={{
+            marginTop: 5,
+            textAlign: 'right',
+            fontSize: '12px',
+          }}
+        >
+          {observacao.length}/500
+        </div>
+      </div>
 
       {erro && (
         <div
@@ -322,7 +370,7 @@ export default function ConferenciaFLVClient() {
       <div
         className="actions"
         style={{
-          marginTop: 14,
+          marginTop: 16,
         }}
       >
         <button
