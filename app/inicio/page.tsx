@@ -355,11 +355,13 @@ export default async function Inicio() {
               Gêneros QS/QR
             </Link>
 
-            {/*
-             * O botão Cardápio será
-             * habilitado assim que o
-             * módulo for criado.
-             */}
+            <Link
+              className="btn"
+              style={estiloBotaoAzul}
+              href="/cardapio"
+            >
+              Cardápio
+            </Link>
           </div>
         </div>
       )}
