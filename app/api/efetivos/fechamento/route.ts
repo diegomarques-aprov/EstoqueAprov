@@ -5,25 +5,28 @@ import { z } from 'zod';
 const ItemFechamentoSchema = z.object({
   id: z.string().min(1),
 
-  // Arranchados que realmente fizeram a refeição.
+  // Quantidade efetivamente alimentada na refeição.
+  // Pode ser superior ao efetivo inicialmente previsto.
   arranchadosCompareceram: z.coerce
     .number()
     .int()
     .min(0),
 
-  // Arranchados previstos que faltaram à refeição.
+  // Arranchados previstos que não compareceram.
   faltas: z.coerce
     .number()
     .int()
     .min(0),
 
-  // Pessoas atendidas que não estavam no efetivo previsto.
+  // Pessoas atendidas que não estavam arranchadas.
   naoArranchadosAtendidos: z.coerce
     .number()
     .int()
     .min(0),
 
-  // Sobras registradas separadamente do efetivo.
+  // Mantido temporariamente nesta etapa.
+  // Será transformado em sobra única diária
+  // na próxima correção.
   sobraKg: z.coerce
     .number()
     .min(0),
@@ -59,7 +62,7 @@ export async function POST(req: Request) {
     return Response.json(
       {
         error:
-          'Para concluir o fechamento, informe a data do serviço, o efetivo alimentado, as faltas, os militares de fora atendidos e a sobra pesada de todas as refeições.',
+          'Para concluir o fechamento, informe corretamente os dados do serviço diário.',
       },
       {
         status: 400,
@@ -70,10 +73,6 @@ export async function POST(req: Request) {
   const dados = validacao.data;
   const dataServico = dia(dados.data);
 
-  /*
-   * Confere se todos os registros enviados
-   * pertencem à data de serviço selecionada.
-   */
   const registros =
     await prisma.arranchamento.findMany({
       where: {
@@ -103,59 +102,18 @@ export async function POST(req: Request) {
   }
 
   /*
-   * Validação de consistência do efetivo.
+   * O efetivo realmente alimentado pode ser
+   * superior ao efetivo previsto.
    *
-   * Arranchados que compareceram + faltas
-   * não podem ultrapassar o efetivo previsto.
+   * Isso pode ocorrer quando militares não
+   * inicialmente arranchados comparecem à
+   * refeição.
    *
-   * Militares de fora não entram nessa conta,
-   * pois não pertenciam ao efetivo previsto.
+   * Portanto, o efetivo previsto serve como
+   * referência de planejamento e não como
+   * limite para o fechamento do serviço.
    */
-  for (const item of dados.itens) {
-    const registro =
-      registros.find(
-        (r) => r.id === item.id
-      );
 
-    if (!registro) {
-      return Response.json(
-        {
-          error:
-            'Registro de arranchamento não encontrado.',
-        },
-        {
-          status: 400,
-        }
-      );
-    }
-
-    const totalDoEfetivoPrevisto =
-      item.arranchadosCompareceram +
-      item.faltas;
-
-    if (
-      totalDoEfetivoPrevisto >
-      registro.totalPrevisto
-    ) {
-      return Response.json(
-        {
-          error:
-            `Na refeição ${registro.refeicao}, a soma do efetivo alimentado (${item.arranchadosCompareceram}) com as faltas (${item.faltas}) ultrapassa o efetivo previsto (${registro.totalPrevisto}). Corrija os valores para prosseguir.`,
-        },
-        {
-          status: 400,
-        }
-      );
-    }
-  }
-
-  /*
-   * Todos os fechamentos são realizados
-   * em uma única transação.
-   *
-   * Se algum deles falhar, nenhum
-   * fechamento será confirmado.
-   */
   const resultado =
     await prisma.$transaction(
       async (tx) => {
@@ -174,13 +132,11 @@ export async function POST(req: Request) {
           }
 
           /*
-           * Total realmente atendido:
+           * Total de atendimentos registrados:
            *
-           * arranchados que compareceram
+           * efetivo alimentado
            * +
-           * militares de fora atendidos.
-           *
-           * As faltas não entram nessa soma.
+           * militares de fora informados.
            */
           const totalAtendido =
             item.arranchadosCompareceram +
@@ -207,27 +163,11 @@ export async function POST(req: Request) {
                 sobraKg:
                   item.sobraKg,
 
-                /*
-                 * Momento real em que o fechamento
-                 * foi registrado.
-                 *
-                 * A data operacional permanece em
-                 * Arranchamento.data.
-                 */
                 fechamentoRealizadoEm:
                   new Date(),
               },
             });
 
-          /*
-           * Auditoria:
-           *
-           * primeiro lançamento =
-           * FECHAMENTO_REFEICAO
-           *
-           * alteração posterior =
-           * CORRECAO_FECHAMENTO
-           */
           await tx.auditoria.create({
             data: {
               usuarioId: g.user!.id,
@@ -312,12 +252,6 @@ export async function POST(req: Request) {
       }
     );
 
-  /*
-   * Consolidação diária.
-   *
-   * Uma mesma pessoa pode aparecer
-   * em mais de uma refeição.
-   */
   const totalEfetivoAlimentado =
     resultado.reduce(
       (total, item) =>
