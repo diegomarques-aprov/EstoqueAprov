@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { currentUser } from '@/lib/auth';
 import FechamentoDiarioClient from '@/components/FechamentoDiarioClient';
+import NavegacaoInferior from '@/components/NavegacaoInferior';
 
 export default async function Page() {
   const user = await currentUser();
@@ -31,6 +32,11 @@ export default async function Page() {
       <h1>Fechamento Diário</h1>
 
       <FechamentoDiarioClient />
+
+      <NavegacaoInferior
+        voltarHref="/efetivo"
+        voltarTexto="Efetivo alimentado"
+      />
     </main>
   );
 }
