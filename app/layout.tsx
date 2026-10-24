@@ -1,8 +1,11 @@
 import './globals.css';
+
 import type {
   Metadata,
   Viewport,
 } from 'next';
+
+import NavigationFooter from '@/components/NavigationFooter';
 
 export const metadata: Metadata = {
   title: 'EstoqueAprov',
@@ -61,7 +64,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR">
-      <body>{children}</body>
+      <body>
+        {children}
+
+        <NavigationFooter />
+      </body>
     </html>
   );
 }
