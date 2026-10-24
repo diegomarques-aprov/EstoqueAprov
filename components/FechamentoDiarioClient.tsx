@@ -31,17 +31,22 @@ type Valores = {
   militaresDeFora: string;
 };
 
+type FechamentoDiario = {
+  id: string;
+  data: string;
+  sobraKg: number;
+  observacao: string | null;
+  criadoEm: string;
+  atualizadoEm: string;
+};
+
 function dataLocal(offsetDias = 0) {
   const agora = new Date();
   agora.setDate(agora.getDate() + offsetDias);
 
   const ano = agora.getFullYear();
-  const mes = String(
-    agora.getMonth() + 1
-  ).padStart(2, '0');
-  const dia = String(
-    agora.getDate()
-  ).padStart(2, '0');
+  const mes = String(agora.getMonth() + 1).padStart(2, '0');
+  const dia = String(agora.getDate()).padStart(2, '0');
 
   return `${ano}-${mes}-${dia}`;
 }
@@ -55,97 +60,105 @@ function numero(valor: string) {
 }
 
 function dataBR(data: string) {
-  const [ano, mes, dia] =
-    data.split('-');
-
+  const [ano, mes, dia] = data.split('-');
   return `${dia}/${mes}/${ano}`;
 }
 
 export default function FechamentoDiarioClient() {
-  const [data, setData] =
-    useState(dataLocal(-1));
+  const [data, setData] = useState(dataLocal(-1));
 
-  const [rows, setRows] =
-    useState<Arranchamento[]>([]);
+  const [rows, setRows] = useState<Arranchamento[]>([]);
 
-  const [valores, setValores] =
-    useState<Record<string, Valores>>(
-      {}
-    );
+  const [valores, setValores] = useState<
+    Record<string, Valores>
+  >({});
 
-  /*
-   * A sobra pertence ao serviço diário,
-   * e não a uma refeição específica.
-   */
-  const [sobraKg, setSobraKg] =
-    useState('');
+  const [fechamentoExistente, setFechamentoExistente] =
+    useState<FechamentoDiario | null>(null);
 
-  const [observacao, setObservacao] =
-    useState('');
+  const [sobraKg, setSobraKg] = useState('');
+  const [observacao, setObservacao] = useState('');
 
-  const [carregando, setCarregando] =
-    useState(false);
+  const [carregando, setCarregando] = useState(false);
+  const [salvando, setSalvando] = useState(false);
 
-  const [salvando, setSalvando] =
-    useState(false);
-
-  const [msg, setMsg] =
-    useState('');
-
-  const [erro, setErro] =
-    useState('');
+  const [msg, setMsg] = useState('');
+  const [erro, setErro] = useState('');
 
   async function carregar() {
     setCarregando(true);
     setMsg('');
     setErro('');
 
-    /*
-     * Enquanto o fechamento diário ainda
-     * não possui consulta própria, os campos
-     * finais começam vazios ao trocar a data.
-     */
-    setSobraKg('');
-    setObservacao('');
-
     try {
-      const r = await fetch(
-        `/api/efetivos?inicio=${data}&fim=${data}`,
-        {
-          cache: 'no-store',
-        }
-      );
+      /*
+       * Carrega em conjunto:
+       *
+       * 1. arranchamentos/refeições do dia;
+       * 2. fechamento diário, se já existir.
+       */
+      const [resEfetivos, resFechamento] =
+        await Promise.all([
+          fetch(
+            `/api/efetivos?inicio=${data}&fim=${data}`,
+            {
+              cache: 'no-store',
+            }
+          ),
 
-      const j = await r.json();
+          fetch(
+            `/api/efetivos/fechamento?data=${data}`,
+            {
+              cache: 'no-store',
+            }
+          ),
+        ]);
 
-      if (!r.ok) {
+      const dadosEfetivos = await resEfetivos.json();
+      const dadosFechamento =
+        await resFechamento.json();
+
+      if (!resEfetivos.ok) {
         setErro(
-          j.error ||
+          dadosEfetivos.error ||
             'Não foi possível consultar os dados do serviço.'
         );
 
         setRows([]);
         setValores({});
+        setFechamentoExistente(null);
+        setSobraKg('');
+        setObservacao('');
+
         return;
       }
 
-      setRows(j);
+      if (!resFechamento.ok) {
+        setErro(
+          dadosFechamento.error ||
+            'Não foi possível consultar o fechamento diário.'
+        );
 
-      const iniciais: Record<
-        string,
-        Valores
-      > = {};
+        setRows([]);
+        setValores({});
+        setFechamentoExistente(null);
+        setSobraKg('');
+        setObservacao('');
+
+        return;
+      }
+
+      setRows(dadosEfetivos);
+
+      const iniciais: Record<string, Valores> = {};
 
       for (
-        const item of j as Arranchamento[]
+        const item of dadosEfetivos as Arranchamento[]
       ) {
         iniciais[item.id] = {
           alimentado:
-            item.arranchadosCompareceram !==
-            null
-              ? String(
-                  item.arranchadosCompareceram
-                )
+            item.arranchadosCompareceram !== null
+              ? String(item.arranchadosCompareceram)
               : '',
 
           faltas:
@@ -155,14 +168,27 @@ export default function FechamentoDiarioClient() {
 
           militaresDeFora:
             item.fechamentoRealizadoEm
-              ? String(
-                  item.naoArranchadosAtendidos
-                )
+              ? String(item.naoArranchadosAtendidos)
               : '0',
         };
       }
 
       setValores(iniciais);
+
+      const fechamento =
+        dadosFechamento.fechamento as
+          | FechamentoDiario
+          | null;
+
+      setFechamentoExistente(fechamento);
+
+      if (fechamento) {
+        setSobraKg(String(fechamento.sobraKg));
+        setObservacao(fechamento.observacao || '');
+      } else {
+        setSobraKg('');
+        setObservacao('');
+      }
     } catch {
       setErro(
         'Não foi possível comunicar com o sistema.'
@@ -170,6 +196,9 @@ export default function FechamentoDiarioClient() {
 
       setRows([]);
       setValores({});
+      setFechamentoExistente(null);
+      setSobraKg('');
+      setObservacao('');
     } finally {
       setCarregando(false);
     }
@@ -200,9 +229,11 @@ export default function FechamentoDiarioClient() {
   const todosFechados =
     rows.length > 0 &&
     rows.every(
-      (item) =>
-        item.fechamentoRealizadoEm
+      (item) => item.fechamentoRealizadoEm
     );
+
+  const fechamentoConcluido =
+    todosFechados && fechamentoExistente !== null;
 
   const resumo = useMemo(() => {
     let previsto = 0;
@@ -212,31 +243,20 @@ export default function FechamentoDiarioClient() {
     let totalAtendido = 0;
 
     for (const item of rows) {
-      previsto +=
-        item.totalPrevisto;
+      previsto += item.totalPrevisto;
 
-      const v =
-        valores[item.id];
+      const v = valores[item.id];
 
       if (!v) continue;
 
-      const a =
-        numero(v.alimentado);
-
-      const f =
-        numero(v.faltas);
-
-      const m =
-        numero(
-          v.militaresDeFora
-        );
+      const a = numero(v.alimentado);
+      const f = numero(v.faltas);
+      const m = numero(v.militaresDeFora);
 
       alimentado += a;
       faltas += f;
       militaresDeFora += m;
-
-      totalAtendido +=
-        a + m;
+      totalAtendido += a + m;
     }
 
     return {
@@ -258,17 +278,12 @@ export default function FechamentoDiarioClient() {
     }
 
     for (const item of rows) {
-      const v =
-        valores[item.id];
+      const v = valores[item.id];
 
       const refeicao =
-        nomes[item.refeicao] ||
-        item.refeicao;
+        nomes[item.refeicao] || item.refeicao;
 
-      if (
-        !v ||
-        v.alimentado.trim() === ''
-      ) {
+      if (!v || v.alimentado.trim() === '') {
         setErro(
           `Para concluir o lançamento, informe o efetivo alimentado no ${refeicao}.`
         );
@@ -276,9 +291,7 @@ export default function FechamentoDiarioClient() {
         return false;
       }
 
-      if (
-        v.faltas.trim() === ''
-      ) {
+      if (v.faltas.trim() === '') {
         setErro(
           `Para concluir o lançamento, informe as faltas no ${refeicao}. Se não houve faltas, informe 0.`
         );
@@ -286,10 +299,7 @@ export default function FechamentoDiarioClient() {
         return false;
       }
 
-      if (
-        v.militaresDeFora.trim() ===
-        ''
-      ) {
+      if (v.militaresDeFora.trim() === '') {
         setErro(
           `Para concluir o lançamento, informe os militares de fora atendidos no ${refeicao}. Se não houve, informe 0.`
         );
@@ -298,13 +308,7 @@ export default function FechamentoDiarioClient() {
       }
     }
 
-    /*
-     * A sobra é obrigatória uma única vez
-     * ao final do serviço.
-     */
-    if (
-      sobraKg.trim() === ''
-    ) {
+    if (sobraKg.trim() === '') {
       setErro(
         'Para concluir o fechamento, informe a sobra pesada total do serviço em kg. Se não houve sobra, informe 0.'
       );
@@ -313,9 +317,7 @@ export default function FechamentoDiarioClient() {
     }
 
     if (
-      !Number.isFinite(
-        Number(sobraKg)
-      ) ||
+      !Number.isFinite(Number(sobraKg)) ||
       Number(sobraKg) < 0
     ) {
       setErro(
@@ -337,9 +339,9 @@ export default function FechamentoDiarioClient() {
     }
 
     if (
-      todosFechados &&
+      fechamentoConcluido &&
       !window.confirm(
-        'Este dia já possui lançamento realizado. Deseja registrar uma correção dos dados? A alteração ficará registrada na auditoria.'
+        'Este serviço já possui fechamento registrado. Deseja corrigir os dados? A alteração ficará registrada na auditoria.'
       )
     ) {
       return;
@@ -348,30 +350,22 @@ export default function FechamentoDiarioClient() {
     setSalvando(true);
 
     try {
-      const itens =
-        rows.map((item) => {
-          const v =
-            valores[item.id];
+      const itens = rows.map((item) => {
+        const v = valores[item.id];
 
-          return {
-            id: item.id,
+        return {
+          id: item.id,
 
-            arranchadosCompareceram:
-              numero(
-                v.alimentado
-              ),
+          arranchadosCompareceram:
+            numero(v.alimentado),
 
-            faltas:
-              numero(
-                v.faltas
-              ),
+          faltas:
+            numero(v.faltas),
 
-            naoArranchadosAtendidos:
-              numero(
-                v.militaresDeFora
-              ),
-          };
-        });
+          naoArranchadosAtendidos:
+            numero(v.militaresDeFora),
+        };
+      });
 
       const r = await fetch(
         '/api/efetivos/fechamento',
@@ -379,31 +373,19 @@ export default function FechamentoDiarioClient() {
           method: 'POST',
 
           headers: {
-            'content-type':
-              'application/json',
+            'content-type': 'application/json',
           },
 
           body: JSON.stringify({
             data,
-
             itens,
-
-            /*
-             * Uma única sobra para todo
-             * o serviço do dia.
-             */
-            sobraKg:
-              numero(sobraKg),
-
-            observacao:
-              observacao.trim() ||
-              null,
+            sobraKg: numero(sobraKg),
+            observacao: observacao.trim() || null,
           }),
         }
       );
 
-      const j =
-        await r.json();
+      const j = await r.json();
 
       if (!r.ok) {
         setErro(
@@ -414,72 +396,21 @@ export default function FechamentoDiarioClient() {
         return;
       }
 
+      /*
+       * Recarrega os dados após salvar.
+       * Agora isso é seguro porque a API GET
+       * recupera também a sobra e a observação.
+       */
+      await carregar();
+
       setMsg(
         `Fechamento do serviço de ${dataBR(
           data
-        )} registrado com sucesso. Foram ${
-          j.quantidadeRefeicoes
-        } refeição${
-          j.quantidadeRefeicoes ===
-          1
-            ? ''
-            : 'ões'
-        } registrada${
-          j.quantidadeRefeicoes ===
-          1
-            ? ''
-            : 's'
-        }, com ${
+        )} registrado com sucesso. Total de ${
           j.resumo.totalAtendido
-        } atendimento${
-          j.resumo.totalAtendido ===
-          1
-            ? ''
-            : 's'
-        } e ${
+        } atendimentos e ${
           j.resumo.sobraKg
-        } kg de sobra total.`
-      );
-
-      /*
-       * Não chamamos carregar() aqui,
-       * pois isso apagaria da tela a
-       * sobra recém-registrada.
-       *
-       * Atualizamos apenas o estado dos
-       * arranchamentos como fechados.
-       */
-      const agora =
-        new Date().toISOString();
-
-      setRows((anterior) =>
-        anterior.map(
-          (item) => ({
-            ...item,
-
-            fechamentoRealizadoEm:
-              agora,
-
-            arranchadosCompareceram:
-              numero(
-                valores[item.id]
-                  ?.alimentado || '0'
-              ),
-
-            faltas:
-              numero(
-                valores[item.id]
-                  ?.faltas || '0'
-              ),
-
-            naoArranchadosAtendidos:
-              numero(
-                valores[item.id]
-                  ?.militaresDeFora ||
-                  '0'
-              ),
-          })
-        )
+        } kg de sobra.`
       );
     } catch {
       setErro(
@@ -493,18 +424,14 @@ export default function FechamentoDiarioClient() {
   return (
     <>
       <div className="card">
-        <h2>
-          Efetivo alimentado
-        </h2>
+        <h2>Efetivo alimentado</h2>
 
         <p className="muted">
-          Registre o efetivo real de
-          cada refeição do dia. O
-          efetivo previsto serve como
-          referência de planejamento e
-          pode ser ultrapassado quando
-          houver atendimento de
-          militares não previstos.
+          Registre o efetivo real de cada refeição.
+          O efetivo previsto serve como referência
+          de planejamento e pode ser ultrapassado
+          quando houver atendimento de militares
+          não previstos.
         </p>
 
         <label>
@@ -515,289 +442,239 @@ export default function FechamentoDiarioClient() {
             value={data}
             max={dataLocal(0)}
             onChange={(e) =>
-              setData(
-                e.target.value
-              )
+              setData(e.target.value)
             }
           />
         </label>
 
         <p className="muted">
           Data selecionada:{' '}
-          <strong>
-            {dataBR(data)}
-          </strong>
+          <strong>{dataBR(data)}</strong>
         </p>
+
+        {fechamentoConcluido && (
+          <div
+            style={{
+              marginTop: 15,
+              padding: 12,
+              borderRadius: 10,
+              border: '1px solid #315846',
+              background: 'rgba(34,197,94,.08)',
+            }}
+          >
+            <strong>✓ Serviço fechado</strong>
+
+            <div className="muted">
+              Os dados abaixo correspondem ao
+              fechamento já registrado. Eles podem
+              ser corrigidos, se necessário.
+            </div>
+          </div>
+        )}
       </div>
 
       {carregando ? (
         <div className="card">
           <p className="muted">
-            Consultando dados do
-            serviço...
+            Consultando dados do serviço...
           </p>
         </div>
       ) : rows.length === 0 ? (
         <div
           className="card"
           style={{
-            border:
-              '1px solid #f59e0b',
-
+            border: '1px solid #f59e0b',
             background:
               'rgba(245, 158, 11, 0.08)',
           }}
         >
-          <h2>
-            ⚠ Sem lançamento
-          </h2>
+          <h2>⚠ Sem lançamento</h2>
 
           <p>
-            Não houve lançamento de
-            arranchamento para o serviço
-            de{' '}
-            <strong>
-              {dataBR(data)}
-            </strong>.
+            Não houve lançamento de arranchamento
+            para o serviço de{' '}
+            <strong>{dataBR(data)}</strong>.
           </p>
 
           <p className="muted">
-            Faça primeiro o planejamento
-            do efetivo para essa data.
+            Faça primeiro o planejamento do efetivo
+            para essa data.
           </p>
         </div>
       ) : (
         <>
           <div className="card">
-            <h2>
-              Efetivo por refeição
-            </h2>
+            <h2>Efetivo por refeição</h2>
 
-            {rows.map(
-              (item) => {
-                const v =
-                  valores[item.id] || {
-                    alimentado: '',
-                    faltas: '',
-                    militaresDeFora:
-                      '0',
-                  };
+            {rows.map((item) => {
+              const v = valores[item.id] || {
+                alimentado: '',
+                faltas: '',
+                militaresDeFora: '0',
+              };
 
-                const total =
-                  numero(
-                    v.alimentado
-                  ) +
-                  numero(
-                    v.militaresDeFora
-                  );
+              const total =
+                numero(v.alimentado) +
+                numero(v.militaresDeFora);
 
-                const refeicao =
-                  nomes[
-                    item.refeicao
-                  ] ||
-                  item.refeicao;
+              const refeicao =
+                nomes[item.refeicao] ||
+                item.refeicao;
 
-                return (
+              return (
+                <div
+                  key={item.id}
+                  style={{
+                    marginBottom: 24,
+                    paddingBottom: 24,
+                    borderBottom:
+                      '1px solid rgba(255,255,255,.12)',
+                  }}
+                >
                   <div
-                    key={item.id}
+                    className="row"
                     style={{
-                      marginBottom: 24,
-                      paddingBottom: 24,
-
-                      borderBottom:
-                        '1px solid rgba(255,255,255,.12)',
+                      alignItems: 'flex-start',
                     }}
                   >
-                    <div
-                      className="row"
-                      style={{
-                        alignItems:
-                          'flex-start',
-                      }}
-                    >
-                      <div>
-                        <h3
-                          style={{
-                            marginTop: 0,
-                            marginBottom: 5,
-                          }}
-                        >
-                          {refeicao}
-                        </h3>
-
-                        <div className="muted">
-                          Efetivo previsto:{' '}
-                          <strong>
-                            {
-                              item.totalPrevisto
-                            }
-                          </strong>
-                        </div>
-
-                        <div className="muted">
-                          Planejamento com
-                          margem:{' '}
-                          {
-                            item.efetivoPlanejamento
-                          }
-                        </div>
-                      </div>
-
-                      <div>
-                        {item.fechamentoRealizadoEm ? (
-                          <strong>
-                            ✓ Registrado
-                          </strong>
-                        ) : (
-                          <strong>
-                            Pendente
-                          </strong>
-                        )}
-                      </div>
-                    </div>
-
-                    {item.observacao && (
-                      <div
+                    <div>
+                      <h3
                         style={{
-                          marginTop: 12,
-                          marginBottom: 12,
-                          padding: 10,
-
-                          borderRadius: 8,
-
-                          background:
-                            'rgba(255,255,255,.05)',
+                          marginTop: 0,
+                          marginBottom: 5,
                         }}
                       >
+                        {refeicao}
+                      </h3>
+
+                      <div className="muted">
+                        Efetivo previsto:{' '}
                         <strong>
-                          Observação do
-                          planejamento:
+                          {item.totalPrevisto}
                         </strong>
-
-                        <div className="muted">
-                          {
-                            item.observacao
-                          }
-                        </div>
                       </div>
-                    )}
 
-                    <div
-                      className="grid"
-                      style={{
-                        marginTop: 15,
-                      }}
-                    >
-                      <label>
-                        Efetivo alimentado
-
-                        <input
-                          type="number"
-                          min="0"
-                          step="1"
-                          value={
-                            v.alimentado
-                          }
-                          onChange={(
-                            e
-                          ) =>
-                            alterar(
-                              item.id,
-                              'alimentado',
-                              e.target
-                                .value
-                            )
-                          }
-                        />
-                      </label>
-
-                      <label>
-                        Faltas
-
-                        <input
-                          type="number"
-                          min="0"
-                          step="1"
-                          value={
-                            v.faltas
-                          }
-                          onChange={(
-                            e
-                          ) =>
-                            alterar(
-                              item.id,
-                              'faltas',
-                              e.target
-                                .value
-                            )
-                          }
-                        />
-                      </label>
-
-                      <label>
-                        Militares de fora
-
-                        <input
-                          type="number"
-                          min="0"
-                          step="1"
-                          value={
-                            v.militaresDeFora
-                          }
-                          onChange={(
-                            e
-                          ) =>
-                            alterar(
-                              item.id,
-                              'militaresDeFora',
-                              e.target
-                                .value
-                            )
-                          }
-                        />
-                      </label>
+                      <div className="muted">
+                        Planejamento com margem:{' '}
+                        {item.efetivoPlanejamento}
+                      </div>
                     </div>
 
-                    <div
-                      className="row"
-                      style={{
-                        marginTop: 12,
-                      }}
-                    >
-                      <span>
-                        Total atendido
-                        nesta refeição
-                      </span>
-
-                      <strong>
-                        {total}
-                      </strong>
+                    <div>
+                      {item.fechamentoRealizadoEm ? (
+                        <strong>✓ Registrado</strong>
+                      ) : (
+                        <strong>Pendente</strong>
+                      )}
                     </div>
                   </div>
-                );
-              }
-            )}
+
+                  {item.observacao && (
+                    <div
+                      style={{
+                        marginTop: 12,
+                        marginBottom: 12,
+                        padding: 10,
+                        borderRadius: 8,
+                        background:
+                          'rgba(255,255,255,.05)',
+                      }}
+                    >
+                      <strong>
+                        Observação do planejamento:
+                      </strong>
+
+                      <div className="muted">
+                        {item.observacao}
+                      </div>
+                    </div>
+                  )}
+
+                  <div
+                    className="grid"
+                    style={{ marginTop: 15 }}
+                  >
+                    <label>
+                      Efetivo alimentado
+
+                      <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        value={v.alimentado}
+                        onChange={(e) =>
+                          alterar(
+                            item.id,
+                            'alimentado',
+                            e.target.value
+                          )
+                        }
+                      />
+                    </label>
+
+                    <label>
+                      Faltas
+
+                      <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        value={v.faltas}
+                        onChange={(e) =>
+                          alterar(
+                            item.id,
+                            'faltas',
+                            e.target.value
+                          )
+                        }
+                      />
+                    </label>
+
+                    <label>
+                      Militares de fora
+
+                      <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        value={v.militaresDeFora}
+                        onChange={(e) =>
+                          alterar(
+                            item.id,
+                            'militaresDeFora',
+                            e.target.value
+                          )
+                        }
+                      />
+                    </label>
+                  </div>
+
+                  <div
+                    className="row"
+                    style={{ marginTop: 12 }}
+                  >
+                    <span>
+                      Total atendido nesta refeição
+                    </span>
+
+                    <strong>{total}</strong>
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
           <div className="card">
-            <h2>
-              Fechamento do serviço
-              diário
-            </h2>
+            <h2>Fechamento do serviço diário</h2>
 
             <p className="muted">
-              Após o encerramento do
-              serviço de alimentação,
-              informe a sobra pesada
-              total do dia. Este valor é
-              único para todo o serviço,
-              independentemente da
-              quantidade de refeições.
+              Após o encerramento do serviço de
+              alimentação, informe uma única vez a
+              sobra pesada total do dia.
             </p>
 
             <label>
-              Sobra pesada total do
-              serviço (kg)
+              Sobra pesada total do serviço (kg)
 
               <input
                 type="number"
@@ -805,10 +682,7 @@ export default function FechamentoDiarioClient() {
                 step="0.001"
                 value={sobraKg}
                 onChange={(e) => {
-                  setSobraKg(
-                    e.target.value
-                  );
-
+                  setSobraKg(e.target.value);
                   setMsg('');
                   setErro('');
                 }}
@@ -822,17 +696,13 @@ export default function FechamentoDiarioClient() {
                 marginTop: 16,
               }}
             >
-              Observação do fechamento
-              (opcional)
+              Observação do fechamento (opcional)
 
               <textarea
                 value={observacao}
                 maxLength={1000}
                 onChange={(e) => {
-                  setObservacao(
-                    e.target.value
-                  );
-
+                  setObservacao(e.target.value);
                   setMsg('');
                   setErro('');
                 }}
@@ -840,24 +710,15 @@ export default function FechamentoDiarioClient() {
                 style={{
                   width: '100%',
                   minHeight: '90px',
-                  boxSizing:
-                    'border-box',
-                  padding:
-                    '14px 16px',
-                  borderRadius:
-                    '10px',
-                  border:
-                    '1px solid #315846',
-                  background:
-                    '#071a12',
-                  color:
-                    '#f8fafc',
-                  fontSize:
-                    '16px',
-                  lineHeight:
-                    '1.5',
-                  resize:
-                    'vertical',
+                  boxSizing: 'border-box',
+                  padding: '14px 16px',
+                  borderRadius: '10px',
+                  border: '1px solid #315846',
+                  background: '#071a12',
+                  color: '#f8fafc',
+                  fontSize: '16px',
+                  lineHeight: '1.5',
+                  resize: 'vertical',
                 }}
               />
             </label>
@@ -873,59 +734,32 @@ export default function FechamentoDiarioClient() {
           </div>
 
           <div className="card">
-            <h2>
-              Resumo do dia
-            </h2>
+            <h2>Resumo do dia</h2>
 
             <div className="row">
-              <span>
-                Refeições realizadas
-              </span>
-
-              <strong>
-                {rows.length}
-              </strong>
+              <span>Refeições realizadas</span>
+              <strong>{rows.length}</strong>
             </div>
 
             <div className="row">
-              <span>
-                Efetivo previsto
-              </span>
-
-              <strong>
-                {resumo.previsto}
-              </strong>
+              <span>Efetivo previsto</span>
+              <strong>{resumo.previsto}</strong>
             </div>
 
             <div className="row">
-              <span>
-                Efetivo alimentado
-              </span>
-
-              <strong>
-                {resumo.alimentado}
-              </strong>
+              <span>Efetivo alimentado</span>
+              <strong>{resumo.alimentado}</strong>
             </div>
 
             <div className="row">
-              <span>
-                Faltas
-              </span>
-
-              <strong>
-                {resumo.faltas}
-              </strong>
+              <span>Faltas</span>
+              <strong>{resumo.faltas}</strong>
             </div>
 
             <div className="row">
-              <span>
-                Militares de fora
-              </span>
-
+              <span>Militares de fora</span>
               <strong>
-                {
-                  resumo.militaresDeFora
-                }
+                {resumo.militaresDeFora}
               </strong>
             </div>
 
@@ -934,32 +768,26 @@ export default function FechamentoDiarioClient() {
               style={{
                 marginTop: 10,
                 paddingTop: 12,
-
                 borderTop:
                   '1px solid rgba(255,255,255,.12)',
               }}
             >
               <span>
                 <strong>
-                  Total de atendimentos
-                  no dia
+                  Total de atendimentos no dia
                 </strong>
               </span>
 
               <strong>
-                {
-                  resumo.totalAtendido
-                }
+                {resumo.totalAtendido}
               </strong>
             </div>
 
             <p className="muted">
-              O total representa
-              refeições/atendimentos
-              servidos no dia. A mesma
-              pessoa pode ter
-              participado de mais de
-              uma refeição.
+              O total representa atendimentos
+              realizados nas refeições do dia. A
+              mesma pessoa pode participar de mais
+              de uma refeição.
             </p>
 
             <div
@@ -967,15 +795,13 @@ export default function FechamentoDiarioClient() {
               style={{
                 marginTop: 18,
                 paddingTop: 16,
-
                 borderTop:
                   '1px solid rgba(255,255,255,.12)',
               }}
             >
               <span>
                 <strong>
-                  Sobra pesada total do
-                  serviço
+                  Sobra pesada total do serviço
                 </strong>
               </span>
 
@@ -984,12 +810,9 @@ export default function FechamentoDiarioClient() {
                   ? '—'
                   : `${Number(
                       sobraKg
-                    ).toLocaleString(
-                      'pt-BR',
-                      {
-                        maximumFractionDigits: 3,
-                      }
-                    )} kg`}
+                    ).toLocaleString('pt-BR', {
+                      maximumFractionDigits: 3,
+                    })} kg`}
               </strong>
             </div>
 
@@ -1013,7 +836,7 @@ export default function FechamentoDiarioClient() {
             >
               {salvando
                 ? 'Salvando...'
-                : todosFechados
+                : fechamentoConcluido
                   ? 'Corrigir fechamento do dia'
                   : 'Registrar fechamento do dia'}
             </button>
