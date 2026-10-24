@@ -491,3 +491,15 @@ model ItemRecebimentoCompraQR {
   quantidade        Decimal             @db.Decimal(14, 3)
   valorUnitarioReal Decimal?            @db.Decimal(14, 4)
 }
+
+model FechamentoDiario {
+  id           String   @id @default(cuid())
+  data         DateTime @unique
+  sobraKg      Decimal  @default(0) @db.Decimal(14, 3)
+  observacao   String?
+  usuarioId    String
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@index([data])
+}
