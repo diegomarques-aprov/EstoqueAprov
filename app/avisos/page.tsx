@@ -32,25 +32,44 @@ function fimDoDiaUTC(data: Date) {
   );
 }
 
+function dataISO(data: Date) {
+  return data
+    .toISOString()
+    .slice(0, 10);
+}
+
+function dataBR(data: string) {
+  const [ano, mes, dia] =
+    data.split('-');
+
+  return `${dia}/${mes}/${ano}`;
+}
+
 export default async function AvisosPage() {
-  const usuario = await currentUser();
+  const usuario =
+    await currentUser();
 
   if (!usuario) {
     redirect('/login');
   }
 
   const administrador =
-    usuario.perfil === 'ADMIN_PRINCIPAL' ||
-    usuario.perfil === 'ADMINISTRADOR';
+    usuario.perfil ===
+      'ADMIN_PRINCIPAL' ||
+    usuario.perfil ===
+      'ADMINISTRADOR';
 
   const chefeDeposito =
-    usuario.perfil === 'CHEFE_DEPOSITO';
+    usuario.perfil ===
+    'CHEFE_DEPOSITO';
 
   const graduadoServico =
-    usuario.perfil === 'GRADUADO_SERVICO';
+    usuario.perfil ===
+    'GRADUADO_SERVICO';
 
   const podeVerEfetivo =
-    administrador || graduadoServico;
+    administrador ||
+    graduadoServico;
 
   const podeVerEstoque =
     administrador ||
@@ -62,7 +81,8 @@ export default async function AvisosPage() {
   const inicioHoje =
     inicioDoDiaUTC(hoje);
 
-  const amanha = new Date(hoje);
+  const amanha =
+    new Date(hoje);
 
   amanha.setDate(
     amanha.getDate() + 1
@@ -130,7 +150,8 @@ export default async function AvisosPage() {
           lt: inicioHoje,
         },
 
-        fechamentoRealizadoEm: null,
+        fechamentoRealizadoEm:
+          null,
       },
 
       select: {
@@ -153,19 +174,20 @@ export default async function AvisosPage() {
    * ESTOQUE ABAIXO DO MÍNIMO
    */
 
-  const saldosPorGenero = new Map<
-    string,
-    {
-      nome: string;
-      quantidade: number;
-      minimo: number;
-    }
-  >();
+  const saldosPorGenero =
+    new Map<
+      string,
+      {
+        nome: string;
+        quantidade: number;
+        minimo: number;
+      }
+    >();
 
   for (const estoque of estoques) {
     if (
-      estoque.genero.estoqueMinimo ==
-      null
+      estoque.genero
+        .estoqueMinimo == null
     ) {
       continue;
     }
@@ -176,9 +198,10 @@ export default async function AvisosPage() {
       );
 
     if (atual) {
-      atual.quantidade += Number(
-        estoque.quantidade
-      );
+      atual.quantidade +=
+        Number(
+          estoque.quantidade
+        );
     } else {
       saldosPorGenero.set(
         estoque.generoId,
@@ -186,35 +209,40 @@ export default async function AvisosPage() {
           nome:
             estoque.genero.nome,
 
-          quantidade: Number(
-            estoque.quantidade
-          ),
+          quantidade:
+            Number(
+              estoque.quantidade
+            ),
 
-          minimo: Number(
-            estoque.genero
-              .estoqueMinimo
-          ),
+          minimo:
+            Number(
+              estoque.genero
+                .estoqueMinimo
+            ),
         }
       );
     }
   }
 
-  const baixos = Array.from(
-    saldosPorGenero.values()
-  ).filter(
-    (item) =>
-      item.quantidade <
-      item.minimo
-  );
+  const baixos =
+    Array.from(
+      saldosPorGenero.values()
+    ).filter(
+      (item) =>
+        item.quantidade <
+        item.minimo
+    );
 
   /*
    * VALIDADES
    */
 
-  const agora = hoje.getTime();
+  const agora =
+    hoje.getTime();
 
   const limiteValidade =
-    agora + 30 * 86400000;
+    agora +
+    30 * 86400000;
 
   let quantidadeVencidos = 0;
 
@@ -222,13 +250,16 @@ export default async function AvisosPage() {
     0;
 
   for (const estoque of estoques) {
-    if (!estoque.lote?.validade) {
+    if (
+      !estoque.lote?.validade
+    ) {
       continue;
     }
 
-    const validade = new Date(
-      estoque.lote.validade
-    ).getTime();
+    const validade =
+      new Date(
+        estoque.lote.validade
+      ).getTime();
 
     if (validade < agora) {
       quantidadeVencidos += 1;
@@ -249,7 +280,8 @@ export default async function AvisosPage() {
    */
 
   const efetivoAmanhaInformado =
-    arranchamentosAmanha.length > 0;
+    arranchamentosAmanha.length >
+    0;
 
   const totalPrevistoAmanha =
     arranchamentosAmanha.reduce(
@@ -269,27 +301,51 @@ export default async function AvisosPage() {
 
   /*
    * FECHAMENTOS PENDENTES
+   *
+   * Agrupa as refeições pendentes
+   * pela data do serviço.
    */
 
-  const diasPendentes = new Set(
-    fechamentosPendentes.map(
-      (item) =>
-        item.data
-          .toISOString()
-          .slice(0, 10)
-    )
-  );
+  const pendenciasPorDia =
+    new Map<
+      string,
+      number
+    >();
+
+  for (
+    const item of fechamentosPendentes
+  ) {
+    const data =
+      dataISO(item.data);
+
+    pendenciasPorDia.set(
+      data,
+      (
+        pendenciasPorDia.get(
+          data
+        ) || 0
+      ) + 1
+    );
+  }
+
+  const diasPendentes =
+    Array.from(
+      pendenciasPorDia.entries()
+    ).map(
+      ([
+        data,
+        quantidadeRefeicoes,
+      ]) => ({
+        data,
+        quantidadeRefeicoes,
+      })
+    );
 
   const quantidadeDiasPendentes =
-    diasPendentes.size;
+    diasPendentes.length;
 
   /*
    * CARDÁPIO SEMANAL
-   *
-   * Sexta-feira:
-   * lembra o Administrador de
-   * preparar o cardápio da
-   * próxima semana.
    */
 
   const diaDaSemana =
@@ -323,7 +379,9 @@ export default async function AvisosPage() {
         ← Início
       </Link>
 
-      <h1>Painel de Avisos</h1>
+      <h1>
+        Painel de Avisos
+      </h1>
 
       <div
         className="card"
@@ -359,10 +417,10 @@ export default async function AvisosPage() {
         <ConferenciaFLVClient />
       )}
 
-      {/* FECHAMENTO DIÁRIO */}
+      {/* FECHAMENTOS PENDENTES */}
 
       {podeVerEfetivo &&
-        fechamentosPendentes.length >
+        quantidadeDiasPendentes >
           0 && (
           <div
             className="card"
@@ -399,31 +457,75 @@ export default async function AvisosPage() {
               pendente.
             </p>
 
-            <div className="row">
-              <span>
-                Refeições pendentes
-              </span>
-
-              <strong>
-                {
-                  fechamentosPendentes.length
-                }
-              </strong>
-            </div>
-
             <div
-              className="actions"
               style={{
-                marginTop: 14,
+                display: 'grid',
+                gap: 12,
+                marginTop: 16,
               }}
             >
-              <Link
-                className="btn"
-                href="/efetivo/fechamento"
-              >
-                Realizar Fechamento
-                Diário
-              </Link>
+              {diasPendentes.map(
+                (pendencia) => (
+                  <div
+                    key={
+                      pendencia.data
+                    }
+                    style={{
+                      padding:
+                        '14px 0',
+
+                      borderTop:
+                        '1px solid rgba(255,255,255,.12)',
+                    }}
+                  >
+                    <div
+                      className="row"
+                      style={{
+                        marginBottom: 10,
+                      }}
+                    >
+                      <span>
+                        Data pendente
+                      </span>
+
+                      <strong>
+                        {dataBR(
+                          pendencia.data
+                        )}
+                      </strong>
+                    </div>
+
+                    <div
+                      className="row"
+                      style={{
+                        marginBottom: 12,
+                      }}
+                    >
+                      <span>
+                        Refeições
+                        pendentes
+                      </span>
+
+                      <strong>
+                        {
+                          pendencia.quantidadeRefeicoes
+                        }
+                      </strong>
+                    </div>
+
+                    <Link
+                      className="btn"
+                      href={`/efetivo/fechamento?data=${pendencia.data}`}
+                    >
+                      Realizar
+                      fechamento de{' '}
+                      {dataBR(
+                        pendencia.data
+                      )}
+                    </Link>
+                  </div>
+                )
+              )}
             </div>
           </div>
         )}
@@ -536,7 +638,7 @@ export default async function AvisosPage() {
           </div>
         ))}
 
-      {/* ESTOQUE */}
+      {/* ESTOQUE ABAIXO DO MÍNIMO */}
 
       {podeVerEstoque &&
         baixos.length > 0 && (
@@ -635,7 +737,8 @@ export default async function AvisosPage() {
       {/* LOTES VENCIDOS */}
 
       {podeVerEstoque &&
-        quantidadeVencidos > 0 && (
+        quantidadeVencidos >
+          0 && (
           <div
             className="card"
             style={{
@@ -680,7 +783,7 @@ export default async function AvisosPage() {
           </div>
         )}
 
-      {/* CARDÁPIO DA PRÓXIMA SEMANA */}
+      {/* CARDÁPIO */}
 
       {exibirLembreteCardapio && (
         <div
