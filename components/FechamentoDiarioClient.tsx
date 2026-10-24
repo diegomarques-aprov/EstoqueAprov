@@ -243,19 +243,6 @@ export default function FechamentoDiarioClient() {
         );
         return false;
       }
-
-      const alimentado = numero(v.alimentado);
-      const faltas = numero(v.faltas);
-
-      if (
-        alimentado + faltas >
-        item.totalPrevisto
-      ) {
-        setErro(
-          `No ${refeicao}, a soma do efetivo alimentado (${alimentado}) com as faltas (${faltas}) é maior que o efetivo previsto (${item.totalPrevisto}). Confira os valores informados.`
-        );
-        return false;
-      }
     }
 
     return true;
@@ -360,9 +347,9 @@ export default function FechamentoDiarioClient() {
 
         <p className="muted">
           Registre o efetivo real de cada refeição do dia.
-          O efetivo previsto vem do planejamento. Informe
-          manualmente o efetivo alimentado, as faltas e os
-          militares de fora atendidos.
+          O efetivo previsto vem do planejamento e serve
+          como referência. Informe o efetivo alimentado,
+          as faltas e os militares de fora atendidos.
         </p>
 
         <label>
@@ -604,9 +591,9 @@ export default function FechamentoDiarioClient() {
                         marginBottom: 0,
                       }}
                     >
-                      A sobra é registrada
-                      separadamente do quadro de
-                      efetivo.
+                      Este campo será consolidado como
+                      sobra única do serviço diário na
+                      próxima atualização.
                     </p>
                   </div>
                 </div>
