@@ -301,9 +301,6 @@ export default async function AvisosPage() {
 
   /*
    * FECHAMENTOS PENDENTES
-   *
-   * Agrupa as refeições pendentes
-   * pela data do serviço.
    */
 
   const pendenciasPorDia =
@@ -384,13 +381,8 @@ export default async function AvisosPage() {
       </h1>
 
       <div
-        className="card"
         style={{
-          border:
-            '1px solid #22c55e',
-
-          background:
-            'rgba(34, 197, 94, 0.06)',
+          marginBottom: 20,
         }}
       >
         <strong>
