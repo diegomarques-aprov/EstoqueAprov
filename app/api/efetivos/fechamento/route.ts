@@ -47,6 +47,82 @@ function dia(s: string) {
   );
 }
 
+/*
+ * Consulta o fechamento diário já registrado.
+ *
+ * Permite recuperar a sobra total e a observação
+ * quando o usuário consultar ou corrigir um dia
+ * anteriormente fechado.
+ */
+export async function GET(req: Request) {
+  const g = await requireEfetivo();
+
+  if (g.error) {
+    return g.error;
+  }
+
+  const { searchParams } =
+    new URL(req.url);
+
+  const data =
+    searchParams.get('data');
+
+  if (!data || data.length < 10) {
+    return Response.json(
+      {
+        error:
+          'Informe a data do serviço para consultar o fechamento diário.',
+      },
+      {
+        status: 400,
+      }
+    );
+  }
+
+  const dataServico =
+    dia(data);
+
+  const fechamento =
+    await prisma.fechamentoDiario.findUnique({
+      where: {
+        data: dataServico,
+      },
+    });
+
+  if (!fechamento) {
+    return Response.json({
+      fechamento: null,
+    });
+  }
+
+  return Response.json({
+    fechamento: {
+      id:
+        fechamento.id,
+
+      data:
+        fechamento.data,
+
+      sobraKg:
+        Number(
+          fechamento.sobraKg
+        ),
+
+      observacao:
+        fechamento.observacao,
+
+      criadoEm:
+        fechamento.criadoEm,
+
+      atualizadoEm:
+        fechamento.atualizadoEm,
+    },
+  });
+}
+
+/*
+ * Registra ou corrige o fechamento diário.
+ */
 export async function POST(req: Request) {
   const g = await requireEfetivo();
 
@@ -54,10 +130,13 @@ export async function POST(req: Request) {
     return g.error;
   }
 
-  const body = await req.json();
+  const body =
+    await req.json();
 
   const validacao =
-    FechamentoSchema.safeParse(body);
+    FechamentoSchema.safeParse(
+      body
+    );
 
   if (!validacao.success) {
     return Response.json(
@@ -71,13 +150,17 @@ export async function POST(req: Request) {
     );
   }
 
-  const dados = validacao.data;
-  const dataServico = dia(dados.data);
+  const dados =
+    validacao.data;
+
+  const dataServico =
+    dia(dados.data);
 
   const registros =
     await prisma.arranchamento.findMany({
       where: {
-        data: dataServico,
+        data:
+          dataServico,
 
         id: {
           in: dados.itens.map(
@@ -106,19 +189,23 @@ export async function POST(req: Request) {
    * O efetivo alimentado pode ultrapassar
    * o efetivo inicialmente previsto.
    *
-   * O previsto é referência de planejamento
-   * e não representa limite de atendimento.
+   * O previsto é apenas referência de
+   * planejamento e não representa limite
+   * para o atendimento real.
    */
-
   const resultado =
     await prisma.$transaction(
       async (tx) => {
         const atualizados = [];
 
-        for (const item of dados.itens) {
+        for (
+          const item of dados.itens
+        ) {
           const anterior =
             registros.find(
-              (r) => r.id === item.id
+              (registro) =>
+                registro.id ===
+                item.id
             );
 
           if (!anterior) {
@@ -127,6 +214,13 @@ export async function POST(req: Request) {
             );
           }
 
+          /*
+           * Total atendido na refeição:
+           *
+           * efetivo alimentado
+           * +
+           * militares de fora.
+           */
           const totalAtendido =
             item.arranchadosCompareceram +
             item.naoArranchadosAtendidos;
@@ -134,7 +228,8 @@ export async function POST(req: Request) {
           const atualizado =
             await tx.arranchamento.update({
               where: {
-                id: item.id,
+                id:
+                  item.id,
               },
 
               data: {
@@ -153,19 +248,21 @@ export async function POST(req: Request) {
                   new Date(),
 
                 /*
-                 * A sobra não é mais registrada
-                 * individualmente por refeição.
+                 * O campo antigo permanece no banco
+                 * apenas por compatibilidade histórica.
                  *
-                 * Mantemos o campo antigo apenas
-                 * por compatibilidade histórica.
+                 * A sobra agora pertence ao
+                 * FechamentoDiario.
                  */
-                sobraKg: null,
+                sobraKg:
+                  null,
               },
             });
 
           await tx.auditoria.create({
             data: {
-              usuarioId: g.user!.id,
+              usuarioId:
+                g.user!.id,
 
               acao:
                 anterior.fechamentoRealizadoEm
@@ -237,24 +334,34 @@ export async function POST(req: Request) {
         }
 
         /*
-         * Uma única sobra para todo o
-         * serviço de alimentação do dia.
+         * Consulta se já existe um fechamento
+         * para esta data.
          */
         const fechamentoAnterior =
           await tx.fechamentoDiario.findUnique({
             where: {
-              data: dataServico,
+              data:
+                dataServico,
             },
           });
 
+        /*
+         * Uma data possui somente um
+         * fechamento diário.
+         *
+         * Se já existir, será corrigido.
+         * Se não existir, será criado.
+         */
         const fechamentoDiario =
           await tx.fechamentoDiario.upsert({
             where: {
-              data: dataServico,
+              data:
+                dataServico,
             },
 
             create: {
-              data: dataServico,
+              data:
+                dataServico,
 
               sobraKg:
                 dados.sobraKg,
@@ -280,13 +387,19 @@ export async function POST(req: Request) {
             },
           });
 
+        /*
+         * Auditoria específica do
+         * fechamento diário.
+         */
         await tx.auditoria.create({
           data: {
-            usuarioId: g.user!.id,
+            usuarioId:
+              g.user!.id,
 
-            acao: fechamentoAnterior
-              ? 'CORRECAO_FECHAMENTO_DIARIO'
-              : 'FECHAMENTO_DIARIO',
+            acao:
+              fechamentoAnterior
+                ? 'CORRECAO_FECHAMENTO_DIARIO'
+                : 'FECHAMENTO_DIARIO',
 
             entidade:
               'FechamentoDiario',
@@ -330,12 +443,17 @@ export async function POST(req: Request) {
       }
     );
 
+  /*
+   * Consolidação do fechamento.
+   */
   const totalEfetivoAlimentado =
     resultado.arranchamentos.reduce(
       (total, item) =>
         total +
-        (item.arranchadosCompareceram ??
-          0),
+        (
+          item.arranchadosCompareceram ??
+          0
+        ),
       0
     );
 
@@ -343,7 +461,10 @@ export async function POST(req: Request) {
     resultado.arranchamentos.reduce(
       (total, item) =>
         total +
-        (item.faltas ?? 0),
+        (
+          item.faltas ??
+          0
+        ),
       0
     );
 
@@ -359,7 +480,10 @@ export async function POST(req: Request) {
     resultado.arranchamentos.reduce(
       (total, item) =>
         total +
-        (item.totalAtendido ?? 0),
+        (
+          item.totalAtendido ??
+          0
+        ),
       0
     );
 
@@ -389,7 +513,9 @@ export async function POST(req: Request) {
 
       sobraKg:
         Number(
-          resultado.fechamentoDiario.sobraKg
+          resultado
+            .fechamentoDiario
+            .sobraKg
         ),
     },
 
