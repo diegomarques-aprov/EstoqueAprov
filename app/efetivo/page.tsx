@@ -30,18 +30,21 @@ export default async function Page() {
 
       <h1>Efetivo alimentado</h1>
 
+      <EfetivoClient />
+
       <div
         className="card"
         style={{
-          marginBottom: 20,
+          marginTop: 20,
         }}
       >
-        <h2>Arranchamento / Efetivo</h2>
+        <h2>Fechamento do serviço diário</h2>
 
         <p className="muted">
-          Planeje o efetivo arranchado para o serviço de
-          alimentação e, após a realização das refeições,
-          registre o fechamento diário.
+          Após a realização das refeições do dia,
+          registre o efetivo realmente alimentado,
+          as faltas, os militares não arranchados
+          atendidos e a sobra total do serviço.
         </p>
 
         <div
@@ -59,8 +62,6 @@ export default async function Page() {
           </Link>
         </div>
       </div>
-
-      <EfetivoClient />
     </main>
   );
 }
