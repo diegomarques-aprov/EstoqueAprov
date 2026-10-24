@@ -5,35 +5,36 @@ import { z } from 'zod';
 const ItemFechamentoSchema = z.object({
   id: z.string().min(1),
 
-  // Quantidade efetivamente alimentada na refeição.
-  // Pode ser superior ao efetivo inicialmente previsto.
   arranchadosCompareceram: z.coerce
     .number()
     .int()
     .min(0),
 
-  // Arranchados previstos que não compareceram.
   faltas: z.coerce
     .number()
     .int()
     .min(0),
 
-  // Pessoas atendidas que não estavam arranchadas.
   naoArranchadosAtendidos: z.coerce
     .number()
     .int()
-    .min(0),
-
-  // Mantido temporariamente nesta etapa.
-  // Será transformado em sobra única diária
-  // na próxima correção.
-  sobraKg: z.coerce
-    .number()
     .min(0),
 });
 
 const FechamentoSchema = z.object({
   data: z.string().min(10),
+
+  // Sobra total do serviço diário.
+  // É registrada uma única vez para todo o dia.
+  sobraKg: z.coerce
+    .number()
+    .min(0),
+
+  observacao: z
+    .string()
+    .max(1000)
+    .optional()
+    .nullable(),
 
   itens: z
     .array(ItemFechamentoSchema)
@@ -62,7 +63,7 @@ export async function POST(req: Request) {
     return Response.json(
       {
         error:
-          'Para concluir o fechamento, informe corretamente os dados do serviço diário.',
+          'Para concluir o fechamento, informe corretamente o efetivo das refeições e a sobra total do serviço diário.',
       },
       {
         status: 400,
@@ -102,16 +103,11 @@ export async function POST(req: Request) {
   }
 
   /*
-   * O efetivo realmente alimentado pode ser
-   * superior ao efetivo previsto.
+   * O efetivo alimentado pode ultrapassar
+   * o efetivo inicialmente previsto.
    *
-   * Isso pode ocorrer quando militares não
-   * inicialmente arranchados comparecem à
-   * refeição.
-   *
-   * Portanto, o efetivo previsto serve como
-   * referência de planejamento e não como
-   * limite para o fechamento do serviço.
+   * O previsto é referência de planejamento
+   * e não representa limite de atendimento.
    */
 
   const resultado =
@@ -131,13 +127,6 @@ export async function POST(req: Request) {
             );
           }
 
-          /*
-           * Total de atendimentos registrados:
-           *
-           * efetivo alimentado
-           * +
-           * militares de fora informados.
-           */
           const totalAtendido =
             item.arranchadosCompareceram +
             item.naoArranchadosAtendidos;
@@ -160,11 +149,17 @@ export async function POST(req: Request) {
 
                 totalAtendido,
 
-                sobraKg:
-                  item.sobraKg,
-
                 fechamentoRealizadoEm:
                   new Date(),
+
+                /*
+                 * A sobra não é mais registrada
+                 * individualmente por refeição.
+                 *
+                 * Mantemos o campo antigo apenas
+                 * por compatibilidade histórica.
+                 */
+                sobraKg: null,
               },
             });
 
@@ -174,7 +169,7 @@ export async function POST(req: Request) {
 
               acao:
                 anterior.fechamentoRealizadoEm
-                  ? 'CORRECAO_FECHAMENTO'
+                  ? 'CORRECAO_FECHAMENTO_REFEICAO'
                   : 'FECHAMENTO_REFEICAO',
 
               entidade:
@@ -205,10 +200,6 @@ export async function POST(req: Request) {
                 totalAtendido:
                   anterior.totalAtendido,
 
-                sobraKg:
-                  anterior.sobraKg?.toString() ??
-                  null,
-
                 fechamentoRealizadoEm:
                   anterior.fechamentoRealizadoEm,
               },
@@ -234,9 +225,6 @@ export async function POST(req: Request) {
 
                 totalAtendido,
 
-                sobraKg:
-                  item.sobraKg,
-
                 fechamentoRealizadoEm:
                   atualizado.fechamentoRealizadoEm,
               },
@@ -248,12 +236,102 @@ export async function POST(req: Request) {
           );
         }
 
-        return atualizados;
+        /*
+         * Uma única sobra para todo o
+         * serviço de alimentação do dia.
+         */
+        const fechamentoAnterior =
+          await tx.fechamentoDiario.findUnique({
+            where: {
+              data: dataServico,
+            },
+          });
+
+        const fechamentoDiario =
+          await tx.fechamentoDiario.upsert({
+            where: {
+              data: dataServico,
+            },
+
+            create: {
+              data: dataServico,
+
+              sobraKg:
+                dados.sobraKg,
+
+              observacao:
+                dados.observacao?.trim() ||
+                null,
+
+              usuarioId:
+                g.user!.id,
+            },
+
+            update: {
+              sobraKg:
+                dados.sobraKg,
+
+              observacao:
+                dados.observacao?.trim() ||
+                null,
+
+              usuarioId:
+                g.user!.id,
+            },
+          });
+
+        await tx.auditoria.create({
+          data: {
+            usuarioId: g.user!.id,
+
+            acao: fechamentoAnterior
+              ? 'CORRECAO_FECHAMENTO_DIARIO'
+              : 'FECHAMENTO_DIARIO',
+
+            entidade:
+              'FechamentoDiario',
+
+            entidadeId:
+              fechamentoDiario.id,
+
+            dadosAnteriores:
+              fechamentoAnterior
+                ? {
+                    dataServico:
+                      dados.data,
+
+                    sobraKg:
+                      fechamentoAnterior.sobraKg.toString(),
+
+                    observacao:
+                      fechamentoAnterior.observacao,
+                  }
+                : undefined,
+
+            dadosNovos: {
+              dataServico:
+                dados.data,
+
+              sobraKg:
+                dados.sobraKg,
+
+              observacao:
+                fechamentoDiario.observacao,
+            },
+          },
+        });
+
+        return {
+          arranchamentos:
+            atualizados,
+
+          fechamentoDiario,
+        };
       }
     );
 
   const totalEfetivoAlimentado =
-    resultado.reduce(
+    resultado.arranchamentos.reduce(
       (total, item) =>
         total +
         (item.arranchadosCompareceram ??
@@ -262,7 +340,7 @@ export async function POST(req: Request) {
     );
 
   const totalFaltas =
-    resultado.reduce(
+    resultado.arranchamentos.reduce(
       (total, item) =>
         total +
         (item.faltas ?? 0),
@@ -270,7 +348,7 @@ export async function POST(req: Request) {
     );
 
   const totalMilitaresDeFora =
-    resultado.reduce(
+    resultado.arranchamentos.reduce(
       (total, item) =>
         total +
         item.naoArranchadosAtendidos,
@@ -278,18 +356,10 @@ export async function POST(req: Request) {
     );
 
   const totalAtendido =
-    resultado.reduce(
+    resultado.arranchamentos.reduce(
       (total, item) =>
         total +
         (item.totalAtendido ?? 0),
-      0
-    );
-
-  const totalSobraKg =
-    resultado.reduce(
-      (total, item) =>
-        total +
-        Number(item.sobraKg ?? 0),
       0
     );
 
@@ -303,7 +373,7 @@ export async function POST(req: Request) {
       new Date().toISOString(),
 
     quantidadeRefeicoes:
-      resultado.length,
+      resultado.arranchamentos.length,
 
     resumo: {
       efetivoAlimentado:
@@ -318,10 +388,12 @@ export async function POST(req: Request) {
       totalAtendido,
 
       sobraKg:
-        totalSobraKg,
+        Number(
+          resultado.fechamentoDiario.sobraKg
+        ),
     },
 
     mensagem:
-      'Efetivo diário registrado com sucesso.',
+      'Fechamento diário registrado com sucesso.',
   });
 }
