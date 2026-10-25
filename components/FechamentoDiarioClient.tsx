@@ -12,8 +12,7 @@ const nomes: Record<string, string> = {
   ALMOCO: 'Almoço',
   JANTAR: 'Jantar',
   CEIA: 'Ceia',
-  SERVICO_DIA_SEGUINTE:
-    'Serviço do dia seguinte',
+  SERVICO_DIA_SEGUINTE: 'Serviço do dia seguinte',
   OUTRO: 'Outro',
 };
 
@@ -23,15 +22,11 @@ type Arranchamento = {
   refeicao: string;
   totalPrevisto: number;
   efetivoPlanejamento: number;
-  arranchadosCompareceram:
-    | number
-    | null;
+  arranchadosCompareceram: number | null;
   faltas: number | null;
   naoArranchadosAtendidos: number;
   totalAtendido: number | null;
-  fechamentoRealizadoEm:
-    | string
-    | null;
+  fechamentoRealizadoEm: string | null;
   observacao?: string | null;
 };
 
@@ -50,17 +45,14 @@ type FechamentoDiario = {
   atualizadoEm: string;
 };
 
-function dataLocal(
-  offsetDias = 0
-) {
+function dataLocal(offsetDias = 0) {
   const agora = new Date();
 
   agora.setDate(
     agora.getDate() + offsetDias
   );
 
-  const ano =
-    agora.getFullYear();
+  const ano = agora.getFullYear();
 
   const mes = String(
     agora.getMonth() + 1
@@ -109,19 +101,6 @@ export default function FechamentoDiarioClient() {
   const searchParams =
     useSearchParams();
 
-  /*
-   * Quando o usuário vem do
-   * Painel de Avisos:
-   *
-   * /efetivo/fechamento?data=2026-10-23
-   *
-   * a tela já abre exatamente
-   * naquela data.
-   *
-   * Sem parâmetro, mantém o
-   * comportamento normal:
-   * abre no dia anterior.
-   */
   const dataRecebida =
     searchParams.get('data');
 
@@ -599,31 +578,52 @@ export default function FechamentoDiarioClient() {
   }
 
   return (
-    <>
-      <div className="card">
-        <h2>
-          Efetivo alimentado
-        </h2>
+    <div>
+      {/* DATA DO SERVIÇO */}
 
-        <p className="muted">
-          Registre o efetivo real
-          de cada refeição. O
-          efetivo previsto serve
-          como referência de
-          planejamento e pode ser
-          ultrapassado quando
-          houver atendimento de
-          militares não previstos.
-        </p>
+      <section
+        style={{
+          marginBottom: '18px',
+        }}
+      >
+        <div
+          style={{
+            marginBottom: '16px',
+          }}
+        >
+          <strong
+            style={{
+              fontSize: '17px',
+            }}
+          >
+            Efetivo alimentado
+          </strong>
+
+          <p
+            className="muted"
+            style={{
+              margin: '5px 0 0',
+              fontSize: '13px',
+              lineHeight: 1.5,
+            }}
+          >
+            Registre o efetivo real de cada
+            refeição. O efetivo previsto serve
+            como referência de planejamento e
+            pode ser ultrapassado quando houver
+            atendimento de militares não
+            previstos.
+          </p>
+        </div>
 
         {dataValida(
           dataRecebida
         ) && (
           <div
             style={{
-              marginBottom: 16,
-              padding: 12,
-              borderRadius: 10,
+              marginBottom: '16px',
+              padding: '12px',
+              borderRadius: '11px',
               border:
                 '1px solid #f59e0b',
               background:
@@ -631,15 +631,15 @@ export default function FechamentoDiarioClient() {
             }}
           >
             <strong>
-              ⚠ Fechamento
-              selecionado pelo
+              ⚠ Fechamento selecionado pelo
               Painel de Avisos
             </strong>
 
             <div
               className="muted"
               style={{
-                marginTop: 4,
+                marginTop: '5px',
+                fontSize: '13px',
               }}
             >
               Data pendente:{' '}
@@ -665,19 +665,41 @@ export default function FechamentoDiarioClient() {
           />
         </label>
 
-        <p className="muted">
-          Data selecionada:{' '}
+        <div
+          style={{
+            marginTop: '10px',
+            padding: '10px 12px',
+            background: '#0c1811',
+            border:
+              '1px solid #284334',
+            borderRadius: '10px',
+            display: 'flex',
+            justifyContent:
+              'space-between',
+            alignItems: 'center',
+            gap: '10px',
+          }}
+        >
+          <span
+            className="muted"
+            style={{
+              fontSize: '13px',
+            }}
+          >
+            Data selecionada
+          </span>
+
           <strong>
             {dataBR(data)}
           </strong>
-        </p>
+        </div>
 
         {fechamentoConcluido && (
           <div
             style={{
-              marginTop: 15,
-              padding: 12,
-              borderRadius: 10,
+              marginTop: '14px',
+              padding: '12px',
+              borderRadius: '11px',
               border:
                 '1px solid #315846',
               background:
@@ -688,306 +710,498 @@ export default function FechamentoDiarioClient() {
               ✓ Serviço fechado
             </strong>
 
-            <div className="muted">
-              Os dados abaixo
-              correspondem ao
-              fechamento já
-              registrado. Eles
-              podem ser corrigidos,
-              se necessário.
+            <div
+              className="muted"
+              style={{
+                marginTop: '4px',
+                fontSize: '13px',
+                lineHeight: 1.45,
+              }}
+            >
+              Os dados abaixo correspondem ao
+              fechamento já registrado. Eles
+              podem ser corrigidos, se
+              necessário.
             </div>
           </div>
         )}
-      </div>
+      </section>
+
+      {/* CARREGAMENTO / SEM LANÇAMENTO */}
 
       {carregando ? (
-        <div className="card">
-          <p className="muted">
-            Consultando dados do
-            serviço...
+        <div
+          style={{
+            padding: '18px',
+            textAlign: 'center',
+            background: '#0c1811',
+            border:
+              '1px solid #284334',
+            borderRadius: '12px',
+          }}
+        >
+          <p
+            className="muted"
+            style={{ margin: 0 }}
+          >
+            Consultando dados do serviço...
           </p>
         </div>
-      ) : rows.length ===
-        0 ? (
+      ) : rows.length === 0 ? (
         <div
-          className="card"
           style={{
+            padding: '16px',
             border:
               '1px solid #f59e0b',
             background:
               'rgba(245,158,11,.08)',
+            borderRadius: '12px',
           }}
         >
-          <h2>
+          <strong>
             ⚠ Sem lançamento
-          </h2>
+          </strong>
 
-          <p>
-            Não houve lançamento
-            de arranchamento para o
-            serviço de{' '}
+          <p
+            style={{
+              marginBottom: '6px',
+            }}
+          >
+            Não houve lançamento de
+            arranchamento para o serviço de{' '}
             <strong>
               {dataBR(data)}
             </strong>.
           </p>
 
-          <p className="muted">
-            Faça primeiro o
-            planejamento do efetivo
-            para essa data.
+          <p
+            className="muted"
+            style={{
+              margin: 0,
+              fontSize: '13px',
+            }}
+          >
+            Faça primeiro o planejamento do
+            efetivo para essa data.
           </p>
         </div>
       ) : (
         <>
-          <div className="card">
-            <h2>
-              Efetivo por refeição
-            </h2>
+          {/* REFEIÇÕES */}
 
-            {rows.map(
-              (item) => {
-                const v =
-                  valores[
-                    item.id
-                  ] || {
-                    alimentado:
-                      '',
-                    faltas: '',
-                    militaresDeFora:
-                      '0',
-                  };
+          <section
+            style={{
+              marginTop: '18px',
+              paddingTop: '18px',
+              borderTop:
+                '1px solid rgba(255,255,255,0.08)',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                justifyContent:
+                  'space-between',
+                alignItems: 'center',
+                gap: '10px',
+                marginBottom: '14px',
+              }}
+            >
+              <div>
+                <strong
+                  style={{
+                    fontSize: '17px',
+                  }}
+                >
+                  Efetivo por refeição
+                </strong>
 
-                const total =
-                  numero(
-                    v.alimentado
-                  ) +
-                  numero(
-                    v.militaresDeFora
-                  );
+                <div
+                  className="muted"
+                  style={{
+                    marginTop: '3px',
+                    fontSize: '13px',
+                  }}
+                >
+                  Informe os dados reais de
+                  cada refeição.
+                </div>
+              </div>
 
-                const refeicao =
-                  nomes[
-                    item.refeicao
-                  ] ||
-                  item.refeicao;
+              <div
+                style={{
+                  minWidth: '32px',
+                  height: '32px',
+                  padding: '0 9px',
+                  borderRadius: '16px',
+                  background: '#183d2a',
+                  border:
+                    '1px solid #284334',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent:
+                    'center',
+                  fontWeight: 700,
+                }}
+              >
+                {rows.length}
+              </div>
+            </div>
 
-                return (
-                  <div
-                    key={
+            <div
+              style={{
+                display: 'grid',
+                gap: '12px',
+              }}
+            >
+              {rows.map(
+                (item) => {
+                  const v =
+                    valores[
                       item.id
-                    }
-                    style={{
-                      marginBottom:
-                        24,
-                      paddingBottom:
-                        24,
-                      borderBottom:
-                        '1px solid rgba(255,255,255,.12)',
-                    }}
-                  >
+                    ] || {
+                      alimentado:
+                        '',
+                      faltas: '',
+                      militaresDeFora:
+                        '0',
+                    };
+
+                  const total =
+                    numero(
+                      v.alimentado
+                    ) +
+                    numero(
+                      v.militaresDeFora
+                    );
+
+                  const refeicao =
+                    nomes[
+                      item.refeicao
+                    ] ||
+                    item.refeicao;
+
+                  return (
                     <div
-                      className="row"
+                      key={
+                        item.id
+                      }
                       style={{
-                        alignItems:
-                          'flex-start',
+                        padding:
+                          '14px',
+                        background:
+                          '#0c1811',
+                        border:
+                          '1px solid #284334',
+                        borderRadius:
+                          '13px',
                       }}
                     >
-                      <div>
-                        <h3
-                          style={{
-                            marginTop:
-                              0,
-                            marginBottom:
-                              5,
-                          }}
-                        >
-                          {
-                            refeicao
-                          }
-                        </h3>
-
-                        <div className="muted">
-                          Efetivo
-                          previsto:{' '}
-                          <strong>
+                      <div
+                        style={{
+                          display:
+                            'flex',
+                          justifyContent:
+                            'space-between',
+                          alignItems:
+                            'flex-start',
+                          gap: '12px',
+                          paddingBottom:
+                            '12px',
+                          marginBottom:
+                            '13px',
+                          borderBottom:
+                            '1px solid rgba(255,255,255,0.07)',
+                        }}
+                      >
+                        <div>
+                          <strong
+                            style={{
+                              fontSize:
+                                '16px',
+                            }}
+                          >
                             {
-                              item.totalPrevisto
+                              refeicao
                             }
                           </strong>
+
+                          <div
+                            className="muted"
+                            style={{
+                              marginTop:
+                                '5px',
+                              fontSize:
+                                '12px',
+                              lineHeight:
+                                1.5,
+                            }}
+                          >
+                            Previsto:{' '}
+                            <strong>
+                              {
+                                item.totalPrevisto
+                              }
+                            </strong>
+                            <br />
+                            Planejamento
+                            com margem:{' '}
+                            {
+                              item.efetivoPlanejamento
+                            }
+                          </div>
                         </div>
 
-                        <div className="muted">
-                          Planejamento
-                          com margem:{' '}
-                          {
-                            item.efetivoPlanejamento
-                          }
+                        <div
+                          style={{
+                            flexShrink:
+                              0,
+                            padding:
+                              '5px 8px',
+                            borderRadius:
+                              '8px',
+                            background:
+                              item.fechamentoRealizadoEm
+                                ? 'rgba(34,197,94,.10)'
+                                : 'rgba(245,158,11,.08)',
+                            border:
+                              item.fechamentoRealizadoEm
+                                ? '1px solid #315846'
+                                : '1px solid rgba(245,158,11,.35)',
+                            fontSize:
+                              '11px',
+                            fontWeight:
+                              700,
+                          }}
+                        >
+                          {item.fechamentoRealizadoEm
+                            ? '✓ Registrado'
+                            : 'Pendente'}
                         </div>
                       </div>
 
-                      <div>
-                        {item.fechamentoRealizadoEm ? (
-                          <strong>
-                            ✓ Registrado
+                      {item.observacao && (
+                        <div
+                          style={{
+                            marginBottom:
+                              '13px',
+                            padding:
+                              '10px',
+                            borderRadius:
+                              '9px',
+                            background:
+                              'rgba(255,255,255,.04)',
+                            border:
+                              '1px solid rgba(255,255,255,.07)',
+                          }}
+                        >
+                          <strong
+                            style={{
+                              fontSize:
+                                '12px',
+                            }}
+                          >
+                            Observação do
+                            planejamento
                           </strong>
-                        ) : (
-                          <strong>
-                            Pendente
-                          </strong>
-                        )}
-                      </div>
-                    </div>
 
-                    {item.observacao && (
+                          <div
+                            className="muted"
+                            style={{
+                              marginTop:
+                                '4px',
+                              fontSize:
+                                '12px',
+                              lineHeight:
+                                1.45,
+                            }}
+                          >
+                            {
+                              item.observacao
+                            }
+                          </div>
+                        </div>
+                      )}
+
+                      <div
+                        style={{
+                          display:
+                            'grid',
+                          gridTemplateColumns:
+                            'repeat(auto-fit, minmax(135px, 1fr))',
+                          gap: '9px',
+                        }}
+                      >
+                        <label>
+                          Efetivo alimentado
+
+                          <input
+                            type="number"
+                            min="0"
+                            step="1"
+                            inputMode="numeric"
+                            placeholder="0"
+                            value={
+                              v.alimentado
+                            }
+                            onChange={(
+                              e
+                            ) =>
+                              alterar(
+                                item.id,
+                                'alimentado',
+                                e.target
+                                  .value
+                              )
+                            }
+                          />
+                        </label>
+
+                        <label>
+                          Faltas
+
+                          <input
+                            type="number"
+                            min="0"
+                            step="1"
+                            inputMode="numeric"
+                            placeholder="0"
+                            value={
+                              v.faltas
+                            }
+                            onChange={(
+                              e
+                            ) =>
+                              alterar(
+                                item.id,
+                                'faltas',
+                                e.target
+                                  .value
+                              )
+                            }
+                          />
+                        </label>
+
+                        <label>
+                          Militares de fora
+
+                          <input
+                            type="number"
+                            min="0"
+                            step="1"
+                            inputMode="numeric"
+                            placeholder="0"
+                            value={
+                              v.militaresDeFora
+                            }
+                            onChange={(
+                              e
+                            ) =>
+                              alterar(
+                                item.id,
+                                'militaresDeFora',
+                                e.target
+                                  .value
+                              )
+                            }
+                          />
+                        </label>
+                      </div>
+
                       <div
                         style={{
                           marginTop:
-                            12,
-                          marginBottom:
-                            12,
-                          padding: 10,
-                          borderRadius:
-                            8,
+                            '11px',
+                          padding:
+                            '10px 12px',
                           background:
-                            'rgba(255,255,255,.05)',
+                            '#102018',
+                          border:
+                            '1px solid #284334',
+                          borderRadius:
+                            '10px',
+                          display:
+                            'flex',
+                          justifyContent:
+                            'space-between',
+                          alignItems:
+                            'center',
+                          gap: '10px',
                         }}
                       >
-                        <strong>
-                          Observação do
-                          planejamento:
+                        <span
+                          className="muted"
+                          style={{
+                            fontSize:
+                              '13px',
+                          }}
+                        >
+                          Total atendido
+                          nesta refeição
+                        </span>
+
+                        <strong
+                          style={{
+                            fontSize:
+                              '20px',
+                          }}
+                        >
+                          {total}
                         </strong>
-
-                        <div className="muted">
-                          {
-                            item.observacao
-                          }
-                        </div>
                       </div>
-                    )}
-
-                    <div
-                      className="grid"
-                      style={{
-                        marginTop:
-                          15,
-                      }}
-                    >
-                      <label>
-                        Efetivo
-                        alimentado
-
-                        <input
-                          type="number"
-                          min="0"
-                          step="1"
-                          value={
-                            v.alimentado
-                          }
-                          onChange={(
-                            e
-                          ) =>
-                            alterar(
-                              item.id,
-                              'alimentado',
-                              e.target
-                                .value
-                            )
-                          }
-                        />
-                      </label>
-
-                      <label>
-                        Faltas
-
-                        <input
-                          type="number"
-                          min="0"
-                          step="1"
-                          value={
-                            v.faltas
-                          }
-                          onChange={(
-                            e
-                          ) =>
-                            alterar(
-                              item.id,
-                              'faltas',
-                              e.target
-                                .value
-                            )
-                          }
-                        />
-                      </label>
-
-                      <label>
-                        Militares de
-                        fora
-
-                        <input
-                          type="number"
-                          min="0"
-                          step="1"
-                          value={
-                            v.militaresDeFora
-                          }
-                          onChange={(
-                            e
-                          ) =>
-                            alterar(
-                              item.id,
-                              'militaresDeFora',
-                              e.target
-                                .value
-                            )
-                          }
-                        />
-                      </label>
                     </div>
+                  );
+                }
+              )}
+            </div>
+          </section>
 
-                    <div
-                      className="row"
-                      style={{
-                        marginTop:
-                          12,
-                      }}
-                    >
-                      <span>
-                        Total atendido
-                        nesta refeição
-                      </span>
+          {/* SOBRA E OBSERVAÇÃO */}
 
-                      <strong>
-                        {total}
-                      </strong>
-                    </div>
-                  </div>
-                );
-              }
-            )}
-          </div>
+          <section
+            style={{
+              marginTop: '18px',
+              paddingTop: '18px',
+              borderTop:
+                '1px solid rgba(255,255,255,0.08)',
+            }}
+          >
+            <div
+              style={{
+                marginBottom: '14px',
+              }}
+            >
+              <strong
+                style={{
+                  fontSize: '17px',
+                }}
+              >
+                Fechamento do serviço diário
+              </strong>
 
-          <div className="card">
-            <h2>
-              Fechamento do serviço
-              diário
-            </h2>
-
-            <p className="muted">
-              Após o encerramento
-              do serviço de
-              alimentação, informe
-              uma única vez a sobra
-              pesada total do dia.
-            </p>
+              <p
+                className="muted"
+                style={{
+                  margin: '5px 0 0',
+                  fontSize: '13px',
+                  lineHeight: 1.5,
+                }}
+              >
+                Após o encerramento do serviço
+                de alimentação, informe uma
+                única vez a sobra pesada total
+                do dia.
+              </p>
+            </div>
 
             <label>
-              Sobra pesada total do
-              serviço (kg)
+              Sobra pesada total do serviço (kg)
 
               <input
                 type="number"
                 min="0"
                 step="0.001"
+                inputMode="decimal"
                 value={sobraKg}
                 onChange={(e) => {
                   setSobraKg(
@@ -1004,11 +1218,11 @@ export default function FechamentoDiarioClient() {
             <label
               style={{
                 display: 'block',
-                marginTop: 16,
+                marginTop: '14px',
               }}
             >
-              Observação do
-              fechamento (opcional)
+              Observação do fechamento
+              (opcional)
 
               <textarea
                 value={
@@ -1024,26 +1238,10 @@ export default function FechamentoDiarioClient() {
                   setErro('');
                 }}
                 placeholder="Informe alguma ocorrência ou observação relevante sobre o serviço do dia."
+                rows={4}
                 style={{
-                  width: '100%',
                   minHeight:
-                    '90px',
-                  boxSizing:
-                    'border-box',
-                  padding:
-                    '14px 16px',
-                  borderRadius:
-                    '10px',
-                  border:
-                    '1px solid #315846',
-                  background:
-                    '#071a12',
-                  color:
-                    '#f8fafc',
-                  fontSize:
-                    '16px',
-                  lineHeight:
-                    '1.5',
+                    '95px',
                   resize:
                     'vertical',
                 }}
@@ -1053,8 +1251,10 @@ export default function FechamentoDiarioClient() {
             <div
               className="muted"
               style={{
+                marginTop: '4px',
                 textAlign:
                   'right',
+                fontSize: '12px',
               }}
             >
               {
@@ -1062,118 +1262,155 @@ export default function FechamentoDiarioClient() {
               }
               /1000
             </div>
-          </div>
+          </section>
 
-          <div className="card">
-            <h2>
-              Resumo do dia
-            </h2>
+          {/* RESUMO */}
 
-            <div className="row">
-              <span>
-                Refeições realizadas
-              </span>
-
-              <strong>
-                {rows.length}
-              </strong>
-            </div>
-
-            <div className="row">
-              <span>
-                Efetivo previsto
-              </span>
-
-              <strong>
-                {resumo.previsto}
-              </strong>
-            </div>
-
-            <div className="row">
-              <span>
-                Efetivo alimentado
-              </span>
-
-              <strong>
-                {
-                  resumo.alimentado
-                }
-              </strong>
-            </div>
-
-            <div className="row">
-              <span>
-                Faltas
-              </span>
-
-              <strong>
-                {resumo.faltas}
-              </strong>
-            </div>
-
-            <div className="row">
-              <span>
-                Militares de fora
-              </span>
-
-              <strong>
-                {
-                  resumo.militaresDeFora
-                }
-              </strong>
-            </div>
-
+          <section
+            style={{
+              marginTop: '18px',
+              padding: '15px',
+              background: '#0c1811',
+              border:
+                '1px solid #284334',
+              borderRadius: '13px',
+            }}
+          >
             <div
-              className="row"
               style={{
-                marginTop: 10,
-                paddingTop: 12,
-                borderTop:
-                  '1px solid rgba(255,255,255,.12)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                marginBottom: '13px',
               }}
             >
-              <span>
-                <strong>
-                  Total de
-                  atendimentos no
-                  dia
-                </strong>
+              <span
+                style={{
+                  fontSize: '20px',
+                }}
+              >
+                ≡
               </span>
 
-              <strong>
+              <strong
+                style={{
+                  fontSize: '17px',
+                }}
+              >
+                Resumo do dia
+              </strong>
+            </div>
+
+            <LinhaResumo
+              titulo="Refeições realizadas"
+              valor={rows.length}
+            />
+
+            <LinhaResumo
+              titulo="Efetivo previsto"
+              valor={resumo.previsto}
+            />
+
+            <LinhaResumo
+              titulo="Efetivo alimentado"
+              valor={resumo.alimentado}
+            />
+
+            <LinhaResumo
+              titulo="Faltas"
+              valor={resumo.faltas}
+            />
+
+            <LinhaResumo
+              titulo="Militares de fora"
+              valor={
+                resumo.militaresDeFora
+              }
+            />
+
+            <div
+              style={{
+                marginTop: '10px',
+                padding:
+                  '12px',
+                background:
+                  '#102018',
+                border:
+                  '1px solid #284334',
+                borderRadius:
+                  '10px',
+                display:
+                  'flex',
+                justifyContent:
+                  'space-between',
+                alignItems:
+                  'center',
+                gap: '10px',
+              }}
+            >
+              <strong
+                style={{
+                  fontSize: '13px',
+                }}
+              >
+                Total de atendimentos no dia
+              </strong>
+
+              <strong
+                style={{
+                  fontSize: '22px',
+                }}
+              >
                 {
                   resumo.totalAtendido
                 }
               </strong>
             </div>
 
-            <p className="muted">
-              O total representa
-              atendimentos
-              realizados nas
-              refeições do dia. A
-              mesma pessoa pode
-              participar de mais de
-              uma refeição.
+            <p
+              className="muted"
+              style={{
+                margin:
+                  '9px 0 0',
+                fontSize: '12px',
+                lineHeight: 1.45,
+              }}
+            >
+              O total representa atendimentos
+              realizados nas refeições do dia.
+              A mesma pessoa pode participar de
+              mais de uma refeição.
             </p>
 
             <div
-              className="row"
               style={{
-                marginTop: 18,
-                paddingTop: 16,
+                marginTop: '14px',
+                paddingTop: '13px',
                 borderTop:
-                  '1px solid rgba(255,255,255,.12)',
+                  '1px solid rgba(255,255,255,.10)',
+                display: 'flex',
+                justifyContent:
+                  'space-between',
+                alignItems:
+                  'center',
+                gap: '10px',
               }}
             >
-              <span>
-                <strong>
-                  Sobra pesada total
-                  do serviço
-                </strong>
-              </span>
+              <strong
+                style={{
+                  fontSize: '13px',
+                }}
+              >
+                Sobra pesada total do serviço
+              </strong>
 
-              <strong>
+              <strong
+                style={{
+                  fontSize: '18px',
+                  whiteSpace:
+                    'nowrap',
+                }}
+              >
                 {sobraKg.trim() ===
                 ''
                   ? '—'
@@ -1190,13 +1427,23 @@ export default function FechamentoDiarioClient() {
             </div>
 
             {msg && (
-              <div className="success">
+              <div
+                className="success"
+                style={{
+                  marginTop: '14px',
+                }}
+              >
                 {msg}
               </div>
             )}
 
             {erro && (
-              <div className="error">
+              <div
+                className="error"
+                style={{
+                  marginTop: '14px',
+                }}
+              >
                 {erro}
               </div>
             )}
@@ -1210,6 +1457,10 @@ export default function FechamentoDiarioClient() {
               onClick={
                 concluir
               }
+              style={{
+                width: '100%',
+                marginTop: '15px',
+              }}
             >
               {salvando
                 ? 'Salvando...'
@@ -1217,17 +1468,58 @@ export default function FechamentoDiarioClient() {
                   ? 'Corrigir fechamento do dia'
                   : 'Registrar fechamento do dia'}
             </button>
-          </div>
+          </section>
         </>
       )}
 
       {!carregando &&
         rows.length === 0 &&
         erro && (
-          <div className="error">
+          <div
+            className="error"
+            style={{
+              marginTop: '14px',
+            }}
+          >
             {erro}
           </div>
         )}
-    </>
+    </div>
+  );
+}
+
+function LinhaResumo({
+  titulo,
+  valor,
+}: {
+  titulo: string;
+  valor: number;
+}) {
+  return (
+    <div
+      style={{
+        minHeight: '38px',
+        display: 'flex',
+        justifyContent:
+          'space-between',
+        alignItems: 'center',
+        gap: '10px',
+        borderBottom:
+          '1px solid rgba(255,255,255,.07)',
+      }}
+    >
+      <span
+        className="muted"
+        style={{
+          fontSize: '13px',
+        }}
+      >
+        {titulo}
+      </span>
+
+      <strong>
+        {valor}
+      </strong>
+    </div>
   );
 }
