@@ -171,16 +171,80 @@ export default async function Page() {
         ← Início
       </Link>
 
-      <h1>
-        Ajustes e movimentações
-        especiais
-      </h1>
+      <header
+        style={{
+          marginTop: '18px',
+          marginBottom: '20px',
+        }}
+      >
+        <h1
+          style={{
+            marginBottom: '6px',
+          }}
+        >
+          Ajustes e movimentações
+          especiais
+        </h1>
 
-      <AjustesClient
-        rows={rows}
-        saidas={saidas}
-        locais={locais}
-      />
+        <p
+          className="muted"
+          style={{
+            margin: 0,
+          }}
+        >
+          Registre devoluções, correções,
+          perdas e outras movimentações
+          necessárias no estoque.
+        </p>
+      </header>
+
+      <section className="card">
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '10px',
+            marginBottom: '18px',
+            paddingBottom: '14px',
+            borderBottom:
+              '1px solid rgba(255,255,255,0.08)',
+          }}
+        >
+          <div
+            style={{
+              fontSize: '23px',
+              lineHeight: 1,
+            }}
+          >
+            ↔
+          </div>
+
+          <div>
+            <strong>
+              Movimentações do estoque
+            </strong>
+
+            <div
+              className="muted"
+              style={{
+                marginTop: '4px',
+                fontSize: '13px',
+                lineHeight: 1.45,
+              }}
+            >
+              Selecione o procedimento e
+              informe os dados necessários
+              para realizar a movimentação.
+            </div>
+          </div>
+        </div>
+
+        <AjustesClient
+          rows={rows}
+          saidas={saidas}
+          locais={locais}
+        />
+      </section>
 
       <NavegacaoInferior />
     </main>
