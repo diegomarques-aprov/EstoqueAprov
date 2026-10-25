@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { currentUser } from '@/lib/auth';
 import EfetivoClient from '@/components/EfetivoClient';
+import NavegacaoInferior from '@/components/NavegacaoInferior';
 
 export default async function Page() {
   const user = await currentUser();
@@ -62,6 +63,8 @@ export default async function Page() {
           </Link>
         </div>
       </div>
+
+      <NavegacaoInferior />
     </main>
   );
 }
