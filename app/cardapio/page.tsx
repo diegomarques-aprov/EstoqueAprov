@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { currentUser } from '@/lib/auth';
 import CardapioClient from '@/components/CardapioClient';
+import NavegacaoInferior from '@/components/NavegacaoInferior';
 
 export default async function CardapioPage() {
   const u = await currentUser();
@@ -25,19 +26,12 @@ export default async function CardapioPage() {
 
   return (
     <main>
-      <div
-        className="actions"
-        style={{
-          marginBottom: 16,
-        }}
+      <Link
+        className="back"
+        href="/inicio"
       >
-        <Link
-          className="btn secondary"
-          href="/inicio"
-        >
-          ← Início
-        </Link>
-      </div>
+        ← Início
+      </Link>
 
       <h1>Cardápio</h1>
 
@@ -76,6 +70,8 @@ export default async function CardapioPage() {
       <CardapioClient
         podeEditar={administrador}
       />
+
+      <NavegacaoInferior />
     </main>
   );
 }
