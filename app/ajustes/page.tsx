@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { currentUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import AjustesClient from '@/components/AjustesClient';
+import NavegacaoInferior from '@/components/NavegacaoInferior';
 
 export default async function Page() {
   const usuario = await currentUser();
@@ -180,6 +181,8 @@ export default async function Page() {
         saidas={saidas}
         locais={locais}
       />
+
+      <NavegacaoInferior />
     </main>
   );
 }
