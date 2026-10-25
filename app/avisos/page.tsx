@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { currentUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import ConferenciaFLVClient from '@/components/ConferenciaFLVClient';
+import NavegacaoInferior from '@/components/NavegacaoInferior';
 
 function inicioDoDiaUTC(data: Date) {
   return new Date(
@@ -912,6 +913,8 @@ export default async function AvisosPage() {
             </p>
           </div>
         )}
+
+      <NavegacaoInferior />
     </main>
   );
 }
