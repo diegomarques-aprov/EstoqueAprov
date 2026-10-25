@@ -5,8 +5,6 @@ import type {
   Viewport,
 } from 'next';
 
-import NavigationFooter from '@/components/NavigationFooter';
-
 export const metadata: Metadata = {
   title: 'EstoqueAprov',
 
@@ -66,8 +64,6 @@ export default function RootLayout({
     <html lang="pt-BR">
       <body>
         {children}
-
-        <NavigationFooter />
       </body>
     </html>
   );
