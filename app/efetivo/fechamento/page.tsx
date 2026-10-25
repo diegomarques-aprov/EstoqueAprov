@@ -29,9 +29,76 @@ export default async function Page() {
         ← Efetivo alimentado
       </Link>
 
-      <h1>Fechamento Diário</h1>
+      <header
+        style={{
+          marginTop: '18px',
+          marginBottom: '20px',
+        }}
+      >
+        <h1
+          style={{
+            marginBottom: '6px',
+          }}
+        >
+          Fechamento Diário
+        </h1>
 
-      <FechamentoDiarioClient />
+        <p
+          className="muted"
+          style={{
+            margin: 0,
+            lineHeight: 1.5,
+          }}
+        >
+          Registre os dados reais do serviço após
+          a realização das refeições do dia.
+        </p>
+      </header>
+
+      <section className="card">
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '10px',
+            marginBottom: '18px',
+            paddingBottom: '14px',
+            borderBottom:
+              '1px solid rgba(255,255,255,0.08)',
+          }}
+        >
+          <div
+            style={{
+              fontSize: '23px',
+              lineHeight: 1,
+            }}
+          >
+            ✓
+          </div>
+
+          <div>
+            <strong>
+              Fechamento do serviço
+            </strong>
+
+            <div
+              className="muted"
+              style={{
+                marginTop: '4px',
+                fontSize: '13px',
+                lineHeight: 1.45,
+              }}
+            >
+              Confira o efetivo previsto e informe
+              o comparecimento, atendimentos adicionais
+              e demais dados necessários para concluir
+              o serviço diário.
+            </div>
+          </div>
+        </div>
+
+        <FechamentoDiarioClient />
+      </section>
 
       <NavegacaoInferior
         voltarHref="/efetivo"
