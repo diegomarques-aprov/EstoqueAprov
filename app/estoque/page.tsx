@@ -18,9 +18,35 @@ export default async function Page() {
         ← Início
       </Link>
 
-      <h1>Estoque atual</h1>
+      <header
+        style={{
+          marginTop: '18px',
+          marginBottom: '20px',
+        }}
+      >
+        <h1
+          style={{
+            marginBottom: '6px',
+          }}
+        >
+          Estoque atual
+        </h1>
 
-      <EstoqueClient />
+        <p
+          className="muted"
+          style={{
+            margin: 0,
+          }}
+        >
+          Consulte os gêneros disponíveis
+          e acompanhe a situação atual do
+          estoque.
+        </p>
+      </header>
+
+      <section className="card">
+        <EstoqueClient />
+      </section>
 
       <NavegacaoInferior />
     </main>
