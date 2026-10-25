@@ -63,6 +63,14 @@ const destinos = [
   ['OUTRO', 'Outro'],
 ] as const;
 
+const estiloSecao = {
+  background: '#0c1811',
+  border: '1px solid #284334',
+  borderRadius: '14px',
+  padding: '16px',
+  marginBottom: '14px',
+};
+
 export default function SaidaClient() {
   const [classe, setClasse] =
     useState<'QS' | 'QR'>('QS');
@@ -178,7 +186,7 @@ export default function SaidaClient() {
     ) {
       for (
         const x of
-          dadosEstoque as E[]
+        dadosEstoque as E[]
       ) {
         novosSaldos[
           x.generoId
@@ -205,13 +213,13 @@ export default function SaidaClient() {
   }, [classe]);
 
   /*
-   * IMPORTANTE:
    * Todos os gêneros ativos permanecem
    * disponíveis na estrutura.
    *
    * Saldo zero não remove gênero,
    * categoria nem grupo da tela.
    */
+
   const generosAtivos =
     useMemo(
       () =>
@@ -233,7 +241,7 @@ export default function SaidaClient() {
 
       for (
         const genero of
-          generosAtivos
+        generosAtivos
       ) {
         const grupo =
           genero.categoria
@@ -271,7 +279,7 @@ export default function SaidaClient() {
 
     for (
       const genero of
-        generosAtivos
+      generosAtivos
     ) {
       const categoria =
         genero.categoria;
@@ -642,37 +650,69 @@ export default function SaidaClient() {
 
   return (
     <>
-      <div className="tabs">
+      {/* QS / QR */}
+
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns:
+            '1fr 1fr',
+          gap: '8px',
+          marginBottom: '18px',
+        }}
+      >
         <button
-          className={
-            'tab ' +
-            (classe === 'QS'
-              ? 'active'
-              : '')
-          }
+          type="button"
           onClick={() =>
             setClasse('QS')
           }
-          type="button"
+          style={{
+            minHeight: '48px',
+            borderRadius: '11px',
+            border:
+              classe === 'QS'
+                ? '1px solid #2b8a57'
+                : '1px solid #355143',
+            background:
+              classe === 'QS'
+                ? '#2b8a57'
+                : '#0c1811',
+            color: '#eef7f1',
+            fontSize: '15px',
+            fontWeight: 800,
+            cursor: 'pointer',
+          }}
         >
           QS
         </button>
 
         <button
-          className={
-            'tab ' +
-            (classe === 'QR'
-              ? 'active'
-              : '')
-          }
+          type="button"
           onClick={() =>
             setClasse('QR')
           }
-          type="button"
+          style={{
+            minHeight: '48px',
+            borderRadius: '11px',
+            border:
+              classe === 'QR'
+                ? '1px solid #2b8a57'
+                : '1px solid #355143',
+            background:
+              classe === 'QR'
+                ? '#2b8a57'
+                : '#0c1811',
+            color: '#eef7f1',
+            fontSize: '15px',
+            fontWeight: 800,
+            cursor: 'pointer',
+          }}
         >
           QR
         </button>
       </div>
+
+      {/* MENSAGENS */}
 
       {msg && (
         <div
@@ -688,30 +728,59 @@ export default function SaidaClient() {
         </div>
       )}
 
-      <div className="card">
-        <h2>
-          Destino da saída
-        </h2>
+      {/* DESTINO */}
+
+      <section style={estiloSecao}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '9px',
+            marginBottom: '14px',
+          }}
+        >
+          <span
+            style={{
+              fontSize: '21px',
+            }}
+          >
+            📍
+          </span>
+
+          <div>
+            <strong
+              style={{
+                fontSize: '17px',
+              }}
+            >
+              Destino da saída
+            </strong>
+
+            <div
+              className="muted"
+              style={{
+                fontSize: '13px',
+                marginTop: '2px',
+              }}
+            >
+              Informe a finalidade da
+              retirada.
+            </div>
+          </div>
+        </div>
 
         <div className="grid">
           <label>
             Refeição/destino
 
             <select
-              value={
-                destino
-              }
-              onChange={(
-                e
-              ) => {
+              value={destino}
+              onChange={(e) => {
                 setDestino(
-                  e.target
-                    .value
+                  e.target.value
                 );
 
-                setRevisar(
-                  false
-                );
+                setRevisar(false);
               }}
             >
               {destinos.map(
@@ -720,12 +789,8 @@ export default function SaidaClient() {
                   nome,
                 ]) => (
                   <option
-                    value={
-                      valor
-                    }
-                    key={
-                      valor
-                    }
+                    value={valor}
+                    key={valor}
                   >
                     {nome}
                   </option>
@@ -740,17 +805,12 @@ export default function SaidaClient() {
             <input
               type="date"
               value={data}
-              onChange={(
-                e
-              ) => {
+              onChange={(e) => {
                 setData(
-                  e.target
-                    .value
+                  e.target.value
                 );
 
-                setRevisar(
-                  false
-                );
+                setRevisar(false);
               }}
             />
           </label>
@@ -758,45 +818,86 @@ export default function SaidaClient() {
 
         {destino ===
           'SERVICO_DIA_SEGUINTE' && (
-          <p className="muted">
-            Esta opção identifica
-            apenas a finalidade da
-            saída. A data e a hora
-            da movimentação serão
-            registradas no momento
-            real em que o material
-            sair do estoque.
-          </p>
+          <div
+            style={{
+              background:
+                'rgba(255,255,255,0.04)',
+              border:
+                '1px solid rgba(255,255,255,0.08)',
+              borderRadius: '11px',
+              padding: '12px',
+              marginBottom: '14px',
+            }}
+          >
+            <p
+              className="muted"
+              style={{
+                margin: 0,
+                fontSize: '13px',
+              }}
+            >
+              Esta opção identifica
+              apenas a finalidade da
+              saída. A data e a hora da
+              movimentação serão
+              registradas no momento
+              real em que o material
+              sair do estoque.
+            </p>
+          </div>
         )}
 
         <label>
           Observação
 
           <input
-            value={
-              observacao
-            }
-            onChange={(
-              e
-            ) => {
+            value={observacao}
+            onChange={(e) => {
               setObservacao(
-                e.target
-                  .value
+                e.target.value
               );
 
-              setRevisar(
-                false
-              );
+              setRevisar(false);
             }}
+            placeholder="Observação opcional"
           />
         </label>
-      </div>
+      </section>
 
-      <div className="card">
-        <div className="top">
-          <h2>
-            Gêneros
-          </h2>
+      {/* GÊNEROS */}
+
+      <section style={estiloSecao}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent:
+              'space-between',
+            alignItems: 'center',
+            gap: '12px',
+            flexWrap: 'wrap',
+            marginBottom: '14px',
+          }}
+        >
+          <div>
+            <strong
+              style={{
+                fontSize: '17px',
+              }}
+            >
+              Gêneros
+            </strong>
+
+            <div
+              className="muted"
+              style={{
+                fontSize: '13px',
+                marginTop: '3px',
+              }}
+            >
+              Selecione os materiais
+              desta saída.
+            </div>
+          </div>
 
           <button
             className="linkbtn"
@@ -809,12 +910,14 @@ export default function SaidaClient() {
                 ]
               );
 
-              setRevisar(
-                false
-              );
+              setRevisar(false);
+            }}
+            style={{
+              minHeight: '38px',
+              fontWeight: 700,
             }}
           >
-            + Adicionar gênero
+            + Adicionar
           </button>
         </div>
 
@@ -861,18 +964,35 @@ export default function SaidaClient() {
                 : false;
 
             return (
-              <div
+              <article
                 className="itembox"
-                key={
-                  indice
-                }
+                key={indice}
+                style={{
+                  marginBottom: '14px',
+                  padding: '15px',
+                }}
               >
-                <div className="top">
-                  <b>
-                    Item{' '}
-                    {indice +
-                      1}
-                  </b>
+                {/* CABEÇALHO ITEM */}
+
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent:
+                      'space-between',
+                    alignItems:
+                      'center',
+                    gap: '10px',
+                    marginBottom:
+                      '12px',
+                    paddingBottom:
+                      '10px',
+                    borderBottom:
+                      '1px solid rgba(255,255,255,0.08)',
+                  }}
+                >
+                  <strong>
+                    Item {indice + 1}
+                  </strong>
 
                   {itens.length >
                     1 && (
@@ -904,266 +1024,219 @@ export default function SaidaClient() {
                   )}
                 </div>
 
-                <div className="grid">
-                  <label>
-                    Grupo
+                {/* GRUPO */}
 
-                    <select
-                      value={
-                        item.grupoId
-                      }
-                      onChange={(
-                        e
-                      ) =>
-                        alterarGrupo(
-                          indice,
-                          e.target
-                            .value
-                        )
-                      }
-                    >
-                      <option value="">
-                        Selecione...
-                      </option>
+                <label>
+                  Grupo
 
-                      {grupos.map(
-                        (
-                          grupo
-                        ) => (
+                  <select
+                    value={
+                      item.grupoId
+                    }
+                    onChange={(e) =>
+                      alterarGrupo(
+                        indice,
+                        e.target.value
+                      )
+                    }
+                  >
+                    <option value="">
+                      Selecione...
+                    </option>
+
+                    {grupos.map(
+                      (grupo) => (
+                        <option
+                          key={
+                            grupo.id
+                          }
+                          value={
+                            grupo.id
+                          }
+                        >
+                          {grupo.nome}
+                        </option>
+                      )
+                    )}
+                  </select>
+                </label>
+
+                {/* CATEGORIA */}
+
+                <label>
+                  Categoria
+
+                  <select
+                    value={
+                      item.categoriaId
+                    }
+                    disabled={
+                      !item.grupoId
+                    }
+                    onChange={(e) =>
+                      alterarCategoria(
+                        indice,
+                        e.target.value
+                      )
+                    }
+                  >
+                    <option value="">
+                      {item.grupoId
+                        ? 'Selecione...'
+                        : 'Selecione o grupo primeiro'}
+                    </option>
+
+                    {categorias.map(
+                      (
+                        categoria
+                      ) => {
+                        const temEstoque =
+                          categoriaTemEstoque(
+                            categoria.id
+                          );
+
+                        return (
                           <option
                             key={
-                              grupo.id
+                              categoria.id
                             }
                             value={
-                              grupo.id
+                              categoria.id
                             }
                           >
                             {
-                              grupo.nome
+                              categoria.nome
                             }
+                            {!temEstoque
+                              ? ' — sem estoque'
+                              : ''}
                           </option>
-                        )
-                      )}
-                    </select>
-                  </label>
-
-                  <label>
-                    Categoria
-
-                    <select
-                      value={
-                        item.categoriaId
+                        );
                       }
-                      disabled={
-                        !item.grupoId
-                      }
-                      onChange={(
-                        e
-                      ) =>
-                        alterarCategoria(
-                          indice,
-                          e.target
-                            .value
-                        )
-                      }
-                    >
-                      <option value="">
-                        {item.grupoId
-                          ? 'Selecione...'
-                          : 'Selecione o grupo primeiro'}
-                      </option>
-
-                      {categorias.map(
-                        (
-                          categoria
-                        ) => {
-                          const temEstoque =
-                            categoriaTemEstoque(
-                              categoria.id
-                            );
-
-                          return (
-                            <option
-                              key={
-                                categoria.id
-                              }
-                              value={
-                                categoria.id
-                              }
-                            >
-                              {
-                                categoria.nome
-                              }
-                              {!temEstoque
-                                ? ' — sem estoque'
-                                : ''}
-                            </option>
-                          );
-                        }
-                      )}
-                    </select>
-                  </label>
-                </div>
+                    )}
+                  </select>
+                </label>
 
                 {categoriaSemEstoque && (
-                  <div
-                    className="error"
-                    style={{
-                      marginTop:
-                        10,
-                    }}
-                  >
+                  <div className="error">
                     Sem estoque
                     disponível nesta
                     categoria.
                   </div>
                 )}
 
-                <div className="grid">
-                  <label>
-                    Gênero
+                {/* GÊNERO */}
 
-                    <select
-                      value={
-                        item.generoId
-                      }
-                      disabled={
-                        !item.categoriaId
-                      }
-                      onChange={(
-                        e
-                      ) =>
-                        alterarGenero(
-                          indice,
-                          e.target
-                            .value
-                        )
-                      }
-                    >
-                      <option value="">
-                        {item.categoriaId
-                          ? 'Selecione...'
-                          : 'Selecione a categoria primeiro'}
-                      </option>
+                <label>
+                  Gênero
 
-                      {generosCategoria.map(
-                        (
-                          generoOpcao
-                        ) => {
-                          const saldoOpcao =
-                            saldoGenero(
-                              generoOpcao.id
-                            );
+                  <select
+                    value={
+                      item.generoId
+                    }
+                    disabled={
+                      !item.categoriaId
+                    }
+                    onChange={(e) =>
+                      alterarGenero(
+                        indice,
+                        e.target.value
+                      )
+                    }
+                  >
+                    <option value="">
+                      {item.categoriaId
+                        ? 'Selecione...'
+                        : 'Selecione a categoria primeiro'}
+                    </option>
 
-                          const baixo =
-                            abaixoDoMinimo(
-                              generoOpcao
-                            );
-
-                          return (
-                            <option
-                              key={
-                                generoOpcao.id
-                              }
-                              value={
-                                generoOpcao.id
-                              }
-                            >
-                              {
-                                generoOpcao.nome
-                              }{' '}
-                              —{' '}
-                              {saldoOpcao.toLocaleString(
-                                'pt-BR'
-                              )}{' '}
-                              {
-                                generoOpcao
-                                  .unidade
-                                  .sigla
-                              }
-                              {saldoOpcao <=
-                              0
-                                ? ' — SEM ESTOQUE'
-                                : baixo
-                                ? ' — ESTOQUE BAIXO'
-                                : ''}
-                            </option>
+                    {generosCategoria.map(
+                      (
+                        generoOpcao
+                      ) => {
+                        const saldoOpcao =
+                          saldoGenero(
+                            generoOpcao.id
                           );
-                        }
-                      )}
-                    </select>
-                  </label>
 
-                  <label>
-                    Quantidade{' '}
-                    {genero &&
-                      `(${genero.unidade.sigla})`}
+                        const baixo =
+                          abaixoDoMinimo(
+                            generoOpcao
+                          );
 
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.001"
-                      value={
-                        item.quantidade
+                        return (
+                          <option
+                            key={
+                              generoOpcao.id
+                            }
+                            value={
+                              generoOpcao.id
+                            }
+                          >
+                            {
+                              generoOpcao.nome
+                            }{' '}
+                            —{' '}
+                            {saldoOpcao.toLocaleString(
+                              'pt-BR'
+                            )}{' '}
+                            {
+                              generoOpcao
+                                .unidade
+                                .sigla
+                            }
+                            {saldoOpcao <=
+                            0
+                              ? ' — SEM ESTOQUE'
+                              : baixo
+                              ? ' — ESTOQUE BAIXO'
+                              : ''}
+                          </option>
+                        );
                       }
-                      disabled={
-                        !genero ||
-                        saldo <=
-                          0
-                      }
-                      onChange={(
-                        e
-                      ) =>
-                        alterarQuantidade(
-                          indice,
-                          e.target
-                            .value
-                        )
-                      }
-                    />
-                  </label>
-                </div>
+                    )}
+                  </select>
+                </label>
 
-                {genero &&
-                  saldo <= 0 && (
-                    <div
-                      className="error"
+                {/* SALDO DESTACADO */}
+
+                {genero && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent:
+                        'space-between',
+                      alignItems:
+                        'center',
+                      gap: '10px',
+                      background:
+                        '#102018',
+                      border:
+                        '1px solid #284334',
+                      borderRadius:
+                        '11px',
+                      padding:
+                        '11px 12px',
+                      marginBottom:
+                        '14px',
+                    }}
+                  >
+                    <span
+                      className="muted"
                       style={{
-                        marginTop:
-                          10,
+                        fontSize:
+                          '13px',
                       }}
                     >
-                      Sem estoque
-                      disponível para{' '}
-                      {
-                        genero.nome
-                      }
-                      . A saída está
-                      bloqueada.
-                    </div>
-                  )}
+                      Disponível
+                    </span>
 
-                {genero &&
-                  estoqueBaixo && (
-                    <div
-                      className="error"
+                    <strong
                       style={{
-                        marginTop:
-                          10,
+                        fontSize:
+                          '16px',
                       }}
                     >
-                      ⚠ Estoque baixo
-                      — abaixo do
-                      limite mínimo.
-                      A saída continua
-                      disponível.
-                    </div>
-                  )}
-
-                {genero &&
-                  saldo > 0 && (
-                    <span className="muted">
-                      Disponível:{' '}
                       {saldo.toLocaleString(
                         'pt-BR'
                       )}{' '}
@@ -1172,64 +1245,320 @@ export default function SaidaClient() {
                           .unidade
                           .sigla
                       }
-                      . O sistema
-                      utilizará
-                      primeiro o lote
-                      válido com
-                      vencimento mais
-                      próximo (PVPS).
-                    </span>
-                  )}
-              </div>
+                    </strong>
+                  </div>
+                )}
+
+                {/* QUANTIDADE */}
+
+                <label>
+                  Quantidade da saída{' '}
+                  {genero &&
+                    `(${genero.unidade.sigla})`}
+
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.001"
+                    inputMode="decimal"
+                    value={
+                      item.quantidade
+                    }
+                    disabled={
+                      !genero ||
+                      saldo <= 0
+                    }
+                    onChange={(e) =>
+                      alterarQuantidade(
+                        indice,
+                        e.target.value
+                      )
+                    }
+                    placeholder="0"
+                  />
+                </label>
+
+                {/* ALERTAS */}
+
+                {genero &&
+                  saldo <= 0 && (
+                  <div className="error">
+                    Sem estoque
+                    disponível para{' '}
+                    {genero.nome}. A
+                    saída está
+                    bloqueada.
+                  </div>
+                )}
+
+                {genero &&
+                  estoqueBaixo && (
+                  <div
+                    style={{
+                      background:
+                        'rgba(245,158,11,0.08)',
+                      border:
+                        '1px solid #f59e0b',
+                      borderRadius:
+                        '11px',
+                      padding:
+                        '11px 12px',
+                      marginBottom:
+                        '12px',
+                    }}
+                  >
+                    <strong>
+                      ⚠ Estoque baixo
+                    </strong>
+
+                    <div
+                      className="muted"
+                      style={{
+                        marginTop:
+                          '4px',
+                        fontSize:
+                          '13px',
+                      }}
+                    >
+                      O saldo está abaixo
+                      do estoque mínimo.
+                      A saída continua
+                      disponível.
+                    </div>
+                  </div>
+                )}
+
+                {genero &&
+                  saldo > 0 && (
+                  <div
+                    className="muted"
+                    style={{
+                      fontSize: '13px',
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    O sistema utilizará
+                    primeiro o lote
+                    válido com
+                    vencimento mais
+                    próximo (PVPS).
+                  </div>
+                )}
+              </article>
             );
           }
         )}
-      </div>
+      </section>
 
-      <div className="card">
-        <div className="top">
-          <div>
-            <b>
-              {
-                destinos.find(
-                  (x) =>
-                    x[0] ===
-                    destino
-                )?.[1]
-              }{' '}
-              · {classe}
-            </b>
+      {/* RESUMO */}
 
-            <p className="muted">
-              {itens.length}{' '}
-              item(ns) na saída
-            </p>
+      <section style={estiloSecao}>
+        <div
+          style={{
+            marginBottom: '16px',
+          }}
+        >
+          <div
+            className="muted"
+            style={{
+              fontSize: '13px',
+              marginBottom: '4px',
+            }}
+          >
+            Resumo da saída
           </div>
 
-          {!revisar ? (
-            <button
-              className="btn"
-              type="button"
-              onClick={() => {
-                const erro =
-                  validar();
+          <strong
+            style={{
+              display: 'block',
+              fontSize: '18px',
+            }}
+          >
+            {
+              destinos.find(
+                (x) =>
+                  x[0] === destino
+              )?.[1]
+            }{' '}
+            · {classe}
+          </strong>
 
-                if (erro) {
-                  setMsg(
-                    erro
-                  );
-                } else {
-                  setMsg('');
-                  setRevisar(
-                    true
-                  );
-                }
+          <div
+            className="muted"
+            style={{
+              marginTop: '4px',
+              fontSize: '13px',
+            }}
+          >
+            {itens.length}{' '}
+            item(ns) na saída
+          </div>
+        </div>
+
+        {!revisar ? (
+          <button
+            className="btn"
+            type="button"
+            style={{
+              width: '100%',
+            }}
+            onClick={() => {
+              const erro =
+                validar();
+
+              if (erro) {
+                setMsg(
+                  erro
+                );
+              } else {
+                setMsg('');
+                setRevisar(
+                  true
+                );
+              }
+            }}
+          >
+            Revisar saída
+          </button>
+        ) : (
+          <>
+            <div
+              style={{
+                background:
+                  'rgba(43,138,87,0.10)',
+                border:
+                  '1px solid #355143',
+                borderRadius:
+                  '11px',
+                padding: '13px',
+                marginBottom:
+                  '14px',
               }}
             >
-              Revisar saída
-            </button>
-          ) : (
-            <div className="actions">
+              <strong>
+                Confira antes de
+                confirmar
+              </strong>
+
+              <p
+                className="muted"
+                style={{
+                  margin:
+                    '6px 0 0',
+                  fontSize: '13px',
+                }}
+              >
+                A confirmação fará a
+                baixa automática do
+                estoque seguindo o PVPS
+                e registrará os lotes e
+                locais utilizados.
+              </p>
+            </div>
+
+            {/* ITENS DA REVISÃO */}
+
+            <div
+              style={{
+                marginBottom: '14px',
+              }}
+            >
+              {itens.map(
+                (
+                  item,
+                  indice
+                ) => {
+                  const genero =
+                    generoSelecionado(
+                      item.generoId
+                    );
+
+                  if (!genero) {
+                    return null;
+                  }
+
+                  return (
+                    <div
+                      key={
+                        item.generoId
+                      }
+                      style={{
+                        padding:
+                          '10px 0',
+                        borderBottom:
+                          '1px solid rgba(255,255,255,0.08)',
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize:
+                            '13px',
+                          color:
+                            '#a9b9af',
+                          marginBottom:
+                            '3px',
+                        }}
+                      >
+                        {indice + 1}.{' '}
+                        {
+                          genero
+                            .categoria
+                            ?.grupo
+                            ?.nome
+                        }{' '}
+                        →{' '}
+                        {
+                          genero
+                            .categoria
+                            ?.nome
+                        }
+                      </div>
+
+                      <div
+                        style={{
+                          display:
+                            'flex',
+                          justifyContent:
+                            'space-between',
+                          gap: '10px',
+                        }}
+                      >
+                        <strong>
+                          {genero.nome}
+                        </strong>
+
+                        <strong
+                          style={{
+                            whiteSpace:
+                              'nowrap',
+                          }}
+                        >
+                          {Number(
+                            item.quantidade
+                          ).toLocaleString(
+                            'pt-BR'
+                          )}{' '}
+                          {
+                            genero
+                              .unidade
+                              .sigla
+                          }
+                        </strong>
+                      </div>
+                    </div>
+                  );
+                }
+              )}
+            </div>
+
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns:
+                  '1fr 1fr',
+                gap: '8px',
+              }}
+            >
               <button
                 className="linkbtn"
                 type="button"
@@ -1245,101 +1574,19 @@ export default function SaidaClient() {
               <button
                 className="btn"
                 type="button"
-                disabled={
-                  busy
-                }
+                disabled={busy}
                 onClick={
                   confirmar
                 }
               >
                 {busy
                   ? 'Confirmando...'
-                  : 'Confirmar saída'}
+                  : 'Confirmar'}
               </button>
             </div>
-          )}
-        </div>
-
-        {revisar && (
-          <div
-            style={{
-              marginTop: 14,
-            }}
-          >
-            <p className="muted">
-              Confira destino,
-              gêneros e
-              quantidades. A
-              confirmação fará a
-              baixa automática do
-              estoque seguindo o
-              PVPS e registrará os
-              lotes e locais
-              utilizados.
-            </p>
-
-            {itens.map(
-              (
-                item,
-                indice
-              ) => {
-                const genero =
-                  generoSelecionado(
-                    item.generoId
-                  );
-
-                if (!genero) {
-                  return null;
-                }
-
-                return (
-                  <div
-                    className="row"
-                    key={
-                      item.generoId
-                    }
-                  >
-                    <span>
-                      {indice +
-                        1}
-                      .{' '}
-                      {
-                        genero
-                          .categoria
-                          ?.grupo
-                          ?.nome
-                      }{' '}
-                      →{' '}
-                      {
-                        genero
-                          .categoria
-                          ?.nome
-                      }{' '}
-                      →{' '}
-                      {
-                        genero.nome
-                      }
-                    </span>
-
-                    <strong>
-                      {Number(
-                        item.quantidade
-                      ).toLocaleString(
-                        'pt-BR'
-                      )}{' '}
-                      {
-                        genero
-                          .unidade
-                          .sigla
-                      }
-                    </strong>
-                  </div>
-                );
-              }
-            )}
-          </div>
+          </>
         )}
-      </div>
+      </section>
     </>
   );
 }
