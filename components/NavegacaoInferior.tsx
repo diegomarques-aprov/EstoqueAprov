@@ -11,45 +11,37 @@ export default function NavegacaoInferior({
   voltarTexto = 'Voltar',
   mostrarInicio = true,
 }: Props) {
-  const estiloBotao = {
-    flex: '1 1 140px',
-    minHeight: 48,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    textAlign: 'center' as const,
+  const estiloLink = {
+    display: 'inline-block',
+    color: '#d6a56d',
     textDecoration: 'none',
-    background: '#7a4b27',
-    border: '1px solid #a86f3d',
-    color: '#fff4e8',
-    borderRadius: 10,
-    padding: '11px 17px',
-    fontWeight: 800,
+    fontWeight: 700,
   };
 
   return (
     <nav
       aria-label="Navegação inferior"
       style={{
-        marginTop: 32,
-        paddingTop: 20,
+        marginTop: 28,
+        paddingTop: 16,
         paddingBottom:
-          'calc(20px + env(safe-area-inset-bottom))',
+          'calc(12px + env(safe-area-inset-bottom))',
         borderTop:
-          '1px solid rgba(255,255,255,0.12)',
+          '1px solid rgba(255,255,255,0.10)',
       }}
     >
       <div
         style={{
           display: 'flex',
-          gap: 12,
+          alignItems: 'center',
+          gap: 22,
           flexWrap: 'wrap',
         }}
       >
         {voltarHref && (
           <Link
             href={voltarHref}
-            style={estiloBotao}
+            style={estiloLink}
           >
             ← {voltarTexto}
           </Link>
@@ -58,9 +50,9 @@ export default function NavegacaoInferior({
         {mostrarInicio && (
           <Link
             href="/inicio"
-            style={estiloBotao}
+            style={estiloLink}
           >
-            ⌂ Início
+            ← Início
           </Link>
         )}
       </div>
