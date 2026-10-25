@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { currentUser } from '@/lib/auth';
 import ConsumoEfetivoClient from '@/components/ConsumoEfetivoClient';
+import NavegacaoInferior from '@/components/NavegacaoInferior';
 
 export default async function Page() {
   const usuario = await currentUser();
@@ -72,6 +73,11 @@ export default async function Page() {
       </div>
 
       <ConsumoEfetivoClient />
+
+      <NavegacaoInferior
+        voltarHref="/relatorios"
+        voltarTexto="Relatórios"
+      />
     </main>
   );
 }
