@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { currentUser } from '@/lib/auth';
 import QDAAClient from '@/components/QDAAClient';
+import NavegacaoInferior from '@/components/NavegacaoInferior';
 
 export default async function Page() {
   const usuario = await currentUser();
@@ -68,6 +69,8 @@ export default async function Page() {
       </div>
 
       <QDAAClient />
+
+      <NavegacaoInferior />
     </main>
   );
 }
