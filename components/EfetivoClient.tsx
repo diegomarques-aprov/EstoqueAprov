@@ -66,8 +66,8 @@ export default function EfetivoClient() {
 
   const [usarTotalDireto, setUsarTotalDireto] =
     useState(false);
-  const [totalDireto, setTotalDireto] = useState('');
 
+  const [totalDireto, setTotalDireto] = useState('');
   const [margem, setMargem] = useState('10');
   const [observacao, setObservacao] = useState('');
 
@@ -187,20 +187,47 @@ export default function EfetivoClient() {
   }
 
   return (
-    <>
-      <div className="card">
-        <h2>Arranchamento / Efetivo</h2>
+    <div>
+      <form onSubmit={salvar}>
+        <div
+          style={{
+            paddingBottom: '16px',
+            marginBottom: '16px',
+            borderBottom:
+              '1px solid rgba(255,255,255,0.08)',
+          }}
+        >
+          <strong style={{ fontSize: '16px' }}>
+            Arranchamento / Efetivo
+          </strong>
 
-        <p className="muted">
-          Informe o efetivo arranchado previsto para possibilitar
-          o planejamento e o saque dos gêneros do dia seguinte.
-          O saque deverá ser planejado para ocorrer até as 15:00
-          do dia anterior.
-        </p>
+          <p
+            className="muted"
+            style={{
+              margin: '6px 0 0',
+              fontSize: '13px',
+              lineHeight: 1.5,
+            }}
+          >
+            Informe o efetivo arranchado previsto para
+            possibilitar o planejamento e o saque dos
+            gêneros do dia seguinte. O saque deverá ser
+            planejado para ocorrer até as 15:00 do dia
+            anterior.
+          </p>
+        </div>
 
-        <form onSubmit={salvar}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns:
+              'repeat(auto-fit, minmax(180px, 1fr))',
+            gap: '12px',
+          }}
+        >
           <label>
             Data da refeição
+
             <input
               type="date"
               value={data}
@@ -211,6 +238,7 @@ export default function EfetivoClient() {
 
           <label>
             Refeição
+
             <select
               value={refeicao}
               onChange={(e) =>
@@ -226,261 +254,518 @@ export default function EfetivoClient() {
               )}
             </select>
           </label>
+        </div>
 
-          <div
+        <div
+          style={{
+            marginTop: '8px',
+            marginBottom: '18px',
+            padding: '14px',
+            background: '#0c1811',
+            border: '1px solid #284334',
+            borderRadius: '12px',
+          }}
+        >
+          <label
             style={{
-              marginTop: 16,
-              marginBottom: 16,
-              padding: 14,
-              border:
-                '1px solid rgba(255,255,255,.12)',
-              borderRadius: 10,
+              display: 'flex',
+              gap: '10px',
+              alignItems: 'center',
+              cursor: 'pointer',
+              margin: 0,
             }}
           >
-            <label
+            <input
+              type="checkbox"
+              checked={usarTotalDireto}
+              onChange={(e) =>
+                setUsarTotalDireto(e.target.checked)
+              }
               style={{
-                display: 'flex',
-                gap: 10,
-                alignItems: 'center',
-                cursor: 'pointer',
+                width: '20px',
+                height: '20px',
+                margin: 0,
+                flexShrink: 0,
               }}
-            >
-              <input
-                type="checkbox"
-                checked={usarTotalDireto}
-                onChange={(e) =>
-                  setUsarTotalDireto(e.target.checked)
-                }
-                style={{ width: 'auto' }}
-              />
+            />
 
+            <strong>
               Informar somente o total de arranchados
-            </label>
+            </strong>
+          </label>
 
-            <p
-              className="muted"
-              style={{ marginBottom: 0 }}
-            >
-              Se os quantitativos por categoria estiverem
-              disponíveis, deixe esta opção desmarcada e
-              informe-os abaixo. O sistema fará a soma
-              automaticamente.
-            </p>
-          </div>
+          <p
+            className="muted"
+            style={{
+              margin: '9px 0 0 30px',
+              fontSize: '13px',
+              lineHeight: 1.45,
+            }}
+          >
+            Se os quantitativos por categoria estiverem
+            disponíveis, deixe esta opção desmarcada.
+            O sistema fará a soma automaticamente.
+          </p>
+        </div>
 
-          {usarTotalDireto ? (
+        {usarTotalDireto ? (
+          <label>
+            Total de militares arranchados
+
+            <input
+              type="number"
+              min="0"
+              step="1"
+              inputMode="numeric"
+              required
+              value={totalDireto}
+              onChange={(e) =>
+                setTotalDireto(e.target.value)
+              }
+              placeholder="0"
+            />
+          </label>
+        ) : (
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns:
+                'repeat(auto-fit, minmax(140px, 1fr))',
+              gap: '10px',
+            }}
+          >
             <label>
-              Total de militares arranchados
+              Of / STen / Sgt
+
               <input
                 type="number"
                 min="0"
                 step="1"
-                required
-                value={totalDireto}
+                inputMode="numeric"
+                value={oficiaisStenSgt}
                 onChange={(e) =>
-                  setTotalDireto(e.target.value)
+                  setOficiaisStenSgt(e.target.value)
                 }
+                placeholder="0"
               />
             </label>
-          ) : (
-            <>
-              <label>
-                Of / STen / Sgt
-                <input
-                  type="number"
-                  min="0"
-                  step="1"
-                  value={oficiaisStenSgt}
-                  onChange={(e) =>
-                    setOficiaisStenSgt(e.target.value)
-                  }
-                />
-              </label>
-
-              <label>
-                Cb / Sd
-                <input
-                  type="number"
-                  min="0"
-                  step="1"
-                  value={cabosSoldados}
-                  onChange={(e) =>
-                    setCabosSoldados(e.target.value)
-                  }
-                />
-              </label>
-
-              <label>
-                Outros
-                <input
-                  type="number"
-                  min="0"
-                  step="1"
-                  value={outrosPrevistos}
-                  onChange={(e) =>
-                    setOutrosPrevistos(e.target.value)
-                  }
-                />
-              </label>
-            </>
-          )}
-
-          <div
-            className="card"
-            style={{
-              marginTop: 18,
-              marginBottom: 18,
-            }}
-          >
-            <h3 style={{ marginTop: 0 }}>
-              Planejamento do saque
-            </h3>
-
-            <div className="row">
-              <span>Efetivo arranchado previsto</span>
-              <strong>{totalPrevisto}</strong>
-            </div>
 
             <label>
-              Margem de segurança (%)
+              Cb / Sd
+
               <input
                 type="number"
                 min="0"
-                max="100"
-                step="0.1"
-                value={margem}
+                step="1"
+                inputMode="numeric"
+                value={cabosSoldados}
                 onChange={(e) =>
-                  setMargem(e.target.value)
+                  setCabosSoldados(e.target.value)
                 }
+                placeholder="0"
               />
             </label>
 
-            <div className="row">
-              <span>
-                Efetivo considerado para planejamento
-              </span>
+            <label>
+              Outros
 
-              <strong>{efetivoPlanejamento}</strong>
-            </div>
-
-            {totalPrevisto > 0 && (
-              <p
-                className="muted"
-                style={{ marginBottom: 0 }}
-              >
-                O cálculo dos gêneros utilizará{' '}
-                <strong>
-                  {efetivoPlanejamento}
-                </strong>{' '}
-                refeição(ões), considerando o efetivo
-                previsto e a margem de segurança.
-              </p>
-            )}
+              <input
+                type="number"
+                min="0"
+                step="1"
+                inputMode="numeric"
+                value={outrosPrevistos}
+                onChange={(e) =>
+                  setOutrosPrevistos(e.target.value)
+                }
+                placeholder="0"
+              />
+            </label>
           </div>
+        )}
 
-          <div style={{ marginBottom: 18 }}>
-            <label
-              htmlFor="observacao-arranchamento"
+        <div
+          style={{
+            marginTop: '18px',
+            marginBottom: '18px',
+            padding: '15px',
+            background: '#0c1811',
+            border: '1px solid #284334',
+            borderRadius: '14px',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '9px',
+              marginBottom: '14px',
+            }}
+          >
+            <span
               style={{
-                display: 'block',
-                marginBottom: 6,
+                fontSize: '20px',
+                lineHeight: 1,
               }}
             >
-              Observação
-            </label>
+              ◉
+            </span>
 
-            <textarea
-              id="observacao-arranchamento"
-              value={observacao}
-              onChange={(e) =>
-                setObservacao(e.target.value)
-              }
-              placeholder="Informação complementar, se necessária."
-              rows={3}
-              style={{
-                display: 'block',
-                width: '100%',
-                minHeight: 80,
-                resize: 'vertical',
-              }}
-            />
+            <strong style={{ fontSize: '16px' }}>
+              Planejamento do saque
+            </strong>
           </div>
 
-          {msg && (
-            <div className="success">{msg}</div>
-          )}
-
-          {erro && (
-            <div className="error">{erro}</div>
-          )}
-
-          <button
-            className="btn"
-            type="submit"
-            disabled={salvando}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr auto',
+              gap: '10px',
+              alignItems: 'center',
+              padding: '11px 0',
+              borderTop:
+                '1px solid rgba(255,255,255,0.07)',
+            }}
           >
-            {salvando
-              ? 'Salvando...'
-              : 'Relacionar efetivo arranchado'}
-          </button>
-        </form>
-      </div>
+            <span
+              className="muted"
+              style={{ fontSize: '13px' }}
+            >
+              Efetivo arranchado previsto
+            </span>
 
-      <div className="card">
-        <h2>Arranchamentos da data</h2>
+            <strong style={{ fontSize: '20px' }}>
+              {totalPrevisto}
+            </strong>
+          </div>
+
+          <label style={{ marginTop: '8px' }}>
+            Margem de segurança (%)
+
+            <input
+              type="number"
+              min="0"
+              max="100"
+              step="0.1"
+              inputMode="decimal"
+              value={margem}
+              onChange={(e) =>
+                setMargem(e.target.value)
+              }
+            />
+          </label>
+
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr auto',
+              gap: '10px',
+              alignItems: 'center',
+              padding: '12px',
+              marginTop: '8px',
+              background: '#102018',
+              border: '1px solid #284334',
+              borderRadius: '11px',
+            }}
+          >
+            <span
+              style={{
+                fontSize: '13px',
+                lineHeight: 1.4,
+              }}
+            >
+              Efetivo considerado para planejamento
+            </span>
+
+            <strong
+              style={{
+                fontSize: '22px',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {efetivoPlanejamento}
+            </strong>
+          </div>
+
+          {totalPrevisto > 0 && (
+            <p
+              className="muted"
+              style={{
+                margin: '11px 0 0',
+                fontSize: '13px',
+                lineHeight: 1.45,
+              }}
+            >
+              O cálculo dos gêneros utilizará{' '}
+              <strong>{efetivoPlanejamento}</strong>{' '}
+              refeição(ões), considerando o efetivo
+              previsto e a margem de segurança.
+            </p>
+          )}
+        </div>
+
+        <label htmlFor="observacao-arranchamento">
+          Observação
+
+          <textarea
+            id="observacao-arranchamento"
+            value={observacao}
+            onChange={(e) =>
+              setObservacao(e.target.value)
+            }
+            placeholder="Informação complementar, se necessária."
+            rows={3}
+            style={{
+              minHeight: '85px',
+              resize: 'vertical',
+            }}
+          />
+        </label>
+
+        {msg && (
+          <div
+            className="success"
+            style={{ marginTop: '14px' }}
+          >
+            {msg}
+          </div>
+        )}
+
+        {erro && (
+          <div
+            className="error"
+            style={{ marginTop: '14px' }}
+          >
+            {erro}
+          </div>
+        )}
+
+        <button
+          className="btn"
+          type="submit"
+          disabled={salvando}
+          style={{
+            width: '100%',
+            marginTop: '14px',
+          }}
+        >
+          {salvando
+            ? 'Salvando...'
+            : 'Relacionar efetivo arranchado'}
+        </button>
+      </form>
+
+      <section
+        style={{
+          marginTop: '18px',
+          paddingTop: '18px',
+          borderTop:
+            '1px solid rgba(255,255,255,0.08)',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            justifyContent: 'space-between',
+            gap: '10px',
+            marginBottom: '14px',
+          }}
+        >
+          <div>
+            <strong style={{ fontSize: '16px' }}>
+              Arranchamentos da data
+            </strong>
+
+            <div
+              className="muted"
+              style={{
+                marginTop: '4px',
+                fontSize: '13px',
+              }}
+            >
+              Registros para{' '}
+              {data
+                ? new Date(
+                    `${data}T12:00:00`
+                  ).toLocaleDateString('pt-BR')
+                : ''}
+            </div>
+          </div>
+
+          <div
+            style={{
+              minWidth: '32px',
+              height: '32px',
+              padding: '0 9px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: '16px',
+              background: '#183d2a',
+              border: '1px solid #284334',
+              fontWeight: 700,
+              fontSize: '13px',
+            }}
+          >
+            {rows.length}
+          </div>
+        </div>
 
         {rows.length === 0 ? (
-          <p className="muted">
-            Nenhum efetivo arranchado relacionado para esta
-            data.
-          </p>
-        ) : (
-          rows.map((item) => (
+          <div
+            style={{
+              padding: '18px 14px',
+              textAlign: 'center',
+              background: '#0c1811',
+              border: '1px solid #284334',
+              borderRadius: '12px',
+            }}
+          >
             <div
-              className="row"
-              key={item.id}
               style={{
-                alignItems: 'flex-start',
-                paddingTop: 12,
-                paddingBottom: 12,
+                fontSize: '24px',
+                marginBottom: '7px',
               }}
             >
-              <div>
-                <strong>
-                  {nomes[item.refeicao]}
-                </strong>
-
-                <div className="muted">
-                  Previsto: {item.totalPrevisto}
-                </div>
-
-                <div className="muted">
-                  Margem:{' '}
-                  {Number(
-                    item.margemSegurancaPercent
-                  ).toLocaleString('pt-BR')}
-                  %
-                </div>
-              </div>
-
-              <div style={{ textAlign: 'right' }}>
-                <strong>
-                  Planejamento:{' '}
-                  {item.efetivoPlanejamento}
-                </strong>
-
-                <div className="muted">
-                  {item.fechamentoRealizadoEm
-                    ? `Atendidos: ${
-                        item.totalAtendido ?? 0
-                      }`
-                    : 'Fechamento pendente'}
-                </div>
-              </div>
+              —
             </div>
-          ))
+
+            <p
+              className="muted"
+              style={{
+                margin: 0,
+                fontSize: '13px',
+              }}
+            >
+              Nenhum efetivo arranchado relacionado
+              para esta data.
+            </p>
+          </div>
+        ) : (
+          <div
+            style={{
+              display: 'grid',
+              gap: '10px',
+            }}
+          >
+            {rows.map((item) => (
+              <div
+                key={item.id}
+                style={{
+                  padding: '13px',
+                  background: '#0c1811',
+                  border: '1px solid #284334',
+                  borderRadius: '12px',
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'flex-start',
+                    gap: '12px',
+                  }}
+                >
+                  <div>
+                    <strong
+                      style={{
+                        fontSize: '15px',
+                      }}
+                    >
+                      {nomes[item.refeicao] ||
+                        item.refeicao}
+                    </strong>
+
+                    <div
+                      className="muted"
+                      style={{
+                        marginTop: '5px',
+                        fontSize: '13px',
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      Previsto: {item.totalPrevisto}
+                      <br />
+                      Margem:{' '}
+                      {Number(
+                        item.margemSegurancaPercent
+                      ).toLocaleString('pt-BR')}
+                      %
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      textAlign: 'right',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <div
+                      className="muted"
+                      style={{
+                        fontSize: '11px',
+                        marginBottom: '2px',
+                      }}
+                    >
+                      Planejamento
+                    </div>
+
+                    <strong
+                      style={{
+                        fontSize: '20px',
+                      }}
+                    >
+                      {item.efetivoPlanejamento}
+                    </strong>
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    marginTop: '11px',
+                    paddingTop: '10px',
+                    borderTop:
+                      '1px solid rgba(255,255,255,0.07)',
+                    fontSize: '13px',
+                  }}
+                >
+                  {item.fechamentoRealizadoEm ? (
+                    <span>
+                      ✓ Fechamento realizado · Atendidos:{' '}
+                      <strong>
+                        {item.totalAtendido ?? 0}
+                      </strong>
+                    </span>
+                  ) : (
+                    <span
+                      className="muted"
+                      style={{
+                        fontWeight: 600,
+                      }}
+                    >
+                      Fechamento pendente
+                    </span>
+                  )}
+                </div>
+
+                {item.observacao && (
+                  <div
+                    className="muted"
+                    style={{
+                      marginTop: '8px',
+                      fontSize: '12px',
+                      lineHeight: 1.45,
+                    }}
+                  >
+                    Obs.: {item.observacao}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         )}
-      </div>
-    </>
+      </section>
+    </div>
   );
 }
