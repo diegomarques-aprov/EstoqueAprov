@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { currentUser } from '@/lib/auth';
 import LocaisClient from '@/components/LocaisClient';
+import NavegacaoInferior from '@/components/NavegacaoInferior';
 
 export default async function Page() {
   const usuario = await currentUser();
@@ -37,6 +38,8 @@ export default async function Page() {
       </p>
 
       <LocaisClient />
+
+      <NavegacaoInferior />
     </main>
   );
 }
