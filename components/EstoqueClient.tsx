@@ -122,6 +122,42 @@ function TextoTotais({
   );
 }
 
+const estiloResumo = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  gap: '12px',
+  flexWrap: 'wrap' as const,
+};
+
+const estiloCategoria = {
+  background:
+    'rgba(255,255,255,0.04)',
+  border:
+    '1px solid rgba(255,255,255,0.08)',
+  borderRadius: '12px',
+  padding: '12px 14px',
+  marginBottom: '12px',
+};
+
+const estiloGenero = {
+  background: '#0c1811',
+  border: '1px solid #284334',
+  borderRadius: '13px',
+  padding: '14px',
+  marginBottom: '10px',
+};
+
+const estiloLocal = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'flex-start',
+  gap: '12px',
+  padding: '10px 0',
+  borderTop:
+    '1px solid rgba(255,255,255,0.08)',
+};
+
 export default function EstoqueClient() {
   const [classe, setClasse] =
     useState<'QS' | 'QR'>('QS');
@@ -251,67 +287,129 @@ export default function EstoqueClient() {
 
   return (
     <>
-      <div className="tabs">
+      {/* SELETOR QS / QR */}
+
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns:
+            '1fr 1fr',
+          gap: '8px',
+          marginBottom: '20px',
+        }}
+      >
         <button
-          className={
-            'tab ' +
-            (classe === 'QS'
-              ? 'active'
-              : '')
-          }
+          type="button"
           onClick={() =>
             setClasse('QS')
           }
-          type="button"
+          style={{
+            minHeight: '46px',
+            borderRadius: '11px',
+            border:
+              classe === 'QS'
+                ? '1px solid #2b8a57'
+                : '1px solid #355143',
+            background:
+              classe === 'QS'
+                ? '#2b8a57'
+                : '#0c1811',
+            color: '#eef7f1',
+            fontWeight: 800,
+            fontSize: '15px',
+            cursor: 'pointer',
+          }}
         >
           QS
         </button>
 
         <button
-          className={
-            'tab ' +
-            (classe === 'QR'
-              ? 'active'
-              : '')
-          }
+          type="button"
           onClick={() =>
             setClasse('QR')
           }
-          type="button"
+          style={{
+            minHeight: '46px',
+            borderRadius: '11px',
+            border:
+              classe === 'QR'
+                ? '1px solid #2b8a57'
+                : '1px solid #355143',
+            background:
+              classe === 'QR'
+                ? '#2b8a57'
+                : '#0c1811',
+            color: '#eef7f1',
+            fontWeight: 800,
+            fontSize: '15px',
+            cursor: 'pointer',
+          }}
         >
           QR
         </button>
       </div>
 
+      {/* ESTADO DE CARREGAMENTO */}
+
       {carregando && (
-        <div className="card">
-          <p className="muted">
+        <div
+          style={{
+            padding: '18px',
+            textAlign: 'center',
+          }}
+        >
+          <p
+            className="muted"
+            style={{
+              margin: 0,
+            }}
+          >
             Consultando estoque...
           </p>
         </div>
       )}
 
+      {/* ERRO */}
+
       {!carregando && erro && (
-        <div className="card">
-          <p
-            style={{
-              color: '#ef4444',
-            }}
-          >
-            {erro}
-          </p>
+        <div className="error">
+          {erro}
         </div>
       )}
+
+      {/* SEM SALDO */}
 
       {!carregando &&
         !erro &&
         registros.length === 0 && (
-          <div className="card">
+          <div
+            style={{
+              padding: '22px 10px',
+              textAlign: 'center',
+            }}
+          >
+            <div
+              style={{
+                fontSize: '28px',
+                marginBottom: '8px',
+              }}
+            >
+              📦
+            </div>
+
+            <strong>
+              Nenhum saldo registrado
+            </strong>
+
             <p className="muted">
-              Nenhum saldo registrado.
+              Não existem gêneros com
+              saldo disponível nesta
+              classe.
             </p>
           </div>
         )}
+
+      {/* GRUPOS */}
 
       {!carregando &&
         !erro &&
@@ -381,34 +479,63 @@ export default function EstoqueClient() {
             });
 
           return (
-            <div
-              className="card"
+            <section
               key={grupo.id}
+              style={{
+                marginBottom: '22px',
+              }}
             >
+              {/* CABEÇALHO DO GRUPO */}
+
               <div
                 style={{
+                  ...estiloResumo,
+                  paddingBottom: '12px',
+                  marginBottom: '14px',
                   borderBottom:
-                    '2px solid rgba(34, 197, 94, 0.35)',
-                  paddingBottom: 12,
-                  marginBottom: 16,
-                  textAlign: 'center',
-                  width: '100%',
+                    '2px solid rgba(34,197,94,0.35)',
                 }}
               >
-                <h2
-                  style={{
-                    margin: 0,
-                    textAlign: 'center',
-                  }}
-                >
-                  {grupo.nome}
-                </h2>
+                <div>
+                  <div
+                    style={{
+                      fontSize: '12px',
+                      fontWeight: 800,
+                      textTransform:
+                        'uppercase',
+                      letterSpacing:
+                        '0.7px',
+                      color: '#a9b9af',
+                      marginBottom: '3px',
+                    }}
+                  >
+                    Grupo
+                  </div>
+
+                  <h2
+                    style={{
+                      margin: 0,
+                      fontSize: '21px',
+                    }}
+                  >
+                    {grupo.nome}
+                  </h2>
+                </div>
 
                 <div
                   style={{
-                    marginTop: 5,
-                    fontWeight: 700,
-                    textAlign: 'center',
+                    background:
+                      '#183d2a',
+                    border:
+                      '1px solid #355143',
+                    borderRadius:
+                      '999px',
+                    padding:
+                      '7px 11px',
+                    fontSize: '13px',
+                    fontWeight: 800,
+                    whiteSpace:
+                      'nowrap',
                   }}
                 >
                   <TextoTotais
@@ -416,6 +543,8 @@ export default function EstoqueClient() {
                   />
                 </div>
               </div>
+
+              {/* CATEGORIAS */}
 
               {categoriasOrdenadas.map(
                 (categoria) => {
@@ -430,7 +559,10 @@ export default function EstoqueClient() {
                       }
                     >();
 
-                  for (const item of categoria.itens) {
+                  for (
+                    const item of
+                    categoria.itens
+                  ) {
                     const id =
                       item.genero.id;
 
@@ -466,38 +598,48 @@ export default function EstoqueClient() {
                     );
 
                   return (
-                    <section
+                    <div
                       key={categoria.id}
                       style={{
-                        marginBottom: 24,
+                        marginBottom:
+                          '18px',
                       }}
                     >
-                      <div
-                        className="row"
-                        style={{
-                          background:
-                            'rgba(255,255,255,0.04)',
-                          borderRadius: 8,
-                          padding:
-                            '10px 12px',
-                          marginBottom: 10,
-                        }}
-                      >
-                        <strong>
-                          {
-                            categoria.nome
-                          }
-                        </strong>
+                      {/* CABEÇALHO CATEGORIA */}
 
-                        <span className="muted">
-                          Subtotal:{' '}
-                          <TextoTotais
-                            itens={
-                              categoria.itens
+                      <div
+                        style={
+                          estiloCategoria
+                        }
+                      >
+                        <div
+                          style={
+                            estiloResumo
+                          }
+                        >
+                          <strong>
+                            {
+                              categoria.nome
                             }
-                          />
-                        </span>
+                          </strong>
+
+                          <span
+                            className="muted"
+                            style={{
+                              fontSize:
+                                '13px',
+                            }}
+                          >
+                            <TextoTotais
+                              itens={
+                                categoria.itens
+                              }
+                            />
+                          </span>
+                        </div>
                       </div>
+
+                      {/* GÊNEROS */}
 
                       {generosOrdenados.map(
                         (genero) => {
@@ -515,35 +657,57 @@ export default function EstoqueClient() {
                             );
 
                           return (
-                            <div
+                            <article
                               key={
                                 genero.id
                               }
-                              style={{
-                                marginLeft:
-                                  12,
-                                marginBottom:
-                                  16,
-                                paddingLeft:
-                                  12,
-                                borderLeft:
-                                  '3px solid rgba(34, 197, 94, 0.30)',
-                              }}
+                              style={
+                                estiloGenero
+                              }
                             >
                               <div
-                                className="row"
                                 style={{
+                                  ...estiloResumo,
                                   marginBottom:
-                                    6,
+                                    '10px',
                                 }}
                               >
-                                <strong>
-                                  {
-                                    genero.nome
-                                  }
-                                </strong>
+                                <div>
+                                  <div
+                                    style={{
+                                      fontSize:
+                                        '12px',
+                                      color:
+                                        '#a9b9af',
+                                      marginBottom:
+                                        '3px',
+                                    }}
+                                  >
+                                    Gênero
+                                  </div>
 
-                                <strong>
+                                  <strong
+                                    style={{
+                                      fontSize:
+                                        '16px',
+                                    }}
+                                  >
+                                    {
+                                      genero.nome
+                                    }
+                                  </strong>
+                                </div>
+
+                                <div
+                                  style={{
+                                    fontSize:
+                                      '17px',
+                                    fontWeight:
+                                      800,
+                                    whiteSpace:
+                                      'nowrap',
+                                  }}
+                                >
                                   {formatarQuantidade(
                                     totalGenero
                                   )}{' '}
@@ -552,69 +716,121 @@ export default function EstoqueClient() {
                                       .unidade
                                       .sigla
                                   }
-                                </strong>
+                                </div>
                               </div>
+
+                              {/* LOCAIS / LOTES */}
 
                               {genero.itens.map(
                                 (
-                                  item
+                                  item,
+                                  index
                                 ) => (
                                   <div
                                     key={
                                       item.id
                                     }
                                     style={{
-                                      padding:
-                                        '7px 0',
+                                      ...estiloLocal,
                                       borderTop:
-                                        '1px solid rgba(255,255,255,0.10)',
-                                      borderBottom:
-                                        '1px solid rgba(255,255,255,0.10)',
+                                        index ===
+                                        0
+                                          ? '1px solid rgba(255,255,255,0.08)'
+                                          : estiloLocal.borderTop,
                                     }}
                                   >
-                                    <div>
-                                      {
-                                        item
-                                          .local
-                                          .nome
-                                      }
-                                    </div>
-
-                                    {item.lote ? (
-                                      <div className="muted">
-                                        Lote{' '}
+                                    <div
+                                      style={{
+                                        minWidth:
+                                          0,
+                                      }}
+                                    >
+                                      <strong
+                                        style={{
+                                          fontSize:
+                                            '14px',
+                                        }}
+                                      >
                                         {
                                           item
-                                            .lote
-                                            .numero
+                                            .local
+                                            .nome
                                         }
-                                        {item
-                                          .lote
-                                          .validade
-                                          ? ` · validade ${new Date(
-                                              item.lote.validade
-                                            ).toLocaleDateString(
-                                              'pt-BR'
-                                            )}`
-                                          : ''}
-                                      </div>
-                                    ) : (
-                                      <div className="muted">
-                                        Sem lote
-                                      </div>
-                                    )}
+                                      </strong>
+
+                                      {item.lote ? (
+                                        <div
+                                          className="muted"
+                                          style={{
+                                            marginTop:
+                                              '3px',
+                                            fontSize:
+                                              '13px',
+                                          }}
+                                        >
+                                          Lote{' '}
+                                          {
+                                            item
+                                              .lote
+                                              .numero
+                                          }
+
+                                          {item
+                                            .lote
+                                            .validade
+                                            ? ` · validade ${new Date(
+                                                item.lote.validade
+                                              ).toLocaleDateString(
+                                                'pt-BR'
+                                              )}`
+                                            : ''}
+                                        </div>
+                                      ) : (
+                                        <div
+                                          className="muted"
+                                          style={{
+                                            marginTop:
+                                              '3px',
+                                            fontSize:
+                                              '13px',
+                                          }}
+                                        >
+                                          Sem lote
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    <strong
+                                      style={{
+                                        whiteSpace:
+                                          'nowrap',
+                                        fontSize:
+                                          '14px',
+                                      }}
+                                    >
+                                      {formatarQuantidade(
+                                        Number(
+                                          item.quantidade
+                                        )
+                                      )}{' '}
+                                      {
+                                        genero
+                                          .unidade
+                                          .sigla
+                                      }
+                                    </strong>
                                   </div>
                                 )
                               )}
-                            </div>
+                            </article>
                           );
                         }
                       )}
-                    </section>
+                    </div>
                   );
                 }
               )}
-            </div>
+            </section>
           );
         })}
     </>
