@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { currentUser } from '@/lib/auth';
 import RecebimentoClient from '@/components/RecebimentoClient';
+import NavegacaoInferior from '@/components/NavegacaoInferior';
 
 export default async function Page() {
   if (!(await currentUser())) {
@@ -25,6 +26,8 @@ export default async function Page() {
       </p>
 
       <RecebimentoClient />
+
+      <NavegacaoInferior />
     </main>
   );
 }
