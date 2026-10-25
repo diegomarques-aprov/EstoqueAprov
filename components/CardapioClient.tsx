@@ -29,43 +29,6 @@ type Props = {
   podeEditar: boolean;
 };
 
-const estiloCampo = {
-  width: '100%',
-  minHeight: '125px',
-  boxSizing: 'border-box' as const,
-  padding: '14px 16px',
-  borderRadius: '10px',
-  border: '1px solid #315846',
-  background: '#071a12',
-  color: '#f8fafc',
-  fontSize: '16px',
-  lineHeight: '1.5',
-  resize: 'vertical' as const,
-};
-
-const estiloObservacao = {
-  ...estiloCampo,
-  minHeight: '90px',
-};
-
-const estiloBlocoRefeicao = {
-  marginTop: '20px',
-};
-
-const estiloLabel = {
-  display: 'block',
-  marginBottom: '8px',
-  fontWeight: 700,
-  fontSize: '15px',
-};
-
-const estiloContador = {
-  textAlign: 'right' as const,
-  fontSize: '12px',
-  marginTop: '5px',
-  marginBottom: '4px',
-};
-
 function hojeLocal() {
   const agora = new Date();
 
@@ -96,6 +59,113 @@ function formatarData(
   }
 
   return `${partes[2]}/${partes[1]}/${partes[0]}`;
+}
+
+type CampoRefeicaoProps = {
+  titulo: string;
+  icone: string;
+  valor: string;
+  onChange: (
+    valor: string
+  ) => void;
+  placeholder: string;
+  podeEditar: boolean;
+  salvando: boolean;
+  menor?: boolean;
+};
+
+function CampoRefeicao({
+  titulo,
+  icone,
+  valor,
+  onChange,
+  placeholder,
+  podeEditar,
+  salvando,
+  menor = false,
+}: CampoRefeicaoProps) {
+  return (
+    <div
+      style={{
+        padding: '14px',
+        background: '#0c1811',
+        border: '1px solid #284334',
+        borderRadius: '13px',
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          marginBottom: '9px',
+        }}
+      >
+        <span
+          style={{
+            fontSize: '19px',
+            lineHeight: 1,
+          }}
+        >
+          {icone}
+        </span>
+
+        <strong
+          style={{
+            fontSize: '15px',
+          }}
+        >
+          {titulo}
+        </strong>
+      </div>
+
+      <textarea
+        value={valor}
+        onChange={(e) =>
+          onChange(
+            e.target.value
+          )
+        }
+        maxLength={1000}
+        disabled={
+          !podeEditar ||
+          salvando
+        }
+        placeholder={
+          podeEditar
+            ? placeholder
+            : valor
+              ? ''
+              : 'Não informado'
+        }
+        rows={
+          menor ? 3 : 5
+        }
+        style={{
+          width: '100%',
+          minHeight:
+            menor
+              ? '85px'
+              : '115px',
+          boxSizing:
+            'border-box',
+          resize:
+            'vertical',
+        }}
+      />
+
+      <div
+        className="muted"
+        style={{
+          marginTop: '5px',
+          textAlign: 'right',
+          fontSize: '11px',
+        }}
+      >
+        {valor.length}/1000
+      </div>
+    </div>
+  );
 }
 
 export default function CardapioClient({
@@ -206,10 +276,18 @@ export default function CardapioClient({
         dados.cardapio as Cardapio;
 
       setCardapio(encontrado);
-      setCafe(encontrado.cafe || '');
-      setAlmoco(encontrado.almoco || '');
-      setJantar(encontrado.jantar || '');
-      setCeia(encontrado.ceia || '');
+      setCafe(
+        encontrado.cafe || ''
+      );
+      setAlmoco(
+        encontrado.almoco || ''
+      );
+      setJantar(
+        encontrado.jantar || ''
+      );
+      setCeia(
+        encontrado.ceia || ''
+      );
       setObservacao(
         encontrado.observacao || ''
       );
@@ -303,10 +381,18 @@ export default function CardapioClient({
           dados.cardapio as Cardapio;
 
         setCardapio(salvo);
-        setCafe(salvo.cafe || '');
-        setAlmoco(salvo.almoco || '');
-        setJantar(salvo.jantar || '');
-        setCeia(salvo.ceia || '');
+        setCafe(
+          salvo.cafe || ''
+        );
+        setAlmoco(
+          salvo.almoco || ''
+        );
+        setJantar(
+          salvo.jantar || ''
+        );
+        setCeia(
+          salvo.ceia || ''
+        );
         setObservacao(
           salvo.observacao || ''
         );
@@ -383,40 +469,63 @@ export default function CardapioClient({
       : '';
 
   return (
-    <>
-      <div className="card">
-        <h2>
-          Cadastro / Consulta de
-          Cardápio
-        </h2>
+    <div>
+      {/* SELEÇÃO DA DATA */}
 
-        <p className="muted">
-          Selecione a data desejada.
-          Caso já exista um cardápio,
-          ele será apresentado para
-          consulta ou alteração.
-        </p>
+      <section>
+        <div
+          style={{
+            marginBottom: '14px',
+          }}
+        >
+          <strong
+            style={{
+              fontSize: '16px',
+            }}
+          >
+            Cadastro / Consulta
+          </strong>
+
+          <p
+            className="muted"
+            style={{
+              margin: '5px 0 0',
+              fontSize: '13px',
+              lineHeight: 1.45,
+            }}
+          >
+            Selecione a data desejada.
+            Caso já exista um cardápio,
+            ele será apresentado para
+            consulta ou alteração.
+          </p>
+        </div>
 
         <label>
           Data do cardápio
+
+          <input
+            type="date"
+            value={data}
+            onChange={(e) =>
+              setData(
+                e.target.value
+              )
+            }
+            disabled={
+              carregando ||
+              salvando
+            }
+          />
         </label>
 
-        <input
-          type="date"
-          value={data}
-          onChange={(e) =>
-            setData(e.target.value)
-          }
-          disabled={
-            carregando ||
-            salvando
-          }
-        />
-
         <div
-          className="actions"
           style={{
-            marginTop: 12,
+            display: 'grid',
+            gridTemplateColumns:
+              '1fr auto 1fr',
+            gap: '7px',
+            marginTop: '10px',
           }}
         >
           <button
@@ -429,20 +538,32 @@ export default function CardapioClient({
               carregando ||
               salvando
             }
+            style={{
+              padding:
+                '10px 8px',
+              fontSize: '12px',
+            }}
           >
-            ← Dia anterior
+            ← Anterior
           </button>
 
           <button
             type="button"
             className="btn secondary"
             onClick={() =>
-              setData(hojeLocal())
+              setData(
+                hojeLocal()
+              )
             }
             disabled={
               carregando ||
               salvando
             }
+            style={{
+              padding:
+                '10px 12px',
+              fontSize: '12px',
+            }}
           >
             Hoje
           </button>
@@ -457,309 +578,305 @@ export default function CardapioClient({
               carregando ||
               salvando
             }
+            style={{
+              padding:
+                '10px 8px',
+              fontSize: '12px',
+            }}
           >
-            Próximo dia →
+            Próximo →
           </button>
         </div>
-      </div>
+      </section>
+
+      {/* CARREGANDO */}
 
       {carregando && (
-        <div className="card">
-          <p className="muted">
+        <div
+          style={{
+            marginTop: '16px',
+            padding: '17px',
+            textAlign: 'center',
+            background: '#0c1811',
+            border:
+              '1px solid #284334',
+            borderRadius: '12px',
+          }}
+        >
+          <p
+            className="muted"
+            style={{
+              margin: 0,
+            }}
+          >
             Consultando cardápio...
           </p>
         </div>
       )}
 
-      {!carregando && data && (
-        <div
-          className="card"
-          style={
-            cardapio
-              ? {
-                  border:
-                    '1px solid #22c55e',
-                  background:
-                    'rgba(34, 197, 94, 0.06)',
-                }
-              : {
-                  border:
-                    '1px solid #f59e0b',
-                  background:
-                    'rgba(245, 158, 11, 0.06)',
-                }
-          }
-        >
-          <h2
+      {/* SITUAÇÃO */}
+
+      {!carregando &&
+        data && (
+          <section
             style={{
-              marginTop: 0,
+              marginTop: '16px',
+              padding: '13px',
+              borderRadius:
+                '12px',
+              border: cardapio
+                ? '1px solid #315846'
+                : '1px solid #f59e0b',
+              background:
+                cardapio
+                  ? 'rgba(34,197,94,.07)'
+                  : 'rgba(245,158,11,.07)',
             }}
           >
-            {cardapio
-              ? '✓ Cardápio cadastrado'
-              : 'Cardápio ainda não cadastrado'}
-          </h2>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent:
+                  'space-between',
+                alignItems:
+                  'flex-start',
+                gap: '10px',
+              }}
+            >
+              <div>
+                <strong
+                  style={{
+                    fontSize:
+                      '14px',
+                  }}
+                >
+                  {cardapio
+                    ? '✓ Cardápio cadastrado'
+                    : 'Cardápio ainda não cadastrado'}
+                </strong>
 
-          <p>
-            <strong>
-              {formatarData(data)}
-            </strong>
-          </p>
+                <div
+                  style={{
+                    marginTop:
+                      '4px',
+                    fontSize:
+                      '16px',
+                    fontWeight:
+                      700,
+                  }}
+                >
+                  {formatarData(
+                    data
+                  )}
+                </div>
+              </div>
 
-          {cardapio &&
-            nomeUsuario && (
-              <p className="muted">
-                Último registro por:{' '}
-                {nomeUsuario}
-                {cardapio.usuario
-                  .funcao
-                  ? ` · ${cardapio.usuario.funcao}`
-                  : ''}
-              </p>
-            )}
+              <span
+                style={{
+                  fontSize:
+                    '20px',
+                  lineHeight: 1,
+                }}
+              >
+                {cardapio
+                  ? '✓'
+                  : '○'}
+              </span>
+            </div>
 
-          {!cardapio &&
-            !podeEditar && (
-              <p className="muted">
-                Ainda não existe
-                cardápio cadastrado
-                para esta data.
-              </p>
-            )}
-        </div>
-      )}
+            {cardapio &&
+              nomeUsuario && (
+                <div
+                  className="muted"
+                  style={{
+                    marginTop:
+                      '9px',
+                    paddingTop:
+                      '9px',
+                    borderTop:
+                      '1px solid rgba(255,255,255,.08)',
+                    fontSize:
+                      '12px',
+                    lineHeight:
+                      1.45,
+                  }}
+                >
+                  Último registro por:{' '}
+                  <strong>
+                    {nomeUsuario}
+                  </strong>
+
+                  {cardapio.usuario
+                    .funcao
+                    ? ` · ${cardapio.usuario.funcao}`
+                    : ''}
+                </div>
+              )}
+
+            {!cardapio &&
+              !podeEditar && (
+                <p
+                  className="muted"
+                  style={{
+                    margin:
+                      '9px 0 0',
+                    fontSize:
+                      '12px',
+                  }}
+                >
+                  Ainda não existe
+                  cardápio cadastrado
+                  para esta data.
+                </p>
+              )}
+          </section>
+        )}
+
+      {/* CARDÁPIO */}
 
       {!carregando && (
-        <div className="card">
-          <h2>
-            Cardápio do dia{' '}
-            {formatarData(data)}
-          </h2>
-
-          <p className="muted">
-            Relacione as preparações
-            previstas para cada
-            refeição.
-          </p>
-
+        <section
+          style={{
+            marginTop: '18px',
+            paddingTop: '18px',
+            borderTop:
+              '1px solid rgba(255,255,255,.08)',
+          }}
+        >
           <div
-            style={
-              estiloBlocoRefeicao
-            }
+            style={{
+              marginBottom:
+                '14px',
+            }}
           >
-            <label
-              style={estiloLabel}
+            <strong
+              style={{
+                fontSize: '17px',
+              }}
             >
-              ☕ Café
-            </label>
+              Cardápio do dia{' '}
+              {formatarData(
+                data
+              )}
+            </strong>
 
-            <textarea
-              value={cafe}
-              onChange={(e) =>
-                setCafe(
-                  e.target.value
-                )
-              }
-              maxLength={1000}
-              disabled={
-                !podeEditar ||
-                salvando
-              }
-              style={estiloCampo}
-              placeholder={
-                podeEditar
-                  ? 'Ex.: Café com leite\nPão com margarina\nFrutas'
-                  : 'Não informado'
-              }
-            />
-
-            <div
+            <p
               className="muted"
-              style={
-                estiloContador
-              }
+              style={{
+                margin:
+                  '5px 0 0',
+                fontSize:
+                  '13px',
+                lineHeight:
+                  1.45,
+              }}
             >
-              {cafe.length}/1000
-            </div>
+              {podeEditar
+                ? 'Relacione as preparações previstas para cada refeição.'
+                : 'Preparações previstas para as refeições do dia.'}
+            </p>
           </div>
 
           <div
-            style={
-              estiloBlocoRefeicao
-            }
+            style={{
+              display: 'grid',
+              gap: '11px',
+            }}
           >
-            <label
-              style={estiloLabel}
-            >
-              🍽️ Almoço
-            </label>
-
-            <textarea
-              value={almoco}
-              onChange={(e) =>
-                setAlmoco(
-                  e.target.value
-                )
+            <CampoRefeicao
+              titulo="Café"
+              icone="☕"
+              valor={cafe}
+              onChange={
+                setCafe
               }
-              maxLength={1000}
-              disabled={
-                !podeEditar ||
-                salvando
-              }
-              style={estiloCampo}
               placeholder={
+                'Ex.: Café com leite\nPão com margarina\nFrutas'
+              }
+              podeEditar={
                 podeEditar
-                  ? 'Ex.: Arroz\nFeijão\nCarne com mandioca\nSalada'
-                  : 'Não informado'
+              }
+              salvando={
+                salvando
               }
             />
 
-            <div
-              className="muted"
-              style={
-                estiloContador
+            <CampoRefeicao
+              titulo="Almoço"
+              icone="🍽️"
+              valor={almoco}
+              onChange={
+                setAlmoco
               }
-            >
-              {almoco.length}/1000
-            </div>
-          </div>
-
-          <div
-            style={
-              estiloBlocoRefeicao
-            }
-          >
-            <label
-              style={estiloLabel}
-            >
-              🍲 Jantar
-            </label>
-
-            <textarea
-              value={jantar}
-              onChange={(e) =>
-                setJantar(
-                  e.target.value
-                )
-              }
-              maxLength={1000}
-              disabled={
-                !podeEditar ||
-                salvando
-              }
-              style={estiloCampo}
               placeholder={
+                'Ex.: Arroz\nFeijão\nCarne com mandioca\nSalada'
+              }
+              podeEditar={
                 podeEditar
-                  ? 'Informe o cardápio do jantar'
-                  : 'Não informado'
+              }
+              salvando={
+                salvando
               }
             />
 
-            <div
-              className="muted"
-              style={
-                estiloContador
+            <CampoRefeicao
+              titulo="Jantar"
+              icone="🍲"
+              valor={jantar}
+              onChange={
+                setJantar
               }
-            >
-              {jantar.length}/1000
-            </div>
-          </div>
-
-          <div
-            style={
-              estiloBlocoRefeicao
-            }
-          >
-            <label
-              style={estiloLabel}
-            >
-              🌙 Ceia
-            </label>
-
-            <textarea
-              value={ceia}
-              onChange={(e) =>
-                setCeia(
-                  e.target.value
-                )
-              }
-              maxLength={1000}
-              disabled={
-                !podeEditar ||
-                salvando
-              }
-              style={estiloCampo}
-              placeholder={
+              placeholder="Informe o cardápio do jantar"
+              podeEditar={
                 podeEditar
-                  ? 'Informe o cardápio da ceia'
-                  : 'Não informado'
+              }
+              salvando={
+                salvando
               }
             />
 
-            <div
-              className="muted"
-              style={
-                estiloContador
+            <CampoRefeicao
+              titulo="Ceia"
+              icone="🌙"
+              valor={ceia}
+              onChange={
+                setCeia
               }
-            >
-              {ceia.length}/1000
-            </div>
-          </div>
-
-          <div
-            style={
-              estiloBlocoRefeicao
-            }
-          >
-            <label
-              style={estiloLabel}
-            >
-              📝 Observação
-            </label>
-
-            <textarea
-              value={observacao}
-              onChange={(e) =>
-                setObservacao(
-                  e.target.value
-                )
-              }
-              maxLength={1000}
-              disabled={
-                !podeEditar ||
-                salvando
-              }
-              style={
-                estiloObservacao
-              }
-              placeholder={
+              placeholder="Informe o cardápio da ceia"
+              podeEditar={
                 podeEditar
-                  ? 'Observação opcional'
-                  : 'Sem observação'
+              }
+              salvando={
+                salvando
               }
             />
 
-            <div
-              className="muted"
-              style={
-                estiloContador
+            <CampoRefeicao
+              titulo="Observação"
+              icone="📝"
+              valor={
+                observacao
               }
-            >
-              {observacao.length}
-              /1000
-            </div>
+              onChange={
+                setObservacao
+              }
+              placeholder="Observação opcional"
+              podeEditar={
+                podeEditar
+              }
+              salvando={
+                salvando
+              }
+              menor
+            />
           </div>
 
           {erro && (
             <div
+              className="error"
               style={{
-                marginTop: 16,
-                padding: 12,
-                border:
-                  '1px solid #ef4444',
-                borderRadius: 8,
-                background:
-                  'rgba(239, 68, 68, 0.08)',
+                marginTop:
+                  '14px',
               }}
             >
               {erro}
@@ -768,14 +885,10 @@ export default function CardapioClient({
 
           {mensagem && (
             <div
+              className="success"
               style={{
-                marginTop: 16,
-                padding: 12,
-                border:
-                  '1px solid #22c55e',
-                borderRadius: 8,
-                background:
-                  'rgba(34, 197, 94, 0.08)',
+                marginTop:
+                  '14px',
               }}
             >
               {mensagem}
@@ -783,31 +896,29 @@ export default function CardapioClient({
           )}
 
           {podeEditar && (
-            <div
-              className="actions"
+            <button
+              type="button"
+              className="btn"
+              onClick={salvar}
+              disabled={
+                salvando ||
+                carregando
+              }
               style={{
-                marginTop: 20,
+                width: '100%',
+                marginTop:
+                  '16px',
               }}
             >
-              <button
-                type="button"
-                className="btn"
-                onClick={salvar}
-                disabled={
-                  salvando ||
-                  carregando
-                }
-              >
-                {salvando
-                  ? 'Salvando...'
-                  : cardapio
-                    ? 'Salvar alterações'
-                    : 'Cadastrar cardápio'}
-              </button>
-            </div>
+              {salvando
+                ? 'Salvando...'
+                : cardapio
+                  ? 'Salvar alterações'
+                  : 'Cadastrar cardápio'}
+            </button>
           )}
-        </div>
+        </section>
       )}
-    </>
+    </div>
   );
 }
