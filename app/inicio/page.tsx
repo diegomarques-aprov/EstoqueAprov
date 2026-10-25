@@ -9,12 +9,6 @@ const estiloAreaAdministrativa = {
   background: 'rgba(37, 99, 235, 0.08)',
 };
 
-const estiloBotaoAzul = {
-  background: '#2563eb',
-  borderColor: '#3b82f6',
-  color: '#ffffff',
-};
-
 const estiloPainelAvisos = {
   border: '1px solid #f59e0b',
   background: 'rgba(245, 158, 11, 0.08)',
@@ -52,6 +46,42 @@ const verdesOperacao = [
     color: '#ffffff',
   },
 ];
+
+const estiloBotaoAzul = {
+  background: '#2563eb',
+  borderColor: '#3b82f6',
+  color: '#ffffff',
+};
+
+const estiloGridModulos = {
+  display: 'grid',
+  gridTemplateColumns:
+    'repeat(auto-fit, minmax(145px, 1fr))',
+  gap: '12px',
+};
+
+const estiloModulo = {
+  minHeight: '96px',
+  display: 'flex',
+  flexDirection: 'column' as const,
+  alignItems: 'flex-start',
+  justifyContent: 'space-between',
+  gap: '12px',
+  padding: '15px',
+  borderWidth: '1px',
+  borderStyle: 'solid',
+  borderRadius: '14px',
+  textDecoration: 'none',
+  fontWeight: 800,
+  lineHeight: 1.25,
+  boxShadow:
+    '0 6px 18px rgba(0, 0, 0, 0.14)',
+};
+
+const estiloIcone = {
+  fontSize: '23px',
+  lineHeight: 1,
+};
 
 export default async function Inicio() {
   const u = await currentUser();
@@ -138,17 +168,34 @@ export default async function Inicio() {
 
       {/* PAINEL DE AVISOS */}
 
-      <div
+      <section
         className="card"
         style={estiloPainelAvisos}
       >
-        <h2
+        <div
           style={{
-            marginTop: 0,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            marginBottom: '8px',
           }}
         >
-          ⚠ Painel de Avisos
-        </h2>
+          <span
+            style={{
+              fontSize: '25px',
+            }}
+          >
+            ⚠
+          </span>
+
+          <h2
+            style={{
+              margin: 0,
+            }}
+          >
+            Painel de Avisos
+          </h2>
+        </div>
 
         <p
           style={{
@@ -168,114 +215,193 @@ export default async function Inicio() {
           concentrados neste painel.
         </p>
 
-        <div className="actions">
-          <Link
-            className="btn"
-            href="/avisos"
-          >
-            Consultar avisos
-          </Link>
-        </div>
-      </div>
+        <Link
+          className="btn"
+          href="/avisos"
+        >
+          Consultar avisos
+        </Link>
+      </section>
 
       {/* OPERAÇÃO */}
 
-      <div className="card">
-        <h2>Operação</h2>
+      <section className="card">
+        <h2
+          style={{
+            marginTop: 0,
+          }}
+        >
+          Operação
+        </h2>
 
-        <div className="actions">
+        <p className="muted">
+          Acesse as principais rotinas do
+          Aprovisionamento.
+        </p>
+
+        <div style={estiloGridModulos}>
           {podeVerEstoqueInicial && (
             <Link
-              className="btn"
-              style={verdesOperacao[0]}
               href="/estoque/inicial"
+              style={{
+                ...estiloModulo,
+                ...verdesOperacao[0],
+              }}
             >
-              Estoque inicial
+              <span style={estiloIcone}>
+                📦
+              </span>
+
+              <span>
+                Estoque inicial
+              </span>
             </Link>
           )}
 
           {podeConsultarEstoque && (
             <Link
-              className="btn"
-              style={verdesOperacao[1]}
               href="/estoque"
+              style={{
+                ...estiloModulo,
+                ...verdesOperacao[1],
+              }}
             >
-              Consultar estoque
+              <span style={estiloIcone}>
+                🔎
+              </span>
+
+              <span>
+                Consultar estoque
+              </span>
             </Link>
           )}
 
           {podeReceber && (
             <Link
-              className="btn"
-              style={verdesOperacao[2]}
               href="/recebimentos"
+              style={{
+                ...estiloModulo,
+                ...verdesOperacao[2],
+              }}
             >
-              Novo recebimento
+              <span style={estiloIcone}>
+                ↓
+              </span>
+
+              <span>
+                Novo recebimento
+              </span>
             </Link>
           )}
 
           {podeRegistrarSaida && (
             <Link
-              className="btn"
-              style={verdesOperacao[3]}
               href="/saidas"
+              style={{
+                ...estiloModulo,
+                ...verdesOperacao[3],
+              }}
             >
-              Saída de gêneros
+              <span style={estiloIcone}>
+                ↑
+              </span>
+
+              <span>
+                Saída de gêneros
+              </span>
             </Link>
           )}
 
           {podeAjustar && (
             <Link
-              className="btn"
-              style={verdesOperacao[4]}
               href="/ajustes"
+              style={{
+                ...estiloModulo,
+                ...verdesOperacao[4],
+              }}
             >
-              Devoluções e ajustes
+              <span style={estiloIcone}>
+                ↺
+              </span>
+
+              <span>
+                Devoluções e ajustes
+              </span>
             </Link>
           )}
 
           {podeVerEfetivo && (
             <Link
-              className="btn"
-              style={verdesOperacao[5]}
               href="/efetivo"
+              style={{
+                ...estiloModulo,
+                ...verdesOperacao[5],
+              }}
             >
-              Efetivo alimentado
+              <span style={estiloIcone}>
+                👥
+              </span>
+
+              <span>
+                Efetivo alimentado
+              </span>
             </Link>
           )}
 
           {podeVerRelatorios && (
             <Link
-              className="btn"
-              style={verdesOperacao[0]}
               href="/relatorios"
+              style={{
+                ...estiloModulo,
+                ...verdesOperacao[0],
+              }}
             >
-              Relatórios
+              <span style={estiloIcone}>
+                📊
+              </span>
+
+              <span>
+                Relatórios
+              </span>
             </Link>
           )}
 
           {podeVerQDAA && (
             <Link
-              className="btn"
-              style={verdesOperacao[1]}
               href="/qdaa"
+              style={{
+                ...estiloModulo,
+                ...verdesOperacao[1],
+              }}
             >
-              QDAA / Ressuprimento QS
+              <span style={estiloIcone}>
+                📋
+              </span>
+
+              <span>
+                QDAA / Ressuprimento QS
+              </span>
             </Link>
           )}
         </div>
-      </div>
+      </section>
 
       {/* CONFIGURAÇÕES */}
 
       {administrador && (
-        <div
+        <section
           className="card"
           style={
             estiloAreaAdministrativa
           }
         >
-          <h2>Configurações</h2>
+          <h2
+            style={{
+              marginTop: 0,
+            }}
+          >
+            Configurações
+          </h2>
 
           <p className="muted">
             Defina a estrutura utilizada
@@ -283,62 +409,108 @@ export default async function Inicio() {
             controlar o estoque.
           </p>
 
-          <div className="actions">
+          <div style={estiloGridModulos}>
             <Link
-              className="btn"
-              style={estiloBotaoAzul}
               href="/admin/locais"
+              style={{
+                ...estiloModulo,
+                ...estiloBotaoAzul,
+              }}
             >
-              Locais de armazenamento
+              <span style={estiloIcone}>
+                ▣
+              </span>
+
+              <span>
+                Locais de armazenamento
+              </span>
             </Link>
 
             <Link
-              className="btn"
-              style={estiloBotaoAzul}
               href="/admin/unidades"
+              style={{
+                ...estiloModulo,
+                ...estiloBotaoAzul,
+              }}
             >
-              Unidades de medida
+              <span style={estiloIcone}>
+                ⚖
+              </span>
+
+              <span>
+                Unidades de medida
+              </span>
             </Link>
 
             <Link
-              className="btn"
-              style={estiloBotaoAzul}
               href="/admin/grupos-generos"
+              style={{
+                ...estiloModulo,
+                ...estiloBotaoAzul,
+              }}
             >
-              Grupos de gêneros
+              <span style={estiloIcone}>
+                ▦
+              </span>
+
+              <span>
+                Grupos de gêneros
+              </span>
             </Link>
 
             <Link
-              className="btn"
-              style={estiloBotaoAzul}
               href="/admin/categorias"
+              style={{
+                ...estiloModulo,
+                ...estiloBotaoAzul,
+              }}
             >
-              Categorias de gêneros
+              <span style={estiloIcone}>
+                ◫
+              </span>
+
+              <span>
+                Categorias de gêneros
+              </span>
             </Link>
 
             {administradorPrincipal && (
               <Link
-                className="btn"
-                style={estiloBotaoAzul}
                 href="/admin/usuarios"
+                style={{
+                  ...estiloModulo,
+                  ...estiloBotaoAzul,
+                }}
               >
-                Usuários e permissões
+                <span style={estiloIcone}>
+                  👤
+                </span>
+
+                <span>
+                  Usuários e permissões
+                </span>
               </Link>
             )}
           </div>
-        </div>
+        </section>
       )}
 
       {/* CADASTROS */}
 
       {administrador && (
-        <div
+        <section
           className="card"
           style={
             estiloAreaAdministrativa
           }
         >
-          <h2>Cadastros</h2>
+          <h2
+            style={{
+              marginTop: 0,
+            }}
+          >
+            Cadastros
+          </h2>
 
           <p className="muted">
             Cadastre e consulte as
@@ -346,24 +518,40 @@ export default async function Inicio() {
             Aprovisionamento.
           </p>
 
-          <div className="actions">
+          <div style={estiloGridModulos}>
             <Link
-              className="btn"
-              style={estiloBotaoAzul}
               href="/admin/generos"
+              style={{
+                ...estiloModulo,
+                ...estiloBotaoAzul,
+              }}
             >
-              Gêneros QS/QR
+              <span style={estiloIcone}>
+                📦
+              </span>
+
+              <span>
+                Gêneros QS/QR
+              </span>
             </Link>
 
             <Link
-              className="btn"
-              style={estiloBotaoAzul}
               href="/cardapio"
+              style={{
+                ...estiloModulo,
+                ...estiloBotaoAzul,
+              }}
             >
-              Cardápio
+              <span style={estiloIcone}>
+                📅
+              </span>
+
+              <span>
+                Cardápio
+              </span>
             </Link>
           </div>
-        </div>
+        </section>
       )}
 
       {/* RODAPÉ */}
@@ -372,7 +560,8 @@ export default async function Inicio() {
         style={{
           marginTop: '32px',
           paddingTop: '16px',
-          paddingBottom: '12px',
+          paddingBottom:
+            'calc(12px + env(safe-area-inset-bottom))',
           textAlign: 'center',
           fontSize: '11px',
           lineHeight: '1.5',
