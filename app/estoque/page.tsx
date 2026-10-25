@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { currentUser } from '@/lib/auth';
 import EstoqueClient from '@/components/EstoqueClient';
+import NavegacaoInferior from '@/components/NavegacaoInferior';
 
 export default async function Page() {
   if (!(await currentUser())) {
@@ -20,6 +21,8 @@ export default async function Page() {
       <h1>Estoque atual</h1>
 
       <EstoqueClient />
+
+      <NavegacaoInferior />
     </main>
   );
 }
