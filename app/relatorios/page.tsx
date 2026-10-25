@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { currentUser } from '@/lib/auth';
 import RelatoriosClient from '@/components/RelatoriosClient';
+import NavegacaoInferior from '@/components/NavegacaoInferior';
 
 export default async function Page() {
   const usuario = await currentUser();
@@ -64,6 +65,8 @@ export default async function Page() {
       </section>
 
       <RelatoriosClient />
+
+      <NavegacaoInferior />
     </main>
   );
 }
