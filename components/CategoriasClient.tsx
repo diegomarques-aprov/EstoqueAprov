@@ -36,6 +36,38 @@ type Categoria = {
   };
 };
 
+function CampoInfo({
+  titulo,
+  valor,
+}: {
+  titulo: string;
+  valor: React.ReactNode;
+}) {
+  return (
+    <div>
+      <div
+        className="muted"
+        style={{
+          fontSize: '10px',
+          marginBottom: '2px',
+        }}
+      >
+        {titulo}
+      </div>
+
+      <div
+        style={{
+          fontSize: '12px',
+          fontWeight: 600,
+          lineHeight: 1.4,
+        }}
+      >
+        {valor}
+      </div>
+    </div>
+  );
+}
+
 export default function CategoriasClient() {
   const [categorias, setCategorias] =
     useState<Categoria[]>([]);
@@ -47,10 +79,13 @@ export default function CategoriasClient() {
     useState<Local[]>([]);
 
   const [erro, setErro] = useState('');
-  const [sucesso, setSucesso] = useState('');
+  const [sucesso, setSucesso] =
+    useState('');
 
-  const [mostrarCategorias, setMostrarCategorias] =
-    useState(false);
+  const [
+    mostrarCategorias,
+    setMostrarCategorias,
+  ] = useState(false);
 
   const [editando, setEditando] =
     useState<Categoria | null>(null);
@@ -64,16 +99,22 @@ export default function CategoriasClient() {
   const [loteEdicao, setLoteEdicao] =
     useState(false);
 
-  const [validadeEdicao, setValidadeEdicao] =
-    useState(false);
+  const [
+    validadeEdicao,
+    setValidadeEdicao,
+  ] = useState(false);
 
   const [localEdicao, setLocalEdicao] =
     useState('');
 
-  const [situacaoEdicao, setSituacaoEdicao] =
+  const [
+    situacaoEdicao,
+    setSituacaoEdicao,
+  ] =
     useState<Situacao>('ATIVO');
 
-  const nomeRef = useRef<HTMLInputElement>(null);
+  const nomeRef =
+    useRef<HTMLInputElement>(null);
 
   async function carregarDados() {
     try {
@@ -151,16 +192,18 @@ export default function CategoriasClient() {
     carregarDados();
   }, []);
 
-  const gruposAtivos = grupos.filter(
-    (grupo) =>
-      grupo.situacao === 'ATIVO'
-  );
+  const gruposAtivos =
+    grupos.filter(
+      (grupo) =>
+        grupo.situacao === 'ATIVO'
+    );
 
-  const locaisAtivos = locais.filter(
-    (local) =>
-      !local.situacao ||
-      local.situacao === 'ATIVO'
-  );
+  const locaisAtivos =
+    locais.filter(
+      (local) =>
+        !local.situacao ||
+        local.situacao === 'ATIVO'
+    );
 
   async function adicionar(
     ev: FormEvent<HTMLFormElement>
@@ -189,7 +232,8 @@ export default function CategoriasClient() {
 
             grupoId:
               String(
-                dados.get('grupoId') || ''
+                dados.get('grupoId') ||
+                  ''
               ) || null,
 
             controlaLotePadrao:
@@ -244,17 +288,23 @@ export default function CategoriasClient() {
     categoria: Categoria
   ) {
     setEditando(categoria);
-    setNomeEdicao(categoria.nome);
+
+    setNomeEdicao(
+      categoria.nome
+    );
+
     setGrupoEdicao(
       categoria.grupoId || ''
     );
 
     setLoteEdicao(
-      categoria.controlaLotePadrao === true
+      categoria.controlaLotePadrao ===
+        true
     );
 
     setValidadeEdicao(
-      categoria.controlaValidadePadrao === true
+      categoria.controlaValidadePadrao ===
+        true
     );
 
     setLocalEdicao(
@@ -304,6 +354,7 @@ export default function CategoriasClient() {
           body: JSON.stringify({
             id: editando.id,
             nome: nomeEdicao.trim(),
+
             grupoId:
               grupoEdicao || null,
 
@@ -356,127 +407,326 @@ export default function CategoriasClient() {
 
   return (
     <>
-      <div className="card">
-        <h2>Nova categoria</h2>
+      <div
+        style={{
+          padding: '13px',
+          borderRadius: '12px',
+          background: '#0c1811',
+          border: '1px solid #284334',
+          marginBottom: '16px',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            justifyContent:
+              'space-between',
+            alignItems: 'flex-start',
+            gap: '10px',
+            marginBottom: '15px',
+          }}
+        >
+          <div>
+            <strong
+              style={{
+                fontSize: '15px',
+              }}
+            >
+              Nova categoria
+            </strong>
 
-        <p className="muted">
-          A categoria pertence a um grupo e pode
-          definir padrões sugeridos automaticamente
-          no cadastro dos gêneros.
-        </p>
+            <div
+              className="muted"
+              style={{
+                marginTop: '3px',
+                fontSize: '11px',
+                lineHeight: 1.4,
+              }}
+            >
+              Defina a organização e os
+              padrões sugeridos para os
+              gêneros.
+            </div>
+          </div>
 
-        <form onSubmit={adicionar}>
-          <label>Nome da categoria</label>
+          <span
+            style={{
+              padding: '5px 8px',
+              borderRadius: '999px',
+              background: '#183d2a',
+              border: '1px solid #284334',
+              fontSize: '10px',
+              fontWeight: 800,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            CADASTRO
+          </span>
+        </div>
 
-          <input
-            ref={nomeRef}
-            name="nome"
-            required
-            autoFocus
-            maxLength={80}
-            placeholder="Ex.: Carne Bovina"
-          />
+        <form
+          onSubmit={adicionar}
+          style={{
+            display: 'grid',
+            gap: '13px',
+          }}
+        >
+          <label>
+            Nome da categoria
 
-          <label>Grupo de gêneros</label>
+            <input
+              ref={nomeRef}
+              name="nome"
+              required
+              autoFocus
+              maxLength={80}
+              placeholder="Ex.: Carne Bovina"
+            />
+          </label>
 
-          <select name="grupoId">
-            <option value="">
-              Não definido
-            </option>
+          <label>
+            Grupo de gêneros
 
-            {gruposAtivos.map(
-              (grupo) => (
-                <option
-                  key={grupo.id}
-                  value={grupo.id}
-                >
-                  {grupo.nome}
-                </option>
-              )
-            )}
-          </select>
+            <select name="grupoId">
+              <option value="">
+                Não definido
+              </option>
 
-          {gruposAtivos.length === 0 && (
-            <p className="muted">
-              Nenhum grupo ativo cadastrado.
-              Cadastre primeiro os grupos de gêneros.
-            </p>
+              {gruposAtivos.map(
+                (grupo) => (
+                  <option
+                    key={grupo.id}
+                    value={grupo.id}
+                  >
+                    {grupo.nome}
+                  </option>
+                )
+              )}
+            </select>
+          </label>
+
+          {gruposAtivos.length ===
+            0 && (
+            <div
+              style={{
+                padding: '10px',
+                borderRadius: '10px',
+                background:
+                  'rgba(245,158,11,.08)',
+                border:
+                  '1px solid rgba(245,158,11,.35)',
+              }}
+            >
+              <span
+                className="muted"
+                style={{
+                  fontSize: '11px',
+                  lineHeight: 1.45,
+                }}
+              >
+                Nenhum grupo ativo
+                cadastrado. Cadastre
+                primeiro os grupos de
+                gêneros.
+              </span>
+            </div>
           )}
 
-          <div className="checks">
-            <label>
-              <input
-                type="checkbox"
-                name="controlaLotePadrao"
-              />{' '}
-              Controla lote por padrão
-            </label>
+          <div>
+            <div
+              style={{
+                marginBottom: '7px',
+                fontSize: '12px',
+                fontWeight: 700,
+              }}
+            >
+              Padrões da categoria
+            </div>
 
-            <label>
-              <input
-                type="checkbox"
-                name="controlaValidadePadrao"
-              />{' '}
-              Controla validade por padrão
-            </label>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns:
+                  'repeat(2, minmax(0, 1fr))',
+                gap: '8px',
+              }}
+            >
+              <label
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '11px',
+                  borderRadius: '11px',
+                  background: '#102018',
+                  border:
+                    '1px solid #284334',
+                  cursor: 'pointer',
+                }}
+              >
+                <input
+                  type="checkbox"
+                  name="controlaLotePadrao"
+                  style={{
+                    width: '18px',
+                    height: '18px',
+                    margin: 0,
+                    flexShrink: 0,
+                  }}
+                />
+
+                <span
+                  style={{
+                    fontSize: '11px',
+                    lineHeight: 1.3,
+                  }}
+                >
+                  Controla lote
+                </span>
+              </label>
+
+              <label
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '11px',
+                  borderRadius: '11px',
+                  background: '#102018',
+                  border:
+                    '1px solid #284334',
+                  cursor: 'pointer',
+                }}
+              >
+                <input
+                  type="checkbox"
+                  name="controlaValidadePadrao"
+                  style={{
+                    width: '18px',
+                    height: '18px',
+                    margin: 0,
+                    flexShrink: 0,
+                  }}
+                />
+
+                <span
+                  style={{
+                    fontSize: '11px',
+                    lineHeight: 1.3,
+                  }}
+                >
+                  Controla validade
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <div
+            style={{
+              padding: '10px 11px',
+              borderRadius: '10px',
+              background:
+                'rgba(43,138,87,.06)',
+              border:
+                '1px solid rgba(43,138,87,.3)',
+            }}
+          >
+            <span
+              className="muted"
+              style={{
+                fontSize: '11px',
+                lineHeight: 1.45,
+              }}
+            >
+              Esses controles serão
+              sugeridos automaticamente
+              quando um gênero for
+              vinculado à categoria.
+            </span>
           </div>
 
           <label>
             Local habitual da categoria
+
+            <select name="localPadraoId">
+              <option value="">
+                Não definido
+              </option>
+
+              {locaisAtivos.map(
+                (local) => (
+                  <option
+                    key={local.id}
+                    value={local.id}
+                  >
+                    {local.nome}
+                  </option>
+                )
+              )}
+            </select>
           </label>
-
-          <select name="localPadraoId">
-            <option value="">
-              Não definido
-            </option>
-
-            {locaisAtivos.map(
-              (local) => (
-                <option
-                  key={local.id}
-                  value={local.id}
-                >
-                  {local.nome}
-                </option>
-              )
-            )}
-          </select>
 
           <button
             className="btn"
             type="submit"
+            style={{
+              width: '100%',
+              minHeight: '46px',
+            }}
           >
             Adicionar categoria
           </button>
 
-          {sucesso && !editando && (
-            <p role="status">
-              <strong>
-                ✓ {sucesso}
-              </strong>
-            </p>
-          )}
+          {sucesso &&
+            !editando && (
+              <div
+                role="status"
+                style={{
+                  padding: '11px',
+                  borderRadius: '10px',
+                  background:
+                    'rgba(43,138,87,.08)',
+                  border:
+                    '1px solid rgba(43,138,87,.4)',
+                  fontSize: '12px',
+                }}
+              >
+                <strong>
+                  ✓ {sucesso}
+                </strong>
+              </div>
+            )}
 
           {erro && !editando && (
-            <p
+            <div
               className="error"
               role="alert"
             >
               {erro}
-            </p>
+            </div>
           )}
         </form>
       </div>
 
-      <div className="card">
+      <div
+        style={{
+          padding: '13px',
+          borderRadius: '12px',
+          background: '#0c1811',
+          border: '1px solid #284334',
+        }}
+      >
         <button
           type="button"
-          className="linkbtn"
+          className="btn"
           onClick={() =>
             setMostrarCategorias(
               !mostrarCategorias
             )
           }
+          style={{
+            width: '100%',
+          }}
         >
           {mostrarCategorias
             ? 'Ocultar categorias cadastradas'
@@ -484,17 +734,54 @@ export default function CategoriasClient() {
         </button>
 
         {mostrarCategorias && (
-          <>
-            <h2>
-              Categorias cadastradas
-            </h2>
+          <div
+            style={{
+              display: 'grid',
+              gap: '10px',
+              marginTop: '14px',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                justifyContent:
+                  'space-between',
+                alignItems: 'center',
+                gap: '10px',
+              }}
+            >
+              <strong>
+                Categorias cadastradas
+              </strong>
+
+              <span
+                className="muted"
+                style={{
+                  fontSize: '11px',
+                }}
+              >
+                {categorias.length}{' '}
+                categoria(s)
+              </span>
+            </div>
 
             {categorias.length > 0 ? (
               categorias.map(
                 (categoria) => (
-                  <div
-                    className="row"
+                  <article
                     key={categoria.id}
+                    style={{
+                      padding: '13px',
+                      borderRadius:
+                        '12px',
+                      background:
+                        '#102018',
+                      border:
+                        editando?.id ===
+                        categoria.id
+                          ? '1px solid rgba(43,138,87,.75)'
+                          : '1px solid #284334',
+                    }}
                   >
                     {editando?.id ===
                     categoria.id ? (
@@ -503,293 +790,518 @@ export default function CategoriasClient() {
                           salvarEdicao
                         }
                         style={{
-                          width: '100%',
+                          display:
+                            'grid',
+                          gap: '13px',
                         }}
                       >
-                        <h3>
-                          Editar categoria
-                        </h3>
+                        <div>
+                          <strong
+                            style={{
+                              fontSize:
+                                '15px',
+                            }}
+                          >
+                            Editar categoria
+                          </strong>
 
-                        <label>Nome</label>
+                          <div
+                            className="muted"
+                            style={{
+                              marginTop:
+                                '3px',
+                              fontSize:
+                                '11px',
+                            }}
+                          >
+                            Altere a
+                            organização e os
+                            padrões da
+                            categoria.
+                          </div>
+                        </div>
 
-                        <input
-                          value={
-                            nomeEdicao
-                          }
-                          onChange={(e) =>
-                            setNomeEdicao(
-                              e.target
-                                .value
-                            )
-                          }
-                          required
-                          maxLength={80}
-                          autoFocus
-                        />
+                        <label>
+                          Nome
+
+                          <input
+                            value={
+                              nomeEdicao
+                            }
+                            onChange={(e) =>
+                              setNomeEdicao(
+                                e.target
+                                  .value
+                              )
+                            }
+                            required
+                            maxLength={80}
+                            autoFocus
+                          />
+                        </label>
 
                         <label>
                           Grupo de gêneros
+
+                          <select
+                            value={
+                              grupoEdicao
+                            }
+                            onChange={(e) =>
+                              setGrupoEdicao(
+                                e.target
+                                  .value
+                              )
+                            }
+                          >
+                            <option value="">
+                              Não definido
+                            </option>
+
+                            {gruposAtivos.map(
+                              (grupo) => (
+                                <option
+                                  key={
+                                    grupo.id
+                                  }
+                                  value={
+                                    grupo.id
+                                  }
+                                >
+                                  {
+                                    grupo.nome
+                                  }
+                                </option>
+                              )
+                            )}
+                          </select>
                         </label>
 
-                        <select
-                          value={
-                            grupoEdicao
-                          }
-                          onChange={(e) =>
-                            setGrupoEdicao(
-                              e.target
-                                .value
-                            )
-                          }
-                        >
-                          <option value="">
-                            Não definido
-                          </option>
+                        <div>
+                          <div
+                            style={{
+                              marginBottom:
+                                '7px',
+                              fontSize:
+                                '12px',
+                              fontWeight:
+                                700,
+                            }}
+                          >
+                            Padrões
+                          </div>
 
-                          {gruposAtivos.map(
-                            (grupo) => (
-                              <option
-                                key={
-                                  grupo.id
+                          <div
+                            style={{
+                              display:
+                                'grid',
+                              gridTemplateColumns:
+                                'repeat(2, minmax(0, 1fr))',
+                              gap: '8px',
+                            }}
+                          >
+                            <label
+                              style={{
+                                display:
+                                  'flex',
+                                alignItems:
+                                  'center',
+                                gap: '8px',
+                                padding:
+                                  '11px',
+                                borderRadius:
+                                  '11px',
+                                background:
+                                  '#0c1811',
+                                border:
+                                  '1px solid #284334',
+                              }}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={
+                                  loteEdicao
                                 }
-                                value={
-                                  grupo.id
+                                onChange={(
+                                  e
+                                ) =>
+                                  setLoteEdicao(
+                                    e.target
+                                      .checked
+                                  )
                                 }
+                                style={{
+                                  width:
+                                    '18px',
+                                  height:
+                                    '18px',
+                                  margin: 0,
+                                  flexShrink: 0,
+                                }}
+                              />
+
+                              <span
+                                style={{
+                                  fontSize:
+                                    '11px',
+                                }}
                               >
-                                {
-                                  grupo.nome
+                                Controla
+                                lote
+                              </span>
+                            </label>
+
+                            <label
+                              style={{
+                                display:
+                                  'flex',
+                                alignItems:
+                                  'center',
+                                gap: '8px',
+                                padding:
+                                  '11px',
+                                borderRadius:
+                                  '11px',
+                                background:
+                                  '#0c1811',
+                                border:
+                                  '1px solid #284334',
+                              }}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={
+                                  validadeEdicao
                                 }
-                              </option>
-                            )
-                          )}
-                        </select>
+                                onChange={(
+                                  e
+                                ) =>
+                                  setValidadeEdicao(
+                                    e.target
+                                      .checked
+                                  )
+                                }
+                                style={{
+                                  width:
+                                    '18px',
+                                  height:
+                                    '18px',
+                                  margin: 0,
+                                  flexShrink: 0,
+                                }}
+                              />
 
-                        <div className="checks">
-                          <label>
-                            <input
-                              type="checkbox"
-                              checked={
-                                loteEdicao
-                              }
-                              onChange={(e) =>
-                                setLoteEdicao(
-                                  e.target
-                                    .checked
-                                )
-                              }
-                            />{' '}
-                            Controla lote
-                            por padrão
-                          </label>
-
-                          <label>
-                            <input
-                              type="checkbox"
-                              checked={
-                                validadeEdicao
-                              }
-                              onChange={(e) =>
-                                setValidadeEdicao(
-                                  e.target
-                                    .checked
-                                )
-                              }
-                            />{' '}
-                            Controla validade
-                            por padrão
-                          </label>
+                              <span
+                                style={{
+                                  fontSize:
+                                    '11px',
+                                }}
+                              >
+                                Controla
+                                validade
+                              </span>
+                            </label>
+                          </div>
                         </div>
 
                         <label>
                           Local habitual
+
+                          <select
+                            value={
+                              localEdicao
+                            }
+                            onChange={(e) =>
+                              setLocalEdicao(
+                                e.target
+                                  .value
+                              )
+                            }
+                          >
+                            <option value="">
+                              Não definido
+                            </option>
+
+                            {locaisAtivos.map(
+                              (local) => (
+                                <option
+                                  key={
+                                    local.id
+                                  }
+                                  value={
+                                    local.id
+                                  }
+                                >
+                                  {
+                                    local.nome
+                                  }
+                                </option>
+                              )
+                            )}
+                          </select>
                         </label>
-
-                        <select
-                          value={
-                            localEdicao
-                          }
-                          onChange={(e) =>
-                            setLocalEdicao(
-                              e.target
-                                .value
-                            )
-                          }
-                        >
-                          <option value="">
-                            Não definido
-                          </option>
-
-                          {locaisAtivos.map(
-                            (local) => (
-                              <option
-                                key={
-                                  local.id
-                                }
-                                value={
-                                  local.id
-                                }
-                              >
-                                {
-                                  local.nome
-                                }
-                              </option>
-                            )
-                          )}
-                        </select>
 
                         <label>
                           Situação
+
+                          <select
+                            value={
+                              situacaoEdicao
+                            }
+                            onChange={(e) =>
+                              setSituacaoEdicao(
+                                e.target
+                                  .value as Situacao
+                              )
+                            }
+                          >
+                            <option value="ATIVO">
+                              Ativo
+                            </option>
+
+                            <option value="INATIVO">
+                              Inativo
+                            </option>
+                          </select>
                         </label>
 
-                        <select
-                          value={
-                            situacaoEdicao
-                          }
-                          onChange={(e) =>
-                            setSituacaoEdicao(
-                              e.target
-                                .value as Situacao
-                            )
-                          }
-                        >
-                          <option value="ATIVO">
-                            Ativo
-                          </option>
-
-                          <option value="INATIVO">
-                            Inativo
-                          </option>
-                        </select>
+                        {erro && (
+                          <div
+                            className="error"
+                            role="alert"
+                          >
+                            {erro}
+                          </div>
+                        )}
 
                         <div
                           style={{
                             display:
-                              'flex',
+                              'grid',
+                            gridTemplateColumns:
+                              'repeat(2, minmax(0, 1fr))',
                             gap: '8px',
-                            marginTop:
-                              '12px',
-                            flexWrap:
-                              'wrap',
                           }}
                         >
                           <button
                             className="btn"
                             type="submit"
                           >
-                            Salvar alterações
+                            Salvar
                           </button>
 
                           <button
-                            className="linkbtn"
                             type="button"
                             onClick={
                               cancelarEdicao
                             }
+                            style={{
+                              minHeight:
+                                '44px',
+                              borderRadius:
+                                '11px',
+                              border:
+                                '1px solid #284334',
+                              background:
+                                '#0c1811',
+                              color:
+                                '#fff',
+                              fontWeight:
+                                700,
+                              cursor:
+                                'pointer',
+                            }}
                           >
                             Cancelar
                           </button>
                         </div>
-
-                        {erro && (
-                          <p
-                            className="error"
-                            role="alert"
-                          >
-                            {erro}
-                          </p>
-                        )}
                       </form>
                     ) : (
                       <>
-                        <div>
-                          <b>
-                            {categoria.nome}
-                          </b>
+                        <div
+                          style={{
+                            display:
+                              'flex',
+                            justifyContent:
+                              'space-between',
+                            alignItems:
+                              'flex-start',
+                            gap: '10px',
+                            paddingBottom:
+                              '10px',
+                            marginBottom:
+                              '11px',
+                            borderBottom:
+                              '1px solid rgba(255,255,255,.07)',
+                          }}
+                        >
+                          <div>
+                            <strong
+                              style={{
+                                fontSize:
+                                  '14px',
+                              }}
+                            >
+                              {
+                                categoria.nome
+                              }
+                            </strong>
 
-                          <div className="muted">
-                            Grupo:{' '}
-                            {categoria.grupo
-                              ?.nome ||
-                              'Não definido'}
+                            <div
+                              className="muted"
+                              style={{
+                                marginTop:
+                                  '3px',
+                                fontSize:
+                                  '11px',
+                              }}
+                            >
+                              Grupo:{' '}
+                              {categoria
+                                .grupo
+                                ?.nome ||
+                                'Não definido'}
+                            </div>
                           </div>
 
-                          <div className="muted">
-                            Lote:{' '}
-                            {categoria.controlaLotePadrao
-                              ? 'Sim'
-                              : 'Não'}
-                            {' · '}
-                            Validade:{' '}
-                            {categoria.controlaValidadePadrao
-                              ? 'Sim'
-                              : 'Não'}
-                          </div>
-
-                          <div className="muted">
-                            Local habitual:{' '}
-                            {categoria
-                              .localPadrao
-                              ?.nome ||
-                              'Não definido'}
-                          </div>
-
-                          <div className="muted">
-                            Gêneros vinculados:{' '}
-                            {categoria
-                              ._count
-                              ?.generos ??
-                              0}
-                          </div>
+                          <span
+                            style={{
+                              padding:
+                                '4px 7px',
+                              borderRadius:
+                                '999px',
+                              background:
+                                categoria.situacao ===
+                                'ATIVO'
+                                  ? 'rgba(43,138,87,.12)'
+                                  : 'rgba(245,158,11,.10)',
+                              border:
+                                categoria.situacao ===
+                                'ATIVO'
+                                  ? '1px solid rgba(43,138,87,.45)'
+                                  : '1px solid rgba(245,158,11,.4)',
+                              fontSize:
+                                '10px',
+                              fontWeight:
+                                800,
+                            }}
+                          >
+                            {
+                              categoria.situacao
+                            }
+                          </span>
                         </div>
 
                         <div
                           style={{
                             display:
-                              'flex',
-                            alignItems:
-                              'center',
-                            gap: '8px',
-                            flexWrap:
-                              'wrap',
+                              'grid',
+                            gridTemplateColumns:
+                              'repeat(2, minmax(0, 1fr))',
+                            gap:
+                              '11px 14px',
                           }}
                         >
-                          <span className="tag">
-                            {
-                              categoria.situacao
+                          <CampoInfo
+                            titulo="Lote por padrão"
+                            valor={
+                              categoria.controlaLotePadrao
+                                ? 'Sim'
+                                : 'Não'
                             }
-                          </span>
+                          />
 
-                          <button
-                            type="button"
-                            className="linkbtn"
-                            onClick={() =>
-                              iniciarEdicao(
-                                categoria
-                              )
+                          <CampoInfo
+                            titulo="Validade por padrão"
+                            valor={
+                              categoria.controlaValidadePadrao
+                                ? 'Sim'
+                                : 'Não'
                             }
-                          >
-                            Editar
-                          </button>
+                          />
+
+                          <CampoInfo
+                            titulo="Local habitual"
+                            valor={
+                              categoria
+                                .localPadrao
+                                ?.nome ||
+                              'Não definido'
+                            }
+                          />
+
+                          <CampoInfo
+                            titulo="Gêneros vinculados"
+                            valor={
+                              categoria
+                                ._count
+                                ?.generos ??
+                              0
+                            }
+                          />
                         </div>
+
+                        <button
+                          type="button"
+                          className="btn"
+                          onClick={() =>
+                            iniciarEdicao(
+                              categoria
+                            )
+                          }
+                          style={{
+                            width: '100%',
+                            marginTop:
+                              '12px',
+                          }}
+                        >
+                          Editar categoria
+                        </button>
                       </>
                     )}
-                  </div>
+                  </article>
                 )
               )
             ) : (
-              <p className="muted">
-                Nenhuma categoria cadastrada.
-              </p>
+              <div
+                style={{
+                  padding: '13px',
+                  borderRadius:
+                    '11px',
+                  background:
+                    '#102018',
+                  border:
+                    '1px solid #284334',
+                }}
+              >
+                <span className="muted">
+                  Nenhuma categoria
+                  cadastrada.
+                </span>
+              </div>
             )}
 
-            {sucesso && !editando && (
-              <p role="status">
-                <strong>
-                  ✓ {sucesso}
-                </strong>
-              </p>
-            )}
-          </>
+            {sucesso &&
+              !editando && (
+                <div
+                  role="status"
+                  style={{
+                    padding: '11px',
+                    borderRadius:
+                      '10px',
+                    background:
+                      'rgba(43,138,87,.08)',
+                    border:
+                      '1px solid rgba(43,138,87,.4)',
+                    fontSize: '12px',
+                  }}
+                >
+                  <strong>
+                    ✓ {sucesso}
+                  </strong>
+                </div>
+              )}
+          </div>
         )}
       </div>
     </>
