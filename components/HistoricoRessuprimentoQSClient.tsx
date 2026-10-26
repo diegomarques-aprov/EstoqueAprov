@@ -1,8 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import {
+  useEffect,
+  useState,
+} from 'react';
 
-function formatarNumero(valor: unknown) {
+function formatarNumero(
+  valor: unknown
+) {
   if (
     valor === null ||
     valor === undefined
@@ -10,7 +15,9 @@ function formatarNumero(valor: unknown) {
     return '—';
   }
 
-  return Number(valor).toLocaleString(
+  return Number(
+    valor
+  ).toLocaleString(
     'pt-BR',
     {
       minimumFractionDigits: 0,
@@ -19,12 +26,16 @@ function formatarNumero(valor: unknown) {
   );
 }
 
-function formatarData(valor: string | null) {
+function formatarData(
+  valor: string | null
+) {
   if (!valor) {
     return '—';
   }
 
-  return new Date(valor).toLocaleDateString(
+  return new Date(
+    valor
+  ).toLocaleDateString(
     'pt-BR'
   );
 }
@@ -36,12 +47,16 @@ function formatarDataHora(
     return '—';
   }
 
-  return new Date(valor).toLocaleString(
+  return new Date(
+    valor
+  ).toLocaleString(
     'pt-BR'
   );
 }
 
-function origemTexto(origem: string) {
+function origemTexto(
+  origem: string
+) {
   if (
     origem ===
     'HISTORICO_ESTOQUEAPROV'
@@ -57,6 +72,81 @@ function origemTexto(origem: string) {
   }
 
   return origem || '—';
+}
+
+function Dado({
+  titulo,
+  valor,
+  destaque = false,
+}: {
+  titulo: string;
+  valor: React.ReactNode;
+  destaque?: boolean;
+}) {
+  return (
+    <div>
+      <div
+        className="muted"
+        style={{
+          fontSize: '11px',
+          lineHeight: 1.3,
+          marginBottom: '3px',
+        }}
+      >
+        {titulo}
+      </div>
+
+      <div
+        style={{
+          fontSize:
+            destaque
+              ? '16px'
+              : '14px',
+          fontWeight:
+            destaque
+              ? 800
+              : 600,
+          lineHeight: 1.35,
+        }}
+      >
+        {valor}
+      </div>
+    </div>
+  );
+}
+
+function Status({
+  status,
+}: {
+  status: string;
+}) {
+  const finalizado =
+    status === 'FINALIZADO';
+
+  return (
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '5px',
+        padding: '5px 9px',
+        borderRadius: '999px',
+        fontSize: '11px',
+        fontWeight: 800,
+        lineHeight: 1,
+        border: finalizado
+          ? '1px solid rgba(43,138,87,.7)'
+          : '1px solid rgba(214,165,109,.65)',
+        background: finalizado
+          ? 'rgba(43,138,87,.13)'
+          : 'rgba(214,165,109,.10)',
+      }}
+    >
+      {finalizado
+        ? '✓ Finalizado'
+        : 'Rascunho'}
+    </span>
+  );
 }
 
 export default function HistoricoRessuprimentoQSClient() {
@@ -90,9 +180,10 @@ export default function HistoricoRessuprimentoQSClient() {
     setCarregando(true);
 
     try {
-      const resposta = await fetch(
-        '/api/relatorios/planejamento-ressuprimento-qs'
-      );
+      const resposta =
+        await fetch(
+          '/api/relatorios/planejamento-ressuprimento-qs'
+        );
 
       const json =
         await resposta.json();
@@ -124,14 +215,17 @@ export default function HistoricoRessuprimentoQSClient() {
     id: string
   ) {
     setErro('');
-    setCarregandoDetalhe(true);
+    setCarregandoDetalhe(
+      true
+    );
 
     try {
-      const resposta = await fetch(
-        `/api/relatorios/planejamento-ressuprimento-qs?id=${encodeURIComponent(
-          id
-        )}`
-      );
+      const resposta =
+        await fetch(
+          `/api/relatorios/planejamento-ressuprimento-qs?id=${encodeURIComponent(
+            id
+          )}`
+        );
 
       const json =
         await resposta.json();
@@ -146,12 +240,19 @@ export default function HistoricoRessuprimentoQSClient() {
       }
 
       setSelecionado(json);
+
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth',
+      });
     } catch {
       setErro(
         'Não foi possível abrir o planejamento.'
       );
     } finally {
-      setCarregandoDetalhe(false);
+      setCarregandoDetalhe(
+        false
+      );
     }
   }
 
@@ -162,324 +263,618 @@ export default function HistoricoRessuprimentoQSClient() {
   if (selecionado) {
     return (
       <>
-        <div className="card">
-          <div className="actions">
-            <button
-              type="button"
-              className="btn"
-              onClick={() =>
-                setSelecionado(null)
-              }
-            >
-              ← Voltar ao histórico
-            </button>
-          </div>
+        <button
+          type="button"
+          className="btn secondary"
+          onClick={() =>
+            setSelecionado(null)
+          }
+          style={{
+            width: '100%',
+            marginBottom: '16px',
+          }}
+        >
+          ← Voltar ao histórico
+        </button>
 
-          <h2
+        <section>
+          <div
             style={{
-              marginTop: 18,
+              display: 'flex',
+              alignItems:
+                'flex-start',
+              justifyContent:
+                'space-between',
+              gap: '10px',
+              marginBottom:
+                '14px',
             }}
           >
-            Planejamento de Ressuprimento QS
-          </h2>
-
-          <div className="grid">
             <div>
-              <span className="muted">
-                Data de referência
-              </span>
+              <div
+                className="muted"
+                style={{
+                  fontSize:
+                    '11px',
+                  marginBottom:
+                    '4px',
+                }}
+              >
+                PLANEJAMENTO QS
+              </div>
 
-              <div className="big">
+              <strong
+                style={{
+                  display:
+                    'block',
+                  fontSize:
+                    '17px',
+                  lineHeight:
+                    1.3,
+                }}
+              >
+                Ressuprimento de{' '}
                 {formatarData(
                   selecionado.dataReferencia
                 )}
-              </div>
+              </strong>
             </div>
 
-            <div>
-              <span className="muted">
-                Situação
-              </span>
+            <Status
+              status={
+                selecionado.status
+              }
+            />
+          </div>
 
-              <div className="big">
-                {selecionado.status ===
-                'FINALIZADO'
-                  ? 'Finalizado'
-                  : 'Rascunho'}
-              </div>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns:
+                'repeat(auto-fit, minmax(100px, 1fr))',
+              gap: '8px',
+            }}
+          >
+            <div
+              style={{
+                padding: '12px',
+                borderRadius:
+                  '11px',
+                background:
+                  '#0c1811',
+                border:
+                  '1px solid #284334',
+              }}
+            >
+              <Dado
+                titulo="Data de referência"
+                valor={formatarData(
+                  selecionado.dataReferencia
+                )}
+                destaque
+              />
             </div>
 
-            <div>
-              <span className="muted">
-                Gêneros
-              </span>
-
-              <div className="big">
-                {
+            <div
+              style={{
+                padding: '12px',
+                borderRadius:
+                  '11px',
+                background:
+                  '#0c1811',
+                border:
+                  '1px solid #284334',
+              }}
+            >
+              <Dado
+                titulo="Gêneros"
+                valor={
                   selecionado.itens
-                    ?.length
+                    ?.length || 0
                 }
+                destaque
+              />
+            </div>
+          </div>
+        </section>
+
+        <section
+          style={{
+            marginTop: '19px',
+            paddingTop: '17px',
+            borderTop:
+              '1px solid rgba(255,255,255,.08)',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              gap: '9px',
+              alignItems:
+                'flex-start',
+              marginBottom:
+                '12px',
+            }}
+          >
+            <span
+              style={{
+                fontSize: '19px',
+              }}
+            >
+              ⚙
+            </span>
+
+            <div>
+              <strong>
+                Parâmetros utilizados
+              </strong>
+
+              <div
+                className="muted"
+                style={{
+                  marginTop:
+                    '3px',
+                  fontSize:
+                    '12px',
+                }}
+              >
+                Configuração utilizada
+                no cálculo deste
+                planejamento.
               </div>
             </div>
           </div>
-        </div>
 
-        <div className="card">
-          <h2>
-            Parâmetros utilizados
-          </h2>
-
-          <div className="grid">
-            <div>
-              <span className="muted">
-                Histórico considerado
-              </span>
-
-              <p>
-                <strong>
-                  {
-                    selecionado.mesesHistorico
-                  }{' '}
-                  mês(es)
-                </strong>
-              </p>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns:
+                'repeat(auto-fit, minmax(105px, 1fr))',
+              gap: '8px',
+            }}
+          >
+            <div
+              style={{
+                padding: '12px',
+                borderRadius:
+                  '11px',
+                background:
+                  '#0c1811',
+                border:
+                  '1px solid #284334',
+              }}
+            >
+              <Dado
+                titulo="Histórico considerado"
+                valor={`${selecionado.mesesHistorico} mês(es)`}
+              />
             </div>
 
-            <div>
-              <span className="muted">
-                Ciclo planejado
-              </span>
-
-              <p>
-                <strong>
-                  {
-                    selecionado.mesesCiclo
-                  }{' '}
-                  mês(es)
-                </strong>
-              </p>
+            <div
+              style={{
+                padding: '12px',
+                borderRadius:
+                  '11px',
+                background:
+                  '#0c1811',
+                border:
+                  '1px solid #284334',
+              }}
+            >
+              <Dado
+                titulo="Ciclo planejado"
+                valor={`${selecionado.mesesCiclo} mês(es)`}
+              />
             </div>
 
-            <div>
-              <span className="muted">
-                Margem de segurança
-              </span>
-
-              <p>
-                <strong>
-                  {formatarNumero(
-                    selecionado.margemSegurancaPercent
-                  )}
-                  %
-                </strong>
-              </p>
+            <div
+              style={{
+                padding: '12px',
+                borderRadius:
+                  '11px',
+                background:
+                  '#0c1811',
+                border:
+                  '1px solid #284334',
+              }}
+            >
+              <Dado
+                titulo="Margem de segurança"
+                valor={`${formatarNumero(
+                  selecionado.margemSegurancaPercent
+                )}%`}
+              />
             </div>
           </div>
 
           {selecionado.observacao && (
-            <>
-              <h3>
+            <div
+              style={{
+                marginTop:
+                  '11px',
+                padding: '12px',
+                borderRadius:
+                  '11px',
+                background:
+                  '#0c1811',
+                border:
+                  '1px solid #284334',
+              }}
+            >
+              <div
+                className="muted"
+                style={{
+                  fontSize:
+                    '11px',
+                  marginBottom:
+                    '5px',
+                }}
+              >
                 Observação geral
-              </h3>
+              </div>
 
-              <p>
+              <div
+                style={{
+                  fontSize:
+                    '13px',
+                  lineHeight:
+                    1.5,
+                  whiteSpace:
+                    'pre-wrap',
+                }}
+              >
                 {
                   selecionado.observacao
                 }
-              </p>
-            </>
+              </div>
+            </div>
           )}
-        </div>
+        </section>
 
-        <div className="card">
-          <h2>
-            Memória do cálculo
-          </h2>
-
-          <p className="muted">
-            Os valores abaixo representam a
-            situação utilizada no momento em
-            que este planejamento foi salvo.
-          </p>
-
+        <section
+          style={{
+            marginTop: '19px',
+            paddingTop: '17px',
+            borderTop:
+              '1px solid rgba(255,255,255,.08)',
+          }}
+        >
           <div
             style={{
-              overflowX: 'auto',
-              marginTop: 16,
+              marginBottom:
+                '13px',
             }}
           >
-            <table
+            <strong
               style={{
-                width: '100%',
-                borderCollapse:
-                  'collapse',
-                minWidth: 1450,
+                fontSize: '16px',
               }}
             >
-              <thead>
-                <tr>
-                  {[
-                    'Gênero',
-                    'Unid.',
-                    'Base',
-                    'Média/mês',
-                    'Projeção',
-                    'Segurança',
-                    'Estoque',
-                    'Prev. receber',
-                    'Sugerido',
-                    'Planejado',
-                    'Justificativa',
-                  ].map(
-                    (titulo) => (
-                      <th
-                        key={titulo}
-                        style={{
-                          padding: 10,
+              Memória do cálculo
+            </strong>
 
-                          textAlign:
-                            [
-                              'Gênero',
-                              'Unid.',
-                              'Base',
-                              'Justificativa',
-                            ].includes(
-                              titulo
-                            )
-                              ? 'left'
-                              : 'right',
-                        }}
-                      >
-                        {titulo}
-                      </th>
-                    )
-                  )}
-                </tr>
-              </thead>
+            <p
+              className="muted"
+              style={{
+                margin:
+                  '4px 0 0',
+                fontSize:
+                  '12px',
+                lineHeight:
+                  1.45,
+              }}
+            >
+              Os valores abaixo
+              representam a situação
+              utilizada no momento em
+              que este planejamento foi
+              salvo.
+            </p>
+          </div>
 
-              <tbody>
-                {selecionado.itens?.map(
-                  (item: any) => {
-                    const alterado =
-                      Math.abs(
+          {!selecionado.itens ||
+          selecionado.itens.length ===
+            0 ? (
+            <div
+              style={{
+                padding: '13px',
+                borderRadius:
+                  '11px',
+                background:
+                  '#0c1811',
+                border:
+                  '1px solid #284334',
+              }}
+            >
+              <span className="muted">
+                Este planejamento não
+                possui gêneros
+                registrados.
+              </span>
+            </div>
+          ) : (
+            <div
+              style={{
+                display: 'grid',
+                gap: '10px',
+              }}
+            >
+              {selecionado.itens.map(
+                (item: any) => {
+                  const alterado =
+                    Math.abs(
+                      Number(
+                        item.quantidadePlanejada
+                      ) -
                         Number(
-                          item.quantidadePlanejada
-                        ) -
-                          Number(
-                            item.quantidadeSugerida
-                          )
-                      ) > 0.0005;
+                          item.quantidadeSugerida
+                        )
+                    ) >
+                    0.0005;
 
-                    return (
-                      <tr
-                        key={item.id}
+                  return (
+                    <article
+                      key={item.id}
+                      style={{
+                        padding:
+                          '13px',
+                        borderRadius:
+                          '13px',
+                        background:
+                          '#0c1811',
+                        border:
+                          alterado
+                            ? '1px solid rgba(214,165,109,.6)'
+                            : '1px solid #284334',
+                      }}
+                    >
+                      <div
                         style={{
-                          borderTop:
-                            '1px solid rgba(255,255,255,0.12)',
+                          display:
+                            'flex',
+                          justifyContent:
+                            'space-between',
+                          alignItems:
+                            'flex-start',
+                          gap: '10px',
+                          paddingBottom:
+                            '10px',
+                          marginBottom:
+                            '10px',
+                          borderBottom:
+                            '1px solid rgba(255,255,255,.07)',
                         }}
                       >
-                        <td
-                          style={{
-                            padding: 10,
-                          }}
-                        >
+                        <div>
                           <strong>
                             {item.genero}
                           </strong>
-                        </td>
 
-                        <td
+                          <div
+                            className="muted"
+                            style={{
+                              marginTop:
+                                '3px',
+                              fontSize:
+                                '11px',
+                              lineHeight:
+                                1.35,
+                            }}
+                          >
+                            {origemTexto(
+                              item.origemMedia
+                            )}
+                          </div>
+                        </div>
+
+                        <span
                           style={{
-                            padding: 10,
+                            flexShrink: 0,
+                            fontSize:
+                              '12px',
+                            fontWeight:
+                              700,
                           }}
                         >
                           {item.unidade}
-                        </td>
+                        </span>
+                      </div>
 
-                        <td
-                          style={{
-                            padding: 10,
-                          }}
-                        >
-                          {origemTexto(
-                            item.origemMedia
+                      <div
+                        style={{
+                          display:
+                            'grid',
+                          gridTemplateColumns:
+                            'repeat(2, minmax(0, 1fr))',
+                          gap:
+                            '11px 14px',
+                        }}
+                      >
+                        <Dado
+                          titulo="Média/mês"
+                          valor={formatarNumero(
+                            item.mediaMensalUtilizada
                           )}
-                        </td>
+                        />
 
-                        {[
-                          item.mediaMensalUtilizada,
-                          item.consumoProjetado,
-                          item.estoqueSeguranca,
-                          item.estoqueDisponivel,
-                          item.previstoReceber,
-                          item.quantidadeSugerida,
-                          item.quantidadePlanejada,
-                        ].map(
-                          (
-                            valor,
-                            index
-                          ) => (
-                            <td
-                              key={index}
-                              style={{
-                                padding: 10,
-                                textAlign:
-                                  'right',
-                              }}
-                            >
-                              <strong
-                                style={
-                                  index ===
-                                    6 &&
-                                  alterado
-                                    ? {
-                                        textDecoration:
-                                          'underline',
-                                      }
-                                    : undefined
-                                }
-                              >
-                                {formatarNumero(
-                                  valor
-                                )}
-                              </strong>
-                            </td>
-                          )
-                        )}
+                        <Dado
+                          titulo="Projeção"
+                          valor={formatarNumero(
+                            item.consumoProjetado
+                          )}
+                        />
 
-                        <td
+                        <Dado
+                          titulo="Segurança"
+                          valor={formatarNumero(
+                            item.estoqueSeguranca
+                          )}
+                        />
+
+                        <Dado
+                          titulo="Estoque"
+                          valor={formatarNumero(
+                            item.estoqueDisponivel
+                          )}
+                        />
+
+                        <Dado
+                          titulo="Prev. receber"
+                          valor={formatarNumero(
+                            item.previstoReceber
+                          )}
+                        />
+
+                        <Dado
+                          titulo="Sugerido"
+                          valor={formatarNumero(
+                            item.quantidadeSugerida
+                          )}
+                          destaque
+                        />
+                      </div>
+
+                      <div
+                        style={{
+                          marginTop:
+                            '11px',
+                          padding:
+                            '11px',
+                          borderRadius:
+                            '10px',
+                          background:
+                            alterado
+                              ? 'rgba(214,165,109,.08)'
+                              : 'rgba(43,138,87,.07)',
+                          border:
+                            alterado
+                              ? '1px solid rgba(214,165,109,.45)'
+                              : '1px solid rgba(43,138,87,.35)',
+                        }}
+                      >
+                        <Dado
+                          titulo="Quantidade planejada"
+                          valor={formatarNumero(
+                            item.quantidadePlanejada
+                          )}
+                          destaque
+                        />
+
+                        <div
                           style={{
-                            padding: 10,
+                            marginTop:
+                              '8px',
+                            paddingTop:
+                              '8px',
+                            borderTop:
+                              '1px solid rgba(255,255,255,.07)',
                           }}
                         >
-                          {alterado
-                            ? item.justificativaAlteracao ||
-                              '—'
-                            : 'Quantidade sugerida mantida'}
-                        </td>
-                      </tr>
-                    );
-                  }
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                          <div
+                            className="muted"
+                            style={{
+                              fontSize:
+                                '11px',
+                              marginBottom:
+                                '3px',
+                            }}
+                          >
+                            {alterado
+                              ? 'Justificativa da alteração'
+                              : 'Decisão'}
+                          </div>
 
-        <div className="card">
-          <h2>
-            Registro administrativo
-          </h2>
+                          <div
+                            style={{
+                              fontSize:
+                                '13px',
+                              lineHeight:
+                                1.45,
+                            }}
+                          >
+                            {alterado
+                              ? item.justificativaAlteracao ||
+                                '—'
+                              : 'Quantidade sugerida mantida'}
+                          </div>
+                        </div>
+                      </div>
+                    </article>
+                  );
+                }
+              )}
+            </div>
+          )}
+        </section>
 
-          <div className="grid">
+        <section
+          style={{
+            marginTop: '19px',
+            paddingTop: '17px',
+            borderTop:
+              '1px solid rgba(255,255,255,.08)',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              gap: '9px',
+              alignItems:
+                'flex-start',
+              marginBottom:
+                '12px',
+            }}
+          >
+            <span
+              style={{
+                fontSize: '19px',
+              }}
+            >
+              ✓
+            </span>
+
             <div>
-              <span className="muted">
-                Responsável
-              </span>
+              <strong>
+                Registro administrativo
+              </strong>
 
-              <p>
-                <strong>
-                  {[
+              <div
+                className="muted"
+                style={{
+                  marginTop:
+                    '3px',
+                  fontSize:
+                    '12px',
+                }}
+              >
+                Responsável e datas
+                vinculadas ao
+                planejamento.
+              </div>
+            </div>
+          </div>
+
+          <div
+            style={{
+              display: 'grid',
+              gap: '9px',
+            }}
+          >
+            <div
+              style={{
+                padding: '12px',
+                borderRadius:
+                  '11px',
+                background:
+                  '#0c1811',
+                border:
+                  '1px solid #284334',
+              }}
+            >
+              <Dado
+                titulo="Responsável"
+                valor={
+                  [
                     selecionado
                       .responsavel
                       ?.postoGraduacao,
@@ -488,295 +883,432 @@ export default function HistoricoRessuprimentoQSClient() {
                       ?.nome,
                   ]
                     .filter(Boolean)
-                    .join(' ')}
-                </strong>
-              </p>
+                    .join(' ') ||
+                  '—'
+                }
+                destaque
+              />
 
-              {selecionado.responsavel
+              {selecionado
+                .responsavel
                 ?.funcao && (
-                <p className="muted">
+                <div
+                  className="muted"
+                  style={{
+                    marginTop:
+                      '5px',
+                    fontSize:
+                      '12px',
+                  }}
+                >
                   {
                     selecionado
                       .responsavel
                       .funcao
                   }
-                </p>
+                </div>
               )}
             </div>
 
-            <div>
-              <span className="muted">
-                Criado em
-              </span>
-
-              <p>
-                <strong>
-                  {formatarDataHora(
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns:
+                  'repeat(auto-fit, minmax(130px, 1fr))',
+                gap: '9px',
+              }}
+            >
+              <div
+                style={{
+                  padding:
+                    '12px',
+                  borderRadius:
+                    '11px',
+                  background:
+                    '#0c1811',
+                  border:
+                    '1px solid #284334',
+                }}
+              >
+                <Dado
+                  titulo="Criado em"
+                  valor={formatarDataHora(
                     selecionado.criadoEm
                   )}
-                </strong>
-              </p>
-            </div>
+                />
+              </div>
 
-            <div>
-              <span className="muted">
-                Finalizado em
-              </span>
-
-              <p>
-                <strong>
-                  {formatarDataHora(
+              <div
+                style={{
+                  padding:
+                    '12px',
+                  borderRadius:
+                    '11px',
+                  background:
+                    '#0c1811',
+                  border:
+                    '1px solid #284334',
+                }}
+              >
+                <Dado
+                  titulo="Finalizado em"
+                  valor={formatarDataHora(
                     selecionado.finalizadoEm
                   )}
-                </strong>
-              </p>
+                />
+              </div>
             </div>
           </div>
 
-          <p className="muted">
+          <div
+            className="muted"
+            style={{
+              marginTop: '11px',
+              fontSize: '10px',
+              lineHeight: 1.4,
+              wordBreak:
+                'break-all',
+            }}
+          >
             Identificação:{' '}
             {selecionado.id}
-          </p>
-        </div>
+          </div>
+        </section>
       </>
     );
   }
 
   return (
     <>
-      <div className="card">
-        <h2>
-          Histórico dos Ressuprimentos QS
-        </h2>
-
-        <p>
-          Consulte os planejamentos salvos e
-          finalizados anteriormente.
-        </p>
-
-        <p className="muted">
-          Os planejamentos finalizados
-          permanecem preservados como memória
-          administrativa do cálculo realizado.
-        </p>
-
-        <div className="actions">
-          <button
-            type="button"
-            className="btn"
-            onClick={
-              carregarHistorico
-            }
-            disabled={
-              carregando
-            }
+      <section>
+        <div
+          style={{
+            display: 'flex',
+            gap: '10px',
+            alignItems:
+              'flex-start',
+          }}
+        >
+          <span
+            style={{
+              fontSize: '20px',
+            }}
           >
-            {carregando
-              ? 'Atualizando...'
-              : 'Atualizar histórico'}
-          </button>
+            ◷
+          </span>
+
+          <div>
+            <strong
+              style={{
+                fontSize: '16px',
+              }}
+            >
+              Histórico dos
+              Ressuprimentos QS
+            </strong>
+
+            <p
+              className="muted"
+              style={{
+                margin:
+                  '4px 0 0',
+                fontSize:
+                  '12px',
+                lineHeight:
+                  1.45,
+              }}
+            >
+              Consulte os
+              planejamentos salvos e
+              finalizados
+              anteriormente.
+            </p>
+          </div>
         </div>
 
+        <button
+          type="button"
+          className="btn"
+          onClick={
+            carregarHistorico
+          }
+          disabled={
+            carregando
+          }
+          style={{
+            width: '100%',
+            marginTop: '13px',
+          }}
+        >
+          {carregando
+            ? 'Atualizando...'
+            : 'Atualizar histórico'}
+        </button>
+
         {erro && (
-          <div className="error">
+          <div
+            className="error"
+            style={{
+              marginTop:
+                '12px',
+            }}
+          >
             {erro}
           </div>
         )}
-      </div>
+      </section>
 
       {carregando ? (
-        <div className="card">
-          <p className="muted">
+        <div
+          style={{
+            marginTop: '15px',
+            padding: '14px',
+            borderRadius: '12px',
+            background: '#0c1811',
+            border:
+              '1px solid #284334',
+          }}
+        >
+          <span className="muted">
             Carregando histórico...
-          </p>
+          </span>
         </div>
       ) : planejamentos.length ===
         0 ? (
-        <div className="card">
-          <p className="muted">
-            Ainda não existem planejamentos
-            de Ressuprimento QS registrados.
-          </p>
+        <div
+          style={{
+            marginTop: '15px',
+            padding: '14px',
+            borderRadius: '12px',
+            background: '#0c1811',
+            border:
+              '1px solid #284334',
+          }}
+        >
+          <span className="muted">
+            Ainda não existem
+            planejamentos de
+            Ressuprimento QS
+            registrados.
+          </span>
         </div>
       ) : (
-        <div className="card">
-          <h2>
-            Planejamentos registrados
-          </h2>
+        <section
+          style={{
+            marginTop: '19px',
+            paddingTop: '17px',
+            borderTop:
+              '1px solid rgba(255,255,255,.08)',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems:
+                'center',
+              justifyContent:
+                'space-between',
+              gap: '10px',
+              marginBottom:
+                '12px',
+            }}
+          >
+            <strong>
+              Planejamentos
+              registrados
+            </strong>
+
+            <span
+              className="muted"
+              style={{
+                fontSize: '11px',
+              }}
+            >
+              {
+                planejamentos.length
+              }{' '}
+              registro(s)
+            </span>
+          </div>
 
           <div
             style={{
-              overflowX: 'auto',
-              marginTop: 16,
+              display: 'grid',
+              gap: '10px',
             }}
           >
-            <table
-              style={{
-                width: '100%',
-                borderCollapse:
-                  'collapse',
-                minWidth: 950,
-              }}
-            >
-              <thead>
-                <tr>
-                  {[
-                    'Data',
-                    'Situação',
-                    'Histórico',
-                    'Ciclo',
-                    'Margem',
-                    'Gêneros',
-                    'Responsável',
-                    'Finalizado em',
-                    'Ação',
-                  ].map(
-                    (titulo) => (
-                      <th
-                        key={titulo}
+            {planejamentos.map(
+              (item: any) => (
+                <article
+                  key={item.id}
+                  style={{
+                    padding: '13px',
+                    borderRadius:
+                      '13px',
+                    background:
+                      '#0c1811',
+                    border:
+                      item.status ===
+                      'FINALIZADO'
+                        ? '1px solid #284334'
+                        : '1px solid rgba(214,165,109,.55)',
+                  }}
+                >
+                  <div
+                    style={{
+                      display:
+                        'flex',
+                      alignItems:
+                        'flex-start',
+                      justifyContent:
+                        'space-between',
+                      gap: '10px',
+                      paddingBottom:
+                        '10px',
+                      marginBottom:
+                        '10px',
+                      borderBottom:
+                        '1px solid rgba(255,255,255,.07)',
+                    }}
+                  >
+                    <div>
+                      <div
+                        className="muted"
                         style={{
-                          padding: 10,
-                          textAlign:
-                            'left',
+                          fontSize:
+                            '10px',
+                          marginBottom:
+                            '3px',
                         }}
                       >
-                        {titulo}
-                      </th>
-                    )
-                  )}
-                </tr>
-              </thead>
+                        DATA DE
+                        REFERÊNCIA
+                      </div>
 
-              <tbody>
-                {planejamentos.map(
-                  (item: any) => (
-                    <tr
-                      key={item.id}
-                      style={{
-                        borderTop:
-                          '1px solid rgba(255,255,255,0.12)',
-                      }}
-                    >
-                      <td
+                      <strong
                         style={{
-                          padding: 10,
+                          fontSize:
+                            '16px',
                         }}
                       >
                         {formatarData(
                           item.dataReferencia
                         )}
-                      </td>
+                      </strong>
+                    </div>
 
-                      <td
-                        style={{
-                          padding: 10,
-                        }}
-                      >
-                        <strong>
-                          {item.status ===
-                          'FINALIZADO'
-                            ? '✓ Finalizado'
-                            : 'Rascunho'}
-                        </strong>
-                      </td>
+                    <Status
+                      status={
+                        item.status
+                      }
+                    />
+                  </div>
 
-                      <td
-                        style={{
-                          padding: 10,
-                        }}
-                      >
-                        {
-                          item.mesesHistorico
-                        }{' '}
-                        mês(es)
-                      </td>
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns:
+                        'repeat(2, minmax(0, 1fr))',
+                      gap:
+                        '11px 14px',
+                    }}
+                  >
+                    <Dado
+                      titulo="Histórico"
+                      valor={`${item.mesesHistorico} mês(es)`}
+                    />
 
-                      <td
-                        style={{
-                          padding: 10,
-                        }}
-                      >
-                        {
-                          item.mesesCiclo
-                        }{' '}
-                        mês(es)
-                      </td>
+                    <Dado
+                      titulo="Ciclo"
+                      valor={`${item.mesesCiclo} mês(es)`}
+                    />
 
-                      <td
-                        style={{
-                          padding: 10,
-                        }}
-                      >
-                        {formatarNumero(
-                          item.margemSegurancaPercent
-                        )}
-                        %
-                      </td>
+                    <Dado
+                      titulo="Margem"
+                      valor={`${formatarNumero(
+                        item.margemSegurancaPercent
+                      )}%`}
+                    />
 
-                      <td
-                        style={{
-                          padding: 10,
-                        }}
-                      >
-                        {
-                          item.quantidadeGeneros
-                        }
-                      </td>
+                    <Dado
+                      titulo="Gêneros"
+                      valor={
+                        item.quantidadeGeneros
+                      }
+                    />
+                  </div>
 
-                      <td
-                        style={{
-                          padding: 10,
-                        }}
-                      >
-                        {[
-                          item.responsavel
+                  <div
+                    style={{
+                      marginTop:
+                        '11px',
+                      paddingTop:
+                        '10px',
+                      borderTop:
+                        '1px solid rgba(255,255,255,.07)',
+                    }}
+                  >
+                    <Dado
+                      titulo="Responsável"
+                      valor={
+                        [
+                          item
+                            .responsavel
                             ?.postoGraduacao,
-                          item.responsavel
+                          item
+                            .responsavel
                             ?.nome,
                         ]
                           .filter(
                             Boolean
                           )
-                          .join(' ')}
-                      </td>
+                          .join(
+                            ' '
+                          ) || '—'
+                      }
+                    />
 
-                      <td
-                        style={{
-                          padding: 10,
-                        }}
-                      >
-                        {formatarDataHora(
+                    <div
+                      style={{
+                        marginTop:
+                          '9px',
+                      }}
+                    >
+                      <Dado
+                        titulo="Finalizado em"
+                        valor={formatarDataHora(
                           item.finalizadoEm
                         )}
-                      </td>
+                      />
+                    </div>
+                  </div>
 
-                      <td
-                        style={{
-                          padding: 10,
-                        }}
-                      >
-                        <button
-                          type="button"
-                          className="btn"
-                          disabled={
-                            carregandoDetalhe
-                          }
-                          onClick={() =>
-                            abrirPlanejamento(
-                              item.id
-                            )
-                          }
-                        >
-                          Abrir
-                        </button>
-                      </td>
-                    </tr>
-                  )
-                )}
-              </tbody>
-            </table>
+                  <button
+                    type="button"
+                    className="btn"
+                    disabled={
+                      carregandoDetalhe
+                    }
+                    onClick={() =>
+                      abrirPlanejamento(
+                        item.id
+                      )
+                    }
+                    style={{
+                      width: '100%',
+                      marginTop:
+                        '12px',
+                    }}
+                  >
+                    {carregandoDetalhe
+                      ? 'Abrindo...'
+                      : 'Abrir planejamento'}
+                  </button>
+                </article>
+              )
+            )}
           </div>
-        </div>
+        </section>
       )}
     </>
   );
