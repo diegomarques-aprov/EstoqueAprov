@@ -47,8 +47,7 @@ function dataHojeLocal() {
     new Intl.DateTimeFormat(
       'en-CA',
       {
-        timeZone:
-          TIME_ZONE,
+        timeZone: TIME_ZONE,
         year: 'numeric',
         month: '2-digit',
         day: '2-digit',
@@ -115,8 +114,7 @@ function formatarDataHora(
   return new Intl.DateTimeFormat(
     'pt-BR',
     {
-      timeZone:
-        TIME_ZONE,
+      timeZone: TIME_ZONE,
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -152,13 +150,6 @@ function parametrosOpcoes(
   const p =
     new URLSearchParams();
 
-  /*
-   * Enviamos 1 e 0.
-   *
-   * Assim PDF e Excel sabem
-   * exatamente quais seções
-   * foram selecionadas.
-   */
   p.set(
     'efetivo',
     opcoes.efetivo
@@ -252,6 +243,73 @@ function somarPorUnidade(
     );
 }
 
+function Dado({
+  titulo,
+  valor,
+  destaque = false,
+}: {
+  titulo: string;
+  valor: React.ReactNode;
+  destaque?: boolean;
+}) {
+  return (
+    <div>
+      <div
+        className="muted"
+        style={{
+          fontSize: '11px',
+          lineHeight: 1.3,
+          marginBottom: '3px',
+        }}
+      >
+        {titulo}
+      </div>
+
+      <div
+        style={{
+          fontSize:
+            destaque
+              ? '16px'
+              : '13px',
+          fontWeight:
+            destaque
+              ? 800
+              : 600,
+          lineHeight: 1.4,
+        }}
+      >
+        {valor}
+      </div>
+    </div>
+  );
+}
+
+function BlocoResumo({
+  titulo,
+  valor,
+}: {
+  titulo: string;
+  valor: React.ReactNode;
+}) {
+  return (
+    <div
+      style={{
+        padding: '12px',
+        borderRadius: '11px',
+        background: '#0c1811',
+        border:
+          '1px solid #284334',
+      }}
+    >
+      <Dado
+        titulo={titulo}
+        valor={valor}
+        destaque
+      />
+    </div>
+  );
+}
+
 function TotaisPorUnidade({
   titulo,
   totais,
@@ -271,22 +329,27 @@ function TotaisPorUnidade({
   return (
     <div
       style={{
-        marginTop: 10,
-        paddingTop: 10,
+        marginTop: '11px',
+        paddingTop: '10px',
         borderTop:
-          '1px solid rgba(255,255,255,.10)',
+          '1px solid rgba(255,255,255,.08)',
       }}
     >
-      <strong>
+      <div
+        className="muted"
+        style={{
+          fontSize: '11px',
+          marginBottom: '7px',
+        }}
+      >
         {titulo}
-      </strong>
+      </div>
 
       <div
         style={{
           display: 'flex',
-          gap: 12,
+          gap: '7px',
           flexWrap: 'wrap',
-          marginTop: 6,
         }}
       >
         {totais.map(
@@ -295,7 +358,22 @@ function TotaisPorUnidade({
               key={
                 total.unidade
               }
-              className="muted"
+              style={{
+                display:
+                  'inline-flex',
+                padding:
+                  '6px 9px',
+                borderRadius:
+                  '999px',
+                background:
+                  '#183d2a',
+                border:
+                  '1px solid #284334',
+                fontSize:
+                  '12px',
+                fontWeight:
+                  700,
+              }}
             >
               {formatarNumero(
                 total.quantidade
@@ -309,7 +387,7 @@ function TotaisPorUnidade({
   );
 }
 
-function TabelaMovimentos({
+function Movimentos({
   titulo,
   itens,
   mostrarDestino = false,
@@ -319,202 +397,188 @@ function TabelaMovimentos({
   mostrarDestino?: boolean;
 }) {
   return (
-    <div className="card">
-      <h2>
-        {titulo}
-      </h2>
+    <section className="card">
+      <div
+        style={{
+          display: 'flex',
+          justifyContent:
+            'space-between',
+          alignItems: 'center',
+          gap: '10px',
+          marginBottom: '12px',
+        }}
+      >
+        <h2
+          style={{
+            margin: 0,
+          }}
+        >
+          {titulo}
+        </h2>
+
+        <span
+          className="muted"
+          style={{
+            fontSize: '11px',
+          }}
+        >
+          {itens.length}{' '}
+          registro(s)
+        </span>
+      </div>
 
       {itens.length ===
       0 ? (
-        <p className="muted">
-          Nenhum registro no
-          período selecionado.
-        </p>
+        <div
+          style={{
+            padding: '13px',
+            borderRadius:
+              '11px',
+            background:
+              '#0c1811',
+            border:
+              '1px solid #284334',
+          }}
+        >
+          <span className="muted">
+            Nenhum registro no
+            período selecionado.
+          </span>
+        </div>
       ) : (
         <div
           style={{
-            overflowX:
-              'auto',
+            display: 'grid',
+            gap: '9px',
           }}
         >
-          <table
-            style={{
-              width: '100%',
-              borderCollapse:
-                'collapse',
-              minWidth:
-                mostrarDestino
-                  ? 1050
-                  : 850,
-            }}
-          >
-            <thead>
-              <tr>
-                <th style={th}>
-                  Gênero
-                </th>
+          {itens.map(
+            (item) => (
+              <article
+                key={item.id}
+                style={{
+                  padding: '13px',
+                  borderRadius:
+                    '12px',
+                  background:
+                    '#0c1811',
+                  border:
+                    '1px solid #284334',
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent:
+                      'space-between',
+                    alignItems:
+                      'flex-start',
+                    gap: '10px',
+                    paddingBottom:
+                      '9px',
+                    marginBottom:
+                      '9px',
+                    borderBottom:
+                      '1px solid rgba(255,255,255,.07)',
+                  }}
+                >
+                  <div>
+                    <strong>
+                      {item.genero}
+                    </strong>
 
-                <th style={th}>
-                  Grupo
-                </th>
-
-                <th style={th}>
-                  Categoria
-                </th>
-
-                <th style={th}>
-                  Classe
-                </th>
-
-                <th style={th}>
-                  Quantidade
-                </th>
-
-                <th style={th}>
-                  Data / hora
-                </th>
-
-                {mostrarDestino && (
-                  <>
-                    <th
-                      style={th}
+                    <div
+                      className="muted"
+                      style={{
+                        marginTop:
+                          '3px',
+                        fontSize:
+                          '11px',
+                      }}
                     >
-                      Finalidade
-                    </th>
+                      {item.grupo ||
+                        'Sem grupo'}
+                      {' · '}
+                      {item.categoria ||
+                        'Sem categoria'}
+                    </div>
+                  </div>
 
-                    <th
-                      style={th}
-                    >
-                      Referência
-                    </th>
-                  </>
-                )}
-              </tr>
-            </thead>
-
-            <tbody>
-              {itens.map(
-                (item) => (
-                  <tr
-                    key={
-                      item.id
-                    }
+                  <span
+                    style={{
+                      flexShrink: 0,
+                      padding:
+                        '4px 7px',
+                      borderRadius:
+                        '999px',
+                      background:
+                        '#183d2a',
+                      border:
+                        '1px solid #284334',
+                      fontSize:
+                        '11px',
+                      fontWeight:
+                        800,
+                    }}
                   >
-                    <td
-                      style={td}
-                    >
-                      <strong>
-                        {
-                          item.genero
-                        }
-                      </strong>
-                    </td>
+                    {item.classe}
+                  </span>
+                </div>
 
-                    <td
-                      style={td}
-                    >
-                      {
-                        item.grupo
-                      }
-                    </td>
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns:
+                      'repeat(2, minmax(0, 1fr))',
+                    gap:
+                      '10px 14px',
+                  }}
+                >
+                  <Dado
+                    titulo="Quantidade"
+                    valor={`${formatarNumero(
+                      item.quantidade
+                    )} ${
+                      item.unidade
+                    }`}
+                    destaque
+                  />
 
-                    <td
-                      style={td}
-                    >
-                      {
-                        item.categoria
-                      }
-                    </td>
-
-                    <td
-                      style={td}
-                    >
-                      {
-                        item.classe
-                      }
-                    </td>
-
-                    <td
-                      style={td}
-                    >
-                      <strong>
-                        {formatarNumero(
-                          item.quantidade
-                        )}{' '}
-                        {
-                          item.unidade
-                        }
-                      </strong>
-                    </td>
-
-                    <td
-                      style={td}
-                    >
-                      {formatarDataHora(
-                        item.dataHora
-                      )}
-                    </td>
-
-                    {mostrarDestino && (
-                      <>
-                        <td
-                          style={
-                            td
-                          }
-                        >
-                          <strong>
-                            {item.destinoNome ||
-                              '—'}
-                          </strong>
-                        </td>
-
-                        <td
-                          style={
-                            td
-                          }
-                        >
-                          {item.referenciaServico ||
-                            '—'}
-                        </td>
-                      </>
+                  <Dado
+                    titulo="Data / hora"
+                    valor={formatarDataHora(
+                      item.dataHora
                     )}
-                  </tr>
-                )
-              )}
-            </tbody>
-          </table>
+                  />
+
+                  {mostrarDestino && (
+                    <>
+                      <Dado
+                        titulo="Finalidade"
+                        valor={
+                          item.destinoNome ||
+                          '—'
+                        }
+                      />
+
+                      <Dado
+                        titulo="Referência"
+                        valor={
+                          item.referenciaServico ||
+                          '—'
+                        }
+                      />
+                    </>
+                  )}
+                </div>
+              </article>
+            )
+          )}
         </div>
       )}
-    </div>
+    </section>
   );
 }
-
-const th: React.CSSProperties =
-  {
-    textAlign:
-      'left',
-
-    padding:
-      '10px 8px',
-
-    borderBottom:
-      '1px solid rgba(255,255,255,.18)',
-
-    whiteSpace:
-      'nowrap',
-  };
-
-const td: React.CSSProperties =
-  {
-    padding:
-      '10px 8px',
-
-    borderBottom:
-      '1px solid rgba(255,255,255,.08)',
-
-    verticalAlign:
-      'top',
-  };
 
 export default function RelatoriosClient() {
   const hoje =
@@ -662,7 +726,6 @@ export default function RelatoriosClient() {
     setOpcoes(
       (anterior) => ({
         ...anterior,
-
         [campo]:
           !anterior[
             campo
@@ -842,23 +905,111 @@ export default function RelatoriosClient() {
         );
     }, [dados]);
 
+  const opcoesLista: {
+    chave:
+      keyof OpcoesRelatorio;
+    titulo: string;
+    descricao: string;
+  }[] = [
+    {
+      chave: 'efetivo',
+      titulo:
+        'Efetivo por refeição',
+      descricao:
+        'Previsto, alimentado, faltas e militares de fora.',
+    },
+    {
+      chave:
+        'refeicoes',
+      titulo:
+        'Refeições relacionadas',
+      descricao:
+        'Refeições identificadas pelas saídas.',
+    },
+    {
+      chave: 'entradas',
+      titulo: 'Entradas',
+      descricao:
+        'Recebimentos registrados no período.',
+    },
+    {
+      chave: 'saidas',
+      titulo: 'Saídas',
+      descricao:
+        'Consumo e destinação dos gêneros.',
+    },
+    {
+      chave:
+        'devolucoes',
+      titulo: 'Devoluções',
+      descricao:
+        'Materiais devolvidos ao estoque.',
+    },
+    {
+      chave: 'estoque',
+      titulo:
+        'Posição do estoque',
+      descricao:
+        'Saldo atual por grupo e categoria.',
+    },
+  ];
+
   return (
     <>
-      <div className="card">
-        <h2>
-          Relatório
-          operacional
-        </h2>
+      <section>
+        <div
+          style={{
+            display: 'flex',
+            gap: '10px',
+            alignItems:
+              'flex-start',
+            marginBottom:
+              '14px',
+          }}
+        >
+          <span
+            style={{
+              fontSize: '20px',
+            }}
+          >
+            ◫
+          </span>
 
-        <p className="muted">
-          Consulte as
-          informações do
-          estoque e escolha
-          quais seções deseja
-          incluir no relatório.
-        </p>
+          <div>
+            <strong
+              style={{
+                fontSize: '16px',
+              }}
+            >
+              Relatório operacional
+            </strong>
 
-        <div className="grid">
+            <p
+              className="muted"
+              style={{
+                margin:
+                  '4px 0 0',
+                fontSize:
+                  '12px',
+                lineHeight:
+                  1.45,
+              }}
+            >
+              Defina o período e a
+              classe de gêneros que
+              deseja consultar.
+            </p>
+          </div>
+        </div>
+
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns:
+              'repeat(auto-fit, minmax(150px, 1fr))',
+            gap: '10px',
+          }}
+        >
           <label>
             Data inicial
 
@@ -871,8 +1022,7 @@ export default function RelatoriosClient() {
                 e
               ) =>
                 setInicio(
-                  e.target
-                    .value
+                  e.target.value
                 )
               }
             />
@@ -890,8 +1040,7 @@ export default function RelatoriosClient() {
                 e
               ) =>
                 setFim(
-                  e.target
-                    .value
+                  e.target.value
                 )
               }
             />
@@ -908,8 +1057,7 @@ export default function RelatoriosClient() {
                 e
               ) =>
                 setClasse(
-                  e.target
-                    .value
+                  e.target.value
                 )
               }
             >
@@ -937,6 +1085,10 @@ export default function RelatoriosClient() {
           onClick={
             carregar
           }
+          style={{
+            width: '100%',
+            marginTop: '14px',
+          }}
         >
           {carregando
             ? 'Consultando...'
@@ -944,459 +1096,487 @@ export default function RelatoriosClient() {
         </button>
 
         {erro && (
-          <div className="error">
+          <div
+            className="error"
+            style={{
+              marginTop:
+                '12px',
+            }}
+          >
             {erro}
           </div>
         )}
-      </div>
+      </section>
 
-      <div className="card">
-        <h2>
-          O que incluir no
-          relatório
-        </h2>
+      <section
+        style={{
+          marginTop: '19px',
+          paddingTop: '17px',
+          borderTop:
+            '1px solid rgba(255,255,255,.08)',
+        }}
+      >
+        <div
+          style={{
+            marginBottom:
+              '12px',
+          }}
+        >
+          <strong>
+            O que incluir no relatório
+          </strong>
 
-        <p className="muted">
-          Marque as informações
-          que deseja visualizar e
-          exportar. Os alertas de
-          estoque são sempre
-          incluídos.
-        </p>
+          <p
+            className="muted"
+            style={{
+              margin:
+                '4px 0 0',
+              fontSize:
+                '12px',
+              lineHeight:
+                1.45,
+            }}
+          >
+            Marque as informações
+            que deseja visualizar e
+            exportar. Os alertas de
+            estoque são sempre
+            incluídos.
+          </p>
+        </div>
 
         <div
           style={{
-            display:
-              'grid',
-
-            gridTemplateColumns:
-              'repeat(auto-fit, minmax(220px, 1fr))',
-
-            gap: 12,
+            display: 'grid',
+            gap: '8px',
           }}
         >
-          <label>
-            <input
-              type="checkbox"
-              checked={
-                opcoes.efetivo
-              }
-              onChange={() =>
-                alterarOpcao(
-                  'efetivo'
-                )
-              }
-            />{' '}
-            Efetivo por
-            refeição
-          </label>
+          {opcoesLista.map(
+            (opcao) => (
+              <label
+                key={
+                  opcao.chave
+                }
+                style={{
+                  display:
+                    'flex',
+                  alignItems:
+                    'flex-start',
+                  gap: '10px',
+                  padding:
+                    '11px',
+                  borderRadius:
+                    '11px',
+                  background:
+                    opcoes[
+                      opcao.chave
+                    ]
+                      ? 'rgba(43,138,87,.09)'
+                      : '#0c1811',
+                  border:
+                    opcoes[
+                      opcao.chave
+                    ]
+                      ? '1px solid rgba(43,138,87,.55)'
+                      : '1px solid #284334',
+                  cursor:
+                    'pointer',
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={
+                    opcoes[
+                      opcao.chave
+                    ]
+                  }
+                  onChange={() =>
+                    alterarOpcao(
+                      opcao.chave
+                    )
+                  }
+                  style={{
+                    marginTop:
+                      '2px',
+                    flexShrink: 0,
+                  }}
+                />
 
-          <label>
-            <input
-              type="checkbox"
-              checked={
-                opcoes.refeicoes
-              }
-              onChange={() =>
-                alterarOpcao(
-                  'refeicoes'
-                )
-              }
-            />{' '}
-            Refeições
-            relacionadas
-          </label>
+                <span>
+                  <strong
+                    style={{
+                      display:
+                        'block',
+                      fontSize:
+                        '13px',
+                    }}
+                  >
+                    {opcao.titulo}
+                  </strong>
 
-          <label>
-            <input
-              type="checkbox"
-              checked={
-                opcoes.entradas
-              }
-              onChange={() =>
-                alterarOpcao(
-                  'entradas'
-                )
-              }
-            />{' '}
-            Entradas
-          </label>
-
-          <label>
-            <input
-              type="checkbox"
-              checked={
-                opcoes.saidas
-              }
-              onChange={() =>
-                alterarOpcao(
-                  'saidas'
-                )
-              }
-            />{' '}
-            Saídas
-          </label>
-
-          <label>
-            <input
-              type="checkbox"
-              checked={
-                opcoes.devolucoes
-              }
-              onChange={() =>
-                alterarOpcao(
-                  'devolucoes'
-                )
-              }
-            />{' '}
-            Devoluções
-          </label>
-
-          <label>
-            <input
-              type="checkbox"
-              checked={
-                opcoes.estoque
-              }
-              onChange={() =>
-                alterarOpcao(
-                  'estoque'
-                )
-              }
-            />{' '}
-            Posição do estoque
-          </label>
+                  <span
+                    className="muted"
+                    style={{
+                      display:
+                        'block',
+                      marginTop:
+                        '2px',
+                      fontSize:
+                        '11px',
+                      lineHeight:
+                        1.35,
+                    }}
+                  >
+                    {
+                      opcao.descricao
+                    }
+                  </span>
+                </span>
+              </label>
+            )
+          )}
         </div>
-      </div>
+      </section>
 
       {dados && (
         <>
-          <div
-            className="row"
+          <section
             style={{
-              gap: 10,
-              flexWrap:
-                'wrap',
+              marginTop:
+                '19px',
+              paddingTop:
+                '17px',
+              borderTop:
+                '1px solid rgba(255,255,255,.08)',
             }}
           >
-            <a
-              className="btn"
-              href={urlExportacao(
-                'pdf'
-              )}
-              target="_blank"
-              rel="noreferrer"
-            >
-              Baixar PDF
-            </a>
+            <strong>
+              Exportar relatório
+            </strong>
 
-            <a
-              className="btn"
-              href={urlExportacao(
-                'excel'
-              )}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns:
+                  'repeat(2, minmax(0, 1fr))',
+                gap: '8px',
+                marginTop:
+                  '10px',
+              }}
             >
-              Baixar Excel
-            </a>
-          </div>
+              <a
+                className="btn"
+                href={urlExportacao(
+                  'pdf'
+                )}
+                target="_blank"
+                rel="noreferrer"
+                style={{
+                  textAlign:
+                    'center',
+                  textDecoration:
+                    'none',
+                }}
+              >
+                PDF
+              </a>
+
+              <a
+                className="btn"
+                href={urlExportacao(
+                  'excel'
+                )}
+                style={{
+                  textAlign:
+                    'center',
+                  textDecoration:
+                    'none',
+                }}
+              >
+                Excel
+              </a>
+            </div>
+          </section>
 
           {opcoes.efetivo && (
-            <div className="card">
-              <h2>
-                Efetivo por
-                refeição
-              </h2>
+            <section className="card">
+              <div
+                style={{
+                  display:
+                    'flex',
+                  justifyContent:
+                    'space-between',
+                  alignItems:
+                    'center',
+                  gap: '10px',
+                  marginBottom:
+                    '12px',
+                }}
+              >
+                <h2
+                  style={{
+                    margin: 0,
+                  }}
+                >
+                  Efetivo por refeição
+                </h2>
+
+                <span
+                  className="muted"
+                  style={{
+                    fontSize:
+                      '11px',
+                  }}
+                >
+                  {
+                    dados.efetivos
+                      .length
+                  }{' '}
+                  registro(s)
+                </span>
+              </div>
 
               {dados.efetivos
-                .length ===
-              0 ? (
-                <p className="muted">
-                  Nenhum efetivo
-                  registrado no
-                  período.
-                </p>
+                .length === 0 ? (
+                <div
+                  style={{
+                    padding:
+                      '13px',
+                    borderRadius:
+                      '11px',
+                    background:
+                      '#0c1811',
+                    border:
+                      '1px solid #284334',
+                  }}
+                >
+                  <span className="muted">
+                    Nenhum efetivo
+                    registrado no
+                    período.
+                  </span>
+                </div>
               ) : (
                 <>
                   <div
                     style={{
-                      overflowX:
-                        'auto',
+                      display:
+                        'grid',
+                      gap: '9px',
                     }}
                   >
-                    <table
-                      style={{
-                        width:
-                          '100%',
-
-                        borderCollapse:
-                          'collapse',
-
-                        minWidth:
-                          900,
-                      }}
-                    >
-                      <thead>
-                        <tr>
-                          <th
-                            style={
-                              th
-                            }
+                    {dados.efetivos.map(
+                      (
+                        item: any
+                      ) => (
+                        <article
+                          key={
+                            item.id
+                          }
+                          style={{
+                            padding:
+                              '13px',
+                            borderRadius:
+                              '12px',
+                            background:
+                              '#0c1811',
+                            border:
+                              '1px solid #284334',
+                          }}
+                        >
+                          <div
+                            style={{
+                              display:
+                                'flex',
+                              justifyContent:
+                                'space-between',
+                              alignItems:
+                                'flex-start',
+                              gap:
+                                '10px',
+                              paddingBottom:
+                                '9px',
+                              marginBottom:
+                                '9px',
+                              borderBottom:
+                                '1px solid rgba(255,255,255,.07)',
+                            }}
                           >
-                            Data
-                          </th>
+                            <div>
+                              <strong>
+                                {nomesRefeicao[
+                                  item
+                                    .refeicao
+                                ] ||
+                                  item.refeicao}
+                              </strong>
 
-                          <th
-                            style={
-                              th
-                            }
-                          >
-                            Refeição
-                          </th>
-
-                          <th
-                            style={
-                              th
-                            }
-                          >
-                            Efetivo
-                            previsto
-                          </th>
-
-                          <th
-                            style={
-                              th
-                            }
-                          >
-                            Efetivo
-                            alimentado
-                          </th>
-
-                          <th
-                            style={
-                              th
-                            }
-                          >
-                            Faltas
-                          </th>
-
-                          <th
-                            style={
-                              th
-                            }
-                          >
-                            Militares
-                            de fora
-                          </th>
-
-                          <th
-                            style={
-                              th
-                            }
-                          >
-                            Total
-                            atendido
-                          </th>
-                        </tr>
-                      </thead>
-
-                      <tbody>
-                        {dados.efetivos.map(
-                          (
-                            item: any
-                          ) => (
-                            <tr
-                              key={
-                                item.id
-                              }
-                            >
-                              <td
-                                style={
-                                  td
-                                }
+                              <div
+                                className="muted"
+                                style={{
+                                  marginTop:
+                                    '3px',
+                                  fontSize:
+                                    '11px',
+                                }}
                               >
                                 {formatarData(
                                   item.data
                                 )}
-                              </td>
+                              </div>
+                            </div>
 
-                              <td
-                                style={
-                                  td
-                                }
+                            <div
+                              style={{
+                                textAlign:
+                                  'right',
+                              }}
+                            >
+                              <div
+                                className="muted"
+                                style={{
+                                  fontSize:
+                                    '10px',
+                                }}
                               >
-                                <strong>
-                                  {nomesRefeicao[
-                                    item
-                                      .refeicao
-                                  ] ||
-                                    item.refeicao}
-                                </strong>
-                              </td>
+                                ATENDIDO
+                              </div>
 
-                              <td
-                                style={
-                                  td
-                                }
+                              <strong
+                                style={{
+                                  fontSize:
+                                    '18px',
+                                }}
                               >
-                                {
-                                  item.totalPrevisto
-                                }
-                              </td>
-
-                              <td
-                                style={
-                                  td
-                                }
-                              >
-                                {item.efetivoAlimentado ??
+                                {item.totalAtendido ??
                                   '—'}
-                              </td>
+                              </strong>
+                            </div>
+                          </div>
 
-                              <td
-                                style={
-                                  td
-                                }
-                              >
-                                {item.faltas ??
-                                  '—'}
-                              </td>
+                          <div
+                            style={{
+                              display:
+                                'grid',
+                              gridTemplateColumns:
+                                'repeat(2, minmax(0, 1fr))',
+                              gap:
+                                '10px 14px',
+                            }}
+                          >
+                            <Dado
+                              titulo="Efetivo previsto"
+                              valor={
+                                item.totalPrevisto
+                              }
+                            />
 
-                              <td
-                                style={
-                                  td
-                                }
-                              >
-                                {item.militaresDeFora ??
-                                  '—'}
-                              </td>
+                            <Dado
+                              titulo="Efetivo alimentado"
+                              valor={
+                                item.efetivoAlimentado ??
+                                '—'
+                              }
+                            />
 
-                              <td
-                                style={
-                                  td
-                                }
-                              >
-                                <strong>
-                                  {item.totalAtendido ??
-                                    '—'}
-                                </strong>
-                              </td>
-                            </tr>
-                          )
-                        )}
-                      </tbody>
-                    </table>
+                            <Dado
+                              titulo="Faltas"
+                              valor={
+                                item.faltas ??
+                                '—'
+                              }
+                            />
+
+                            <Dado
+                              titulo="Militares de fora"
+                              valor={
+                                item.militaresDeFora ??
+                                '—'
+                              }
+                            />
+                          </div>
+                        </article>
+                      )
+                    )}
                   </div>
 
                   <div
-                    className="grid"
                     style={{
+                      display:
+                        'grid',
+                      gridTemplateColumns:
+                        'repeat(2, minmax(0, 1fr))',
+                      gap: '8px',
                       marginTop:
-                        18,
+                        '12px',
                     }}
                   >
-                    <div className="card">
-                      <span className="muted">
-                        Refeições
-                        realizadas
-                      </span>
+                    <BlocoResumo
+                      titulo="Refeições realizadas"
+                      valor={
+                        dados
+                          .resumoEfetivo
+                          .refeicoes
+                      }
+                    />
 
-                      <div>
-                        <strong>
-                          {
-                            dados
-                              .resumoEfetivo
-                              .refeicoes
-                          }
-                        </strong>
-                      </div>
-                    </div>
+                    <BlocoResumo
+                      titulo="Efetivo previsto"
+                      valor={
+                        dados
+                          .resumoEfetivo
+                          .efetivoPrevisto
+                      }
+                    />
 
-                    <div className="card">
-                      <span className="muted">
-                        Efetivo
-                        previsto
-                      </span>
+                    <BlocoResumo
+                      titulo="Efetivo alimentado"
+                      valor={
+                        dados
+                          .resumoEfetivo
+                          .efetivoAlimentado
+                      }
+                    />
 
-                      <div>
-                        <strong>
-                          {
-                            dados
-                              .resumoEfetivo
-                              .efetivoPrevisto
-                          }
-                        </strong>
-                      </div>
-                    </div>
+                    <BlocoResumo
+                      titulo="Faltas"
+                      valor={
+                        dados
+                          .resumoEfetivo
+                          .faltas
+                      }
+                    />
 
-                    <div className="card">
-                      <span className="muted">
-                        Efetivo
-                        alimentado
-                      </span>
+                    <BlocoResumo
+                      titulo="Militares de fora"
+                      valor={
+                        dados
+                          .resumoEfetivo
+                          .militaresDeFora
+                      }
+                    />
 
-                      <div>
-                        <strong>
-                          {
-                            dados
-                              .resumoEfetivo
-                              .efetivoAlimentado
-                          }
-                        </strong>
-                      </div>
-                    </div>
-
-                    <div className="card">
-                      <span className="muted">
-                        Faltas
-                      </span>
-
-                      <div>
-                        <strong>
-                          {
-                            dados
-                              .resumoEfetivo
-                              .faltas
-                          }
-                        </strong>
-                      </div>
-                    </div>
-
-                    <div className="card">
-                      <span className="muted">
-                        Militares de
-                        fora
-                      </span>
-
-                      <div>
-                        <strong>
-                          {
-                            dados
-                              .resumoEfetivo
-                              .militaresDeFora
-                          }
-                        </strong>
-                      </div>
-                    </div>
-
-                    <div className="card">
-                      <span className="muted">
-                        Total de
-                        atendimentos
-                      </span>
-
-                      <div>
-                        <strong>
-                          {
-                            dados
-                              .resumoEfetivo
-                              .totalAtendido
-                          }
-                        </strong>
-                      </div>
-                    </div>
+                    <BlocoResumo
+                      titulo="Total de atendimentos"
+                      valor={
+                        dados
+                          .resumoEfetivo
+                          .totalAtendido
+                      }
+                    />
                   </div>
 
-                  <p className="muted">
+                  <p
+                    className="muted"
+                    style={{
+                      fontSize:
+                        '11px',
+                      lineHeight:
+                        1.45,
+                      margin:
+                        '11px 0 0',
+                    }}
+                  >
                     O total de
                     atendimentos
                     representa as
@@ -1410,129 +1590,182 @@ export default function RelatoriosClient() {
                   <div
                     style={{
                       marginTop:
-                        18,
-
-                      paddingTop:
-                        16,
-
-                      borderTop:
-                        '1px solid rgba(255,255,255,.12)',
+                        '13px',
+                      padding:
+                        '12px',
+                      borderRadius:
+                        '11px',
+                      background:
+                        '#0c1811',
+                      border:
+                        '1px solid #284334',
                     }}
                   >
-                    <h3>
-                      Sobras
-                    </h3>
-
-                    <div className="row">
-                      <span>
-                        Sobra pesada
-                        total no período
-                      </span>
-
-                      <strong>
-                        {formatarNumero(
-                          dados
-                            .resumoEfetivo
-                            .sobraKg
-                        )}{' '}
-                        kg
-                      </strong>
-                    </div>
+                    <Dado
+                      titulo="Sobra pesada total no período"
+                      valor={`${formatarNumero(
+                        dados
+                          .resumoEfetivo
+                          .sobraKg
+                      )} kg`}
+                      destaque
+                    />
                   </div>
                 </>
               )}
-            </div>
+            </section>
           )}
 
           {opcoes.refeicoes && (
-            <div className="card">
+            <section className="card">
               <h2>
-                Refeições
-                relacionadas
+                Refeições relacionadas
               </h2>
 
-              <p className="muted">
-                Refeições
-                identificadas pelas
-                saídas físicas de
+              <p
+                className="muted"
+                style={{
+                  fontSize:
+                    '12px',
+                  lineHeight:
+                    1.45,
+                }}
+              >
+                Refeições identificadas
+                pelas saídas físicas de
                 gêneros no período.
               </p>
 
               {dados
                 .refeicoesRelacionadas
-                .length ===
-              0 ? (
-                <p className="muted">
-                  Nenhuma refeição
-                  relacionada às
-                  saídas do período.
-                </p>
+                .length === 0 ? (
+                <div
+                  style={{
+                    padding:
+                      '13px',
+                    borderRadius:
+                      '11px',
+                    background:
+                      '#0c1811',
+                    border:
+                      '1px solid #284334',
+                  }}
+                >
+                  <span className="muted">
+                    Nenhuma refeição
+                    relacionada às
+                    saídas do período.
+                  </span>
+                </div>
               ) : (
-                dados.refeicoesRelacionadas.map(
-                  (
-                    item: any,
-                    indice: number
-                  ) => (
-                    <div
-                      key={`${item.data}-${item.destino}-${indice}`}
-                      className="row"
-                      style={{
-                        padding:
-                          '10px 0',
+                <div
+                  style={{
+                    display:
+                      'grid',
+                    gap: '8px',
+                  }}
+                >
+                  {dados.refeicoesRelacionadas.map(
+                    (
+                      item: any,
+                      indice: number
+                    ) => (
+                      <div
+                        key={`${item.data}-${item.destino}-${indice}`}
+                        style={{
+                          padding:
+                            '11px',
+                          borderRadius:
+                            '11px',
+                          background:
+                            '#0c1811',
+                          border:
+                            '1px solid #284334',
+                          display:
+                            'flex',
+                          justifyContent:
+                            'space-between',
+                          alignItems:
+                            'center',
+                          gap:
+                            '10px',
+                        }}
+                      >
+                        <div>
+                          <strong>
+                            {item.nome}
+                          </strong>
 
-                        borderBottom:
-                          '1px solid rgba(255,255,255,.08)',
-                      }}
-                    >
-                      <div>
-                        <strong>
+                          <div
+                            className="muted"
+                            style={{
+                              marginTop:
+                                '3px',
+                              fontSize:
+                                '11px',
+                            }}
+                          >
+                            {formatarData(
+                              item.data
+                            )}
+                          </div>
+                        </div>
+
+                        <strong
+                          style={{
+                            textAlign:
+                              'right',
+                            fontSize:
+                              '12px',
+                          }}
+                        >
                           {
-                            item.nome
+                            item.referencia
                           }
                         </strong>
-
-                        <div className="muted">
-                          {formatarData(
-                            item.data
-                          )}
-                        </div>
                       </div>
+                    )
+                  )}
 
-                      <strong>
-                        {
-                          item.referencia
-                        }
-                      </strong>
-                    </div>
-                  )
-                )
+                  <div
+                    style={{
+                      padding:
+                        '11px',
+                      borderRadius:
+                        '11px',
+                      background:
+                        '#183d2a',
+                      border:
+                        '1px solid #284334',
+                      display:
+                        'flex',
+                      justifyContent:
+                        'space-between',
+                      alignItems:
+                        'center',
+                      gap:
+                        '10px',
+                    }}
+                  >
+                    <span>
+                      Total de refeições
+                    </span>
+
+                    <strong>
+                      {
+                        dados
+                          .refeicoesRelacionadas
+                          .length
+                      }
+                    </strong>
+                  </div>
+                </div>
               )}
-
-              <div
-                className="row"
-                style={{
-                  marginTop:
-                    14,
-                }}
-              >
-                <span>
-                  Total de refeições
-                  relacionadas
-                </span>
-
-                <strong>
-                  {
-                    dados
-                      .refeicoesRelacionadas
-                      .length
-                  }
-                </strong>
-              </div>
-            </div>
+            </section>
           )}
 
           {opcoes.entradas && (
-            <TabelaMovimentos
+            <Movimentos
               titulo="Entradas"
               itens={
                 dados.entradas
@@ -1541,7 +1774,7 @@ export default function RelatoriosClient() {
           )}
 
           {opcoes.saidas && (
-            <TabelaMovimentos
+            <Movimentos
               titulo="Saídas"
               itens={
                 dados.saidas
@@ -1551,7 +1784,7 @@ export default function RelatoriosClient() {
           )}
 
           {opcoes.devolucoes && (
-            <TabelaMovimentos
+            <Movimentos
               titulo="Devoluções"
               itens={
                 dados.devolucoes
@@ -1560,12 +1793,20 @@ export default function RelatoriosClient() {
           )}
 
           {opcoes.estoque && (
-            <div className="card">
+            <section className="card">
               <h2>
                 Posição do estoque
               </h2>
 
-              <p className="muted">
+              <p
+                className="muted"
+                style={{
+                  fontSize:
+                    '12px',
+                  lineHeight:
+                    1.45,
+                }}
+              >
                 Saldo atual dos
                 gêneros organizado
                 por grupo e
@@ -1575,214 +1816,356 @@ export default function RelatoriosClient() {
                 unidade de medida.
               </p>
 
-              {estoqueAgrupado.map(
-                (
-                  grupo: any
-                ) => (
-                  <section
-                    key={
-                      grupo.nome
-                    }
-                    style={{
-                      marginTop:
-                        24,
-                    }}
-                  >
-                    <h3>
-                      {
-                        grupo.nome
-                      }
-                    </h3>
-
-                    {grupo.categorias.map(
-                      (
-                        categoria: any
-                      ) => (
+              {estoqueAgrupado.length ===
+              0 ? (
+                <div
+                  style={{
+                    padding:
+                      '13px',
+                    borderRadius:
+                      '11px',
+                    background:
+                      '#0c1811',
+                    border:
+                      '1px solid #284334',
+                  }}
+                >
+                  <span className="muted">
+                    Nenhum gênero
+                    encontrado na
+                    posição de estoque.
+                  </span>
+                </div>
+              ) : (
+                <div
+                  style={{
+                    display:
+                      'grid',
+                    gap: '13px',
+                  }}
+                >
+                  {estoqueAgrupado.map(
+                    (
+                      grupo: any
+                    ) => (
+                      <section
+                        key={
+                          grupo.nome
+                        }
+                        style={{
+                          padding:
+                            '13px',
+                          borderRadius:
+                            '13px',
+                          background:
+                            '#0c1811',
+                          border:
+                            '1px solid #284334',
+                        }}
+                      >
                         <div
-                          key={
-                            categoria.nome
-                          }
                           style={{
-                            marginTop:
-                              16,
-
-                            padding:
-                              14,
-
-                            border:
-                              '1px solid rgba(255,255,255,.10)',
-
-                            borderRadius:
-                              12,
+                            display:
+                              'flex',
+                            alignItems:
+                              'center',
+                            justifyContent:
+                              'space-between',
+                            gap:
+                              '10px',
+                            marginBottom:
+                              '10px',
                           }}
                         >
-                          <strong>
+                          <strong
+                            style={{
+                              fontSize:
+                                '16px',
+                            }}
+                          >
                             {
-                              categoria.nome
+                              grupo.nome
                             }
                           </strong>
 
-                          <div
+                          <span
+                            className="muted"
                             style={{
-                              marginTop:
-                                10,
+                              fontSize:
+                                '10px',
                             }}
                           >
-                            {categoria.itens.map(
-                              (
-                                item: any
-                              ) => (
-                                <div
-                                  key={
-                                    item.generoId
-                                  }
-                                  className="row"
-                                  style={{
-                                    padding:
-                                      '8px 0',
+                            {
+                              grupo.itens
+                                .length
+                            }{' '}
+                            gênero(s)
+                          </span>
+                        </div>
 
-                                    borderBottom:
-                                      '1px solid rgba(255,255,255,.06)',
+                        <div
+                          style={{
+                            display:
+                              'grid',
+                            gap:
+                              '9px',
+                          }}
+                        >
+                          {grupo.categorias.map(
+                            (
+                              categoria: any
+                            ) => (
+                              <div
+                                key={
+                                  categoria.nome
+                                }
+                                style={{
+                                  padding:
+                                    '11px',
+                                  borderRadius:
+                                    '11px',
+                                  background:
+                                    '#102018',
+                                  border:
+                                    '1px solid rgba(255,255,255,.08)',
+                                }}
+                              >
+                                <strong
+                                  style={{
+                                    fontSize:
+                                      '13px',
                                   }}
                                 >
-                                  <div>
-                                    <strong>
-                                      {
-                                        item.nome
-                                      }
-                                    </strong>
+                                  {
+                                    categoria.nome
+                                  }
+                                </strong>
 
-                                    <div className="muted">
-                                      {
-                                        item.classe
-                                      }
-                                    </div>
-                                  </div>
+                                <div
+                                  style={{
+                                    marginTop:
+                                      '8px',
+                                    display:
+                                      'grid',
+                                    gap:
+                                      '6px',
+                                  }}
+                                >
+                                  {categoria.itens.map(
+                                    (
+                                      item: any
+                                    ) => (
+                                      <div
+                                        key={
+                                          item.generoId
+                                        }
+                                        style={{
+                                          display:
+                                            'flex',
+                                          justifyContent:
+                                            'space-between',
+                                          alignItems:
+                                            'center',
+                                          gap:
+                                            '10px',
+                                          padding:
+                                            '7px 0',
+                                          borderBottom:
+                                            '1px solid rgba(255,255,255,.05)',
+                                        }}
+                                      >
+                                        <div>
+                                          <strong
+                                            style={{
+                                              fontSize:
+                                                '12px',
+                                            }}
+                                          >
+                                            {
+                                              item.nome
+                                            }
+                                          </strong>
 
-                                  <strong>
-                                    {formatarNumero(
-                                      item.quantidade
-                                    )}{' '}
-                                    {
-                                      item.unidade
-                                    }
-                                  </strong>
+                                          <div
+                                            className="muted"
+                                            style={{
+                                              fontSize:
+                                                '10px',
+                                              marginTop:
+                                                '2px',
+                                            }}
+                                          >
+                                            {
+                                              item.classe
+                                            }
+                                          </div>
+                                        </div>
+
+                                        <strong
+                                          style={{
+                                            flexShrink:
+                                              0,
+                                            fontSize:
+                                              '12px',
+                                          }}
+                                        >
+                                          {formatarNumero(
+                                            item.quantidade
+                                          )}{' '}
+                                          {
+                                            item.unidade
+                                          }
+                                        </strong>
+                                      </div>
+                                    )
+                                  )}
                                 </div>
-                              )
-                            )}
-                          </div>
 
-                          <TotaisPorUnidade
-                            titulo={`Subtotal — ${categoria.nome}`}
-                            totais={
-                              categoria.totais
-                            }
-                          />
+                                <TotaisPorUnidade
+                                  titulo={`Subtotal — ${categoria.nome}`}
+                                  totais={
+                                    categoria.totais
+                                  }
+                                />
+                              </div>
+                            )
+                          )}
                         </div>
-                      )
-                    )}
 
-                    <div
-                      style={{
-                        marginTop:
-                          14,
-
-                        padding:
-                          14,
-
-                        border:
-                          '1px solid rgba(255,255,255,.16)',
-
-                        borderRadius:
-                          12,
-                      }}
-                    >
-                      <TotaisPorUnidade
-                        titulo={`Total do grupo — ${grupo.nome}`}
-                        totais={
-                          grupo.totais
-                        }
-                      />
-                    </div>
-                  </section>
-                )
+                        <TotaisPorUnidade
+                          titulo={`Total do grupo — ${grupo.nome}`}
+                          totais={
+                            grupo.totais
+                          }
+                        />
+                      </section>
+                    )
+                  )}
+                </div>
               )}
-            </div>
+            </section>
           )}
 
-          <div className="card">
-            <h2>
-              Alertas de estoque
-            </h2>
+          <section className="card">
+            <div
+              style={{
+                display: 'flex',
+                gap: '9px',
+                alignItems:
+                  'flex-start',
+                marginBottom:
+                  '11px',
+              }}
+            >
+              <span
+                style={{
+                  fontSize: '19px',
+                }}
+              >
+                ⚠
+              </span>
 
-            <p className="muted">
-              Esta seção é sempre
-              exibida no relatório.
-            </p>
+              <div>
+                <h2
+                  style={{
+                    margin: 0,
+                  }}
+                >
+                  Alertas de estoque
+                </h2>
+
+                <div
+                  className="muted"
+                  style={{
+                    marginTop:
+                      '3px',
+                    fontSize:
+                      '11px',
+                  }}
+                >
+                  Esta seção é sempre
+                  exibida no relatório.
+                </div>
+              </div>
+            </div>
 
             {dados.estoqueBaixo
-              .length ===
-              0 &&
+              .length === 0 &&
             dados.validade
-              .length ===
-              0 ? (
+              .length === 0 ? (
               <div
                 style={{
-                  padding:
-                    14,
-
+                  padding: '13px',
                   borderRadius:
-                    10,
-
+                    '11px',
                   border:
-                    '1px solid rgba(34,197,94,.35)',
-
+                    '1px solid rgba(43,138,87,.55)',
                   background:
-                    'rgba(34,197,94,.06)',
+                    'rgba(43,138,87,.08)',
                 }}
               >
                 ✓ Nenhum alerta de
                 estoque.
               </div>
             ) : (
-              <>
+              <div
+                style={{
+                  display: 'grid',
+                  gap: '9px',
+                }}
+              >
                 {dados.estoqueBaixo.map(
                   (
                     item: any
                   ) => (
-                    <div
+                    <article
                       key={
                         item.id
                       }
                       style={{
                         padding:
-                          14,
-
-                        marginTop:
-                          10,
-
+                          '13px',
                         borderRadius:
-                          12,
-
+                          '12px',
                         border:
                           item.zerado
                             ? '2px solid #ef4444'
                             : '2px solid #f59e0b',
-
                         background:
                           item.zerado
                             ? 'rgba(239,68,68,.10)'
                             : 'rgba(245,158,11,.10)',
                       }}
                     >
-                      <div className="row">
-                        <strong>
+                      <div
+                        style={{
+                          display:
+                            'flex',
+                          justifyContent:
+                            'space-between',
+                          alignItems:
+                            'flex-start',
+                          gap:
+                            '10px',
+                        }}
+                      >
+                        <strong
+                          style={{
+                            fontSize:
+                              '12px',
+                          }}
+                        >
                           {item.zerado
                             ? '⛔ ESTOQUE ZERADO'
                             : '⚠ ESTOQUE BAIXO'}
                         </strong>
 
-                        <strong>
+                        <strong
+                          style={{
+                            textAlign:
+                              'right',
+                          }}
+                        >
                           {
                             item.nome
                           }
@@ -1791,33 +2174,40 @@ export default function RelatoriosClient() {
 
                       <div
                         style={{
+                          display:
+                            'grid',
+                          gridTemplateColumns:
+                            'repeat(2, minmax(0, 1fr))',
+                          gap:
+                            '10px',
                           marginTop:
-                            8,
+                            '11px',
+                          paddingTop:
+                            '10px',
+                          borderTop:
+                            '1px solid rgba(255,255,255,.08)',
                         }}
                       >
-                        Saldo atual:{' '}
-                        <strong>
-                          {formatarNumero(
+                        <Dado
+                          titulo="Saldo atual"
+                          valor={`${formatarNumero(
                             item.qtd
-                          )}{' '}
-                          {
+                          )} ${
                             item.unidade
-                          }
-                        </strong>
+                          }`}
+                          destaque
+                        />
 
-                        {' · '}
-
-                        Estoque mínimo:{' '}
-                        <strong>
-                          {formatarNumero(
+                        <Dado
+                          titulo="Estoque mínimo"
+                          valor={`${formatarNumero(
                             item.min
-                          )}{' '}
-                          {
+                          )} ${
                             item.unidade
-                          }
-                        </strong>
+                          }`}
+                        />
                       </div>
-                    </div>
+                    </article>
                   )
                 )}
 
@@ -1826,30 +2216,29 @@ export default function RelatoriosClient() {
                     item: any,
                     indice: number
                   ) => (
-                    <div
+                    <article
                       key={`${item.genero}-${item.lote}-${indice}`}
                       style={{
                         padding:
-                          14,
-
-                        marginTop:
-                          10,
-
+                          '13px',
                         borderRadius:
-                          12,
-
+                          '12px',
                         border:
                           item.vencido
                             ? '2px solid #ef4444'
                             : '2px solid #f59e0b',
-
                         background:
                           item.vencido
                             ? 'rgba(239,68,68,.10)'
                             : 'rgba(245,158,11,.10)',
                       }}
                     >
-                      <strong>
+                      <strong
+                        style={{
+                          fontSize:
+                            '12px',
+                        }}
+                      >
                         {item.vencido
                           ? '⛔ LOTE VENCIDO'
                           : '⚠ VALIDADE PRÓXIMA'}
@@ -1858,7 +2247,7 @@ export default function RelatoriosClient() {
                       <div
                         style={{
                           marginTop:
-                            8,
+                            '8px',
                         }}
                       >
                         <strong>
@@ -1867,34 +2256,60 @@ export default function RelatoriosClient() {
                           }
                         </strong>
 
-                        {' · '}
-
-                        Lote{' '}
-                        {item.lote ||
-                          '—'}
+                        <div
+                          className="muted"
+                          style={{
+                            marginTop:
+                              '3px',
+                            fontSize:
+                              '11px',
+                          }}
+                        >
+                          Lote{' '}
+                          {item.lote ||
+                            '—'}
+                        </div>
                       </div>
 
-                      <div className="muted">
-                        Validade:{' '}
-                        {formatarData(
-                          item.validade
-                        )}
+                      <div
+                        style={{
+                          display:
+                            'grid',
+                          gridTemplateColumns:
+                            'repeat(2, minmax(0, 1fr))',
+                          gap:
+                            '10px',
+                          marginTop:
+                            '10px',
+                          paddingTop:
+                            '10px',
+                          borderTop:
+                            '1px solid rgba(255,255,255,.08)',
+                        }}
+                      >
+                        <Dado
+                          titulo="Validade"
+                          valor={formatarData(
+                            item.validade
+                          )}
+                        />
 
-                        {' · '}
-
-                        {formatarNumero(
-                          item.quantidade
-                        )}{' '}
-                        {
-                          item.unidade
-                        }
+                        <Dado
+                          titulo="Quantidade"
+                          valor={`${formatarNumero(
+                            item.quantidade
+                          )} ${
+                            item.unidade
+                          }`}
+                          destaque
+                        />
                       </div>
-                    </div>
+                    </article>
                   )
                 )}
-              </>
+              </div>
             )}
-          </div>
+          </section>
         </>
       )}
     </>
