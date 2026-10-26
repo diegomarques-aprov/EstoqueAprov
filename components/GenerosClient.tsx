@@ -66,6 +66,38 @@ function formatarMoeda(
   );
 }
 
+function CampoInfo({
+  titulo,
+  valor,
+}: {
+  titulo: string;
+  valor: React.ReactNode;
+}) {
+  return (
+    <div>
+      <div
+        className="muted"
+        style={{
+          fontSize: '10px',
+          marginBottom: '2px',
+        }}
+      >
+        {titulo}
+      </div>
+
+      <div
+        style={{
+          fontSize: '12px',
+          fontWeight: 600,
+          lineHeight: 1.4,
+        }}
+      >
+        {valor}
+      </div>
+    </div>
+  );
+}
+
 export default function GenerosClient() {
   const [classe, setClasse] =
     useState<Classe>('QS');
@@ -112,8 +144,10 @@ export default function GenerosClient() {
     setUnidadeEdicao,
   ] = useState('');
 
-  const [loteEdicao, setLoteEdicao] =
-    useState(false);
+  const [
+    loteEdicao,
+    setLoteEdicao,
+  ] = useState(false);
 
   const [
     validadeEdicao,
@@ -130,13 +164,16 @@ export default function GenerosClient() {
     setValorUnitarioEdicao,
   ] = useState('');
 
-  const [localEdicao, setLocalEdicao] =
-    useState('');
+  const [
+    localEdicao,
+    setLocalEdicao,
+  ] = useState('');
 
   const [
     situacaoEdicao,
     setSituacaoEdicao,
-  ] = useState<Situacao>('ATIVO');
+  ] =
+    useState<Situacao>('ATIVO');
 
   const nomeRef =
     useRef<HTMLInputElement>(null);
@@ -229,6 +266,8 @@ export default function GenerosClient() {
 
   useEffect(() => {
     carregarDados();
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [classe]);
 
   function alterarClasse(
@@ -386,6 +425,7 @@ export default function GenerosClient() {
           resultado.error ||
             'Não foi possível cadastrar o gênero.'
         );
+
         return;
       }
 
@@ -409,14 +449,8 @@ export default function GenerosClient() {
     genero: Genero
   ) {
     setEditando(genero);
-
-    setNomeEdicao(
-      genero.nome
-    );
-
-    setClasseEdicao(
-      genero.classe
-    );
+    setNomeEdicao(genero.nome);
+    setClasseEdicao(genero.classe);
 
     setCategoriaEdicao(
       genero.categoriaId || ''
@@ -542,41 +576,31 @@ export default function GenerosClient() {
             },
             body: JSON.stringify({
               id: editando.id,
-
               nome:
                 nomeEdicao.trim(),
-
               classe:
                 classeEdicao,
-
               categoriaId:
                 categoriaEdicao ||
                 null,
-
               unidadeId:
                 unidadeEdicao,
-
               controlaLote:
                 loteEdicao,
-
               controlaValidade:
                 validadeEdicao,
-
               estoqueMinimo:
                 minimo === ''
                   ? null
                   : Number(minimo),
-
               valorUnitarioReferencia:
                 valorUnitario === ''
                   ? null
                   : Number(
                       valorUnitario
                     ),
-
               localPadraoId:
                 localEdicao || null,
-
               situacao:
                 situacaoEdicao,
             }),
@@ -591,6 +615,7 @@ export default function GenerosClient() {
           resultado.error ||
             'Não foi possível alterar o gênero.'
         );
+
         return;
       }
 
@@ -618,235 +643,411 @@ export default function GenerosClient() {
 
   return (
     <>
-      <div className="tabs">
-        <button
-          type="button"
-          className={
-            classe === 'QS'
-              ? 'tab active'
-              : 'tab'
-          }
-          onClick={() =>
-            alterarClasse('QS')
-          }
-        >
-          QS
-        </button>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns:
+            'repeat(2, minmax(0, 1fr))',
+          gap: '8px',
+          marginBottom: '17px',
+        }}
+      >
+        {(['QS', 'QR'] as Classe[]).map(
+          (item) => (
+            <button
+              key={item}
+              type="button"
+              onClick={() =>
+                alterarClasse(item)
+              }
+              style={{
+                minHeight: '52px',
+                borderRadius: '12px',
+                border:
+                  classe === item
+                    ? '1px solid rgba(43,138,87,.8)'
+                    : '1px solid #284334',
+                background:
+                  classe === item
+                    ? '#2b8a57'
+                    : '#102018',
+                color: '#fff',
+                fontWeight: 800,
+                fontSize: '15px',
+                cursor: 'pointer',
+              }}
+            >
+              {item}
 
-        <button
-          type="button"
-          className={
-            classe === 'QR'
-              ? 'tab active'
-              : 'tab'
-          }
-          onClick={() =>
-            alterarClasse('QR')
-          }
-        >
-          QR
-        </button>
+              <span
+                style={{
+                  display: 'block',
+                  marginTop: '2px',
+                  fontSize: '10px',
+                  fontWeight: 500,
+                  opacity: 0.8,
+                }}
+              >
+                {item === 'QS'
+                  ? 'Cadeia de suprimento'
+                  : 'Compra local'}
+              </span>
+            </button>
+          )
+        )}
       </div>
 
-      <div className="card">
-        <h2>
-          Novo gênero {classe}
-        </h2>
+      <div
+        style={{
+          padding: '13px',
+          borderRadius: '12px',
+          background: '#0c1811',
+          border: '1px solid #284334',
+          marginBottom: '16px',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent:
+              'space-between',
+            gap: '10px',
+            marginBottom: '14px',
+          }}
+        >
+          <div>
+            <strong
+              style={{
+                fontSize: '15px',
+              }}
+            >
+              Novo gênero {classe}
+            </strong>
+
+            <div
+              className="muted"
+              style={{
+                marginTop: '3px',
+                fontSize: '11px',
+              }}
+            >
+              Informe os dados de
+              controle do gênero.
+            </div>
+          </div>
+
+          <span
+            style={{
+              padding: '5px 8px',
+              borderRadius: '999px',
+              background: '#183d2a',
+              border: '1px solid #284334',
+              fontSize: '11px',
+              fontWeight: 800,
+            }}
+          >
+            {classe}
+          </span>
+        </div>
 
         <form
           onSubmit={adicionar}
+          style={{
+            display: 'grid',
+            gap: '13px',
+          }}
         >
-          <label>Nome</label>
+          <label>
+            Nome
 
-          <input
-            ref={nomeRef}
-            name="nome"
-            required
-            autoFocus
-            maxLength={120}
-          />
+            <input
+              ref={nomeRef}
+              name="nome"
+              required
+              autoFocus
+              maxLength={120}
+              placeholder="Nome do gênero"
+            />
+          </label>
 
           <label>
             Categoria
+
+            <select
+              name="categoriaId"
+              onChange={(ev) =>
+                aplicarPadraoCategoria(
+                  ev.target.value,
+                  ev.currentTarget
+                    .form!
+                )
+              }
+            >
+              <option value="">
+                Sem categoria
+              </option>
+
+              {categorias.map(
+                (categoria) => (
+                  <option
+                    key={
+                      categoria.id
+                    }
+                    value={
+                      categoria.id
+                    }
+                  >
+                    {
+                      categoria.nome
+                    }
+                  </option>
+                )
+              )}
+            </select>
           </label>
-
-          <select
-            name="categoriaId"
-            onChange={(ev) =>
-              aplicarPadraoCategoria(
-                ev.target.value,
-                ev.currentTarget
-                  .form!
-              )
-            }
-          >
-            <option value="">
-              Sem categoria
-            </option>
-
-            {categorias.map(
-              (categoria) => (
-                <option
-                  key={
-                    categoria.id
-                  }
-                  value={
-                    categoria.id
-                  }
-                >
-                  {
-                    categoria.nome
-                  }
-                </option>
-              )
-            )}
-          </select>
 
           <label>
             Unidade de medida
+
+            <select
+              name="unidadeId"
+              required
+            >
+              <option value="">
+                Selecione
+              </option>
+
+              {unidades.map(
+                (unidade) => (
+                  <option
+                    key={unidade.id}
+                    value={unidade.id}
+                  >
+                    {unidade.sigla} —{' '}
+                    {unidade.nome}
+                  </option>
+                )
+              )}
+            </select>
           </label>
 
-          <select
-            name="unidadeId"
-            required
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns:
+                'repeat(2, minmax(0, 1fr))',
+              gap: '8px',
+            }}
           >
-            <option value="">
-              Selecione
-            </option>
-
-            {unidades.map(
-              (unidade) => (
-                <option
-                  key={
-                    unidade.id
-                  }
-                  value={
-                    unidade.id
-                  }
-                >
-                  {
-                    unidade.sigla
-                  }{' '}
-                  —{' '}
-                  {
-                    unidade.nome
-                  }
-                </option>
-              )
-            )}
-          </select>
-
-          <div className="checks">
-            <label>
+            <label
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '11px',
+                borderRadius: '11px',
+                background: '#102018',
+                border:
+                  '1px solid #284334',
+                cursor: 'pointer',
+              }}
+            >
               <input
                 type="checkbox"
                 name="controlaLote"
-              />{' '}
-              Controla lote
+                style={{
+                  width: '18px',
+                  height: '18px',
+                  margin: 0,
+                }}
+              />
+
+              <span
+                style={{
+                  fontSize: '12px',
+                }}
+              >
+                Controla lote
+              </span>
             </label>
 
-            <label>
+            <label
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '11px',
+                borderRadius: '11px',
+                background: '#102018',
+                border:
+                  '1px solid #284334',
+                cursor: 'pointer',
+              }}
+            >
               <input
                 type="checkbox"
                 name="controlaValidade"
-              />{' '}
-              Controla validade
+                style={{
+                  width: '18px',
+                  height: '18px',
+                  margin: 0,
+                }}
+              />
+
+              <span
+                style={{
+                  fontSize: '12px',
+                }}
+              >
+                Controla validade
+              </span>
             </label>
           </div>
 
           <label>
             Estoque mínimo
-            (opcional)
-          </label>
+            <span className="muted">
+              {' '}
+              (opcional)
+            </span>
 
-          <input
-            name="estoqueMinimo"
-            type="number"
-            min="0"
-            step="0.001"
-          />
+            <input
+              name="estoqueMinimo"
+              type="number"
+              min="0"
+              step="0.001"
+              placeholder="0"
+            />
+          </label>
 
           <label>
-            Valor unitário de
-            referência (opcional)
+            Valor unitário de referência
+            <span className="muted">
+              {' '}
+              (opcional)
+            </span>
+
+            <input
+              name="valorUnitarioReferencia"
+              type="number"
+              min="0"
+              step="0.0001"
+              placeholder="R$ 0,00"
+            />
           </label>
 
-          <input
-            name="valorUnitarioReferencia"
-            type="number"
-            min="0"
-            step="0.0001"
-            placeholder="R$ 0,00"
-          />
-
-          <p className="muted">
-            Utilizado somente para
-            consultas de orçamento
-            estimado. Não representa
-            crédito, empenho ou saldo
-            financeiro.
-          </p>
+          <div
+            style={{
+              padding: '10px 11px',
+              borderRadius: '10px',
+              background:
+                'rgba(43,138,87,.06)',
+              border:
+                '1px solid rgba(43,138,87,.3)',
+            }}
+          >
+            <span
+              className="muted"
+              style={{
+                fontSize: '11px',
+                lineHeight: 1.45,
+              }}
+            >
+              O valor unitário é usado
+              somente em consultas de
+              orçamento estimado. Não
+              representa crédito, empenho
+              ou saldo financeiro.
+            </span>
+          </div>
 
           <label>
             Local habitual
+
+            <select
+              name="localPadraoId"
+            >
+              <option value="">
+                Não definido
+              </option>
+
+              {locais.map(
+                (local) => (
+                  <option
+                    key={local.id}
+                    value={local.id}
+                  >
+                    {local.nome}
+                  </option>
+                )
+              )}
+            </select>
           </label>
-
-          <select
-            name="localPadraoId"
-          >
-            <option value="">
-              Não definido
-            </option>
-
-            {locais.map(
-              (local) => (
-                <option
-                  key={local.id}
-                  value={local.id}
-                >
-                  {local.nome}
-                </option>
-              )
-            )}
-          </select>
 
           <button
             className="btn"
             type="submit"
+            style={{
+              width: '100%',
+              minHeight: '46px',
+            }}
           >
             Salvar gênero {classe}
           </button>
 
           {sucesso &&
             !editando && (
-              <p role="status">
+              <div
+                role="status"
+                style={{
+                  padding: '11px',
+                  borderRadius:
+                    '10px',
+                  background:
+                    'rgba(43,138,87,.08)',
+                  border:
+                    '1px solid rgba(43,138,87,.4)',
+                  fontSize: '12px',
+                }}
+              >
                 <strong>
                   ✓ {sucesso}
                 </strong>
-              </p>
+              </div>
             )}
 
           {erro &&
             !editando && (
-              <p
+              <div
                 className="error"
                 role="alert"
               >
                 {erro}
-              </p>
+              </div>
             )}
         </form>
       </div>
 
-      <div className="card">
+      <div
+        style={{
+          padding: '13px',
+          borderRadius: '12px',
+          background: '#0c1811',
+          border: '1px solid #284334',
+        }}
+      >
         <button
           type="button"
-          className="linkbtn"
+          className="btn"
           onClick={() =>
             setMostrarGeneros(
               !mostrarGeneros
             )
           }
+          style={{
+            width: '100%',
+          }}
         >
           {mostrarGeneros
             ? `Ocultar gêneros ${classe}`
@@ -854,20 +1055,54 @@ export default function GenerosClient() {
         </button>
 
         {mostrarGeneros && (
-          <>
-            <h2>
-              Gêneros {classe}
-            </h2>
+          <div
+            style={{
+              display: 'grid',
+              gap: '10px',
+              marginTop: '14px',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                justifyContent:
+                  'space-between',
+                alignItems: 'center',
+                gap: '10px',
+              }}
+            >
+              <strong>
+                Gêneros {classe}
+              </strong>
 
-            {generos.length >
-            0 ? (
+              <span
+                className="muted"
+                style={{
+                  fontSize: '11px',
+                }}
+              >
+                {generos.length}{' '}
+                cadastrado(s)
+              </span>
+            </div>
+
+            {generos.length > 0 ? (
               generos.map(
                 (genero) => (
-                  <div
-                    className="row"
-                    key={
-                      genero.id
-                    }
+                  <article
+                    key={genero.id}
+                    style={{
+                      padding: '13px',
+                      borderRadius:
+                        '12px',
+                      background:
+                        '#102018',
+                      border:
+                        editando?.id ===
+                        genero.id
+                          ? '1px solid rgba(43,138,87,.75)'
+                          : '1px solid #284334',
+                    }}
                   >
                     {editando?.id ===
                     genero.id ? (
@@ -876,159 +1111,197 @@ export default function GenerosClient() {
                           salvarEdicao
                         }
                         style={{
-                          width:
-                            '100%',
+                          display:
+                            'grid',
+                          gap: '13px',
                         }}
                       >
-                        <h3>
-                          Editar
-                          gênero
-                        </h3>
+                        <div>
+                          <strong
+                            style={{
+                              fontSize:
+                                '15px',
+                            }}
+                          >
+                            Editar gênero
+                          </strong>
+
+                          <div
+                            className="muted"
+                            style={{
+                              marginTop:
+                                '3px',
+                              fontSize:
+                                '11px',
+                            }}
+                          >
+                            Atualize os dados
+                            necessários.
+                          </div>
+                        </div>
 
                         <label>
                           Nome
-                        </label>
 
-                        <input
-                          value={
-                            nomeEdicao
-                          }
-                          onChange={(
-                            ev
-                          ) =>
-                            setNomeEdicao(
+                          <input
+                            value={
+                              nomeEdicao
+                            }
+                            onChange={(
                               ev
-                                .target
-                                .value
-                            )
-                          }
-                          required
-                          maxLength={
-                            120
-                          }
-                          autoFocus
-                        />
+                            ) =>
+                              setNomeEdicao(
+                                ev.target
+                                  .value
+                              )
+                            }
+                            required
+                            maxLength={
+                              120
+                            }
+                            autoFocus
+                          />
+                        </label>
 
                         <label>
                           Classificação
-                        </label>
 
-                        <select
-                          value={
-                            classeEdicao
-                          }
-                          onChange={(
-                            ev
-                          ) =>
-                            setClasseEdicao(
+                          <select
+                            value={
+                              classeEdicao
+                            }
+                            onChange={(
                               ev
-                                .target
-                                .value as Classe
-                            )
-                          }
-                        >
-                          <option value="QS">
-                            QS
-                          </option>
+                            ) =>
+                              setClasseEdicao(
+                                ev.target
+                                  .value as Classe
+                              )
+                            }
+                          >
+                            <option value="QS">
+                              QS
+                            </option>
 
-                          <option value="QR">
-                            QR
-                          </option>
-                        </select>
+                            <option value="QR">
+                              QR
+                            </option>
+                          </select>
+                        </label>
 
                         <label>
                           Categoria
-                        </label>
 
-                        <select
-                          value={
-                            categoriaEdicao
-                          }
-                          onChange={(
-                            ev
-                          ) =>
-                            aplicarPadraoCategoriaEdicao(
+                          <select
+                            value={
+                              categoriaEdicao
+                            }
+                            onChange={(
                               ev
-                                .target
-                                .value
-                            )
-                          }
-                        >
-                          <option value="">
-                            Sem
-                            categoria
-                          </option>
+                            ) =>
+                              aplicarPadraoCategoriaEdicao(
+                                ev.target
+                                  .value
+                              )
+                            }
+                          >
+                            <option value="">
+                              Sem categoria
+                            </option>
 
-                          {categorias.map(
-                            (
-                              categoria
-                            ) => (
-                              <option
-                                key={
-                                  categoria.id
-                                }
-                                value={
-                                  categoria.id
-                                }
-                              >
-                                {
-                                  categoria.nome
-                                }
-                              </option>
-                            )
-                          )}
-                        </select>
+                            {categorias.map(
+                              (
+                                categoria
+                              ) => (
+                                <option
+                                  key={
+                                    categoria.id
+                                  }
+                                  value={
+                                    categoria.id
+                                  }
+                                >
+                                  {
+                                    categoria.nome
+                                  }
+                                </option>
+                              )
+                            )}
+                          </select>
+                        </label>
 
                         <label>
-                          Unidade de
-                          medida
+                          Unidade de medida
+
+                          <select
+                            value={
+                              unidadeEdicao
+                            }
+                            onChange={(
+                              ev
+                            ) =>
+                              setUnidadeEdicao(
+                                ev.target
+                                  .value
+                              )
+                            }
+                            required
+                          >
+                            <option value="">
+                              Selecione
+                            </option>
+
+                            {unidades.map(
+                              (
+                                unidade
+                              ) => (
+                                <option
+                                  key={
+                                    unidade.id
+                                  }
+                                  value={
+                                    unidade.id
+                                  }
+                                >
+                                  {
+                                    unidade.sigla
+                                  }{' '}
+                                  —{' '}
+                                  {
+                                    unidade.nome
+                                  }
+                                </option>
+                              )
+                            )}
+                          </select>
                         </label>
 
-                        <select
-                          value={
-                            unidadeEdicao
-                          }
-                          onChange={(
-                            ev
-                          ) =>
-                            setUnidadeEdicao(
-                              ev
-                                .target
-                                .value
-                            )
-                          }
-                          required
+                        <div
+                          style={{
+                            display:
+                              'grid',
+                            gridTemplateColumns:
+                              'repeat(2, minmax(0, 1fr))',
+                            gap: '8px',
+                          }}
                         >
-                          <option value="">
-                            Selecione
-                          </option>
-
-                          {unidades.map(
-                            (
-                              unidade
-                            ) => (
-                              <option
-                                key={
-                                  unidade.id
-                                }
-                                value={
-                                  unidade.id
-                                }
-                              >
-                                {
-                                  unidade.sigla
-                                }{' '}
-                                —{' '}
-                                {
-                                  unidade.nome
-                                }
-                              </option>
-                            )
-                          )}
-                        </select>
-
-                        <div className="checks">
-                          <label>
+                          <label
+                            style={{
+                              display:
+                                'flex',
+                              alignItems:
+                                'center',
+                              gap: '8px',
+                              padding:
+                                '11px',
+                              borderRadius:
+                                '11px',
+                              background:
+                                '#0c1811',
+                              border:
+                                '1px solid #284334',
+                            }}
+                          >
                             <input
                               type="checkbox"
                               checked={
@@ -1038,17 +1311,46 @@ export default function GenerosClient() {
                                 ev
                               ) =>
                                 setLoteEdicao(
-                                  ev
-                                    .target
+                                  ev.target
                                     .checked
                                 )
                               }
-                            />{' '}
-                            Controla
-                            lote
+                              style={{
+                                width:
+                                  '18px',
+                                height:
+                                  '18px',
+                                margin: 0,
+                              }}
+                            />
+
+                            <span
+                              style={{
+                                fontSize:
+                                  '12px',
+                              }}
+                            >
+                              Controla lote
+                            </span>
                           </label>
 
-                          <label>
+                          <label
+                            style={{
+                              display:
+                                'flex',
+                              alignItems:
+                                'center',
+                              gap: '8px',
+                              padding:
+                                '11px',
+                              borderRadius:
+                                '11px',
+                              background:
+                                '#0c1811',
+                              border:
+                                '1px solid #284334',
+                            }}
+                          >
                             <input
                               type="checkbox"
                               checked={
@@ -1058,155 +1360,157 @@ export default function GenerosClient() {
                                 ev
                               ) =>
                                 setValidadeEdicao(
-                                  ev
-                                    .target
+                                  ev.target
                                     .checked
                                 )
                               }
-                            />{' '}
-                            Controla
-                            validade
+                              style={{
+                                width:
+                                  '18px',
+                                height:
+                                  '18px',
+                                margin: 0,
+                              }}
+                            />
+
+                            <span
+                              style={{
+                                fontSize:
+                                  '12px',
+                              }}
+                            >
+                              Controla validade
+                            </span>
                           </label>
                         </div>
 
                         <label>
-                          Estoque
-                          mínimo
+                          Estoque mínimo
+
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.001"
+                            value={
+                              estoqueMinimoEdicao
+                            }
+                            onChange={(
+                              ev
+                            ) =>
+                              setEstoqueMinimoEdicao(
+                                ev.target
+                                  .value
+                              )
+                            }
+                          />
                         </label>
 
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.001"
-                          value={
-                            estoqueMinimoEdicao
-                          }
-                          onChange={(
-                            ev
-                          ) =>
-                            setEstoqueMinimoEdicao(
-                              ev
-                                .target
-                                .value
-                            )
-                          }
-                        />
-
                         <label>
-                          Valor
-                          unitário de
+                          Valor unitário de
                           referência
-                        </label>
 
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.0001"
-                          value={
-                            valorUnitarioEdicao
-                          }
-                          onChange={(
-                            ev
-                          ) =>
-                            setValorUnitarioEdicao(
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.0001"
+                            value={
+                              valorUnitarioEdicao
+                            }
+                            onChange={(
                               ev
-                                .target
-                                .value
-                            )
-                          }
-                          placeholder="R$ 0,00"
-                        />
-
-                        <p className="muted">
-                          Valor
-                          opcional,
-                          utilizado
-                          somente para
-                          orçamento
-                          estimado.
-                        </p>
+                            ) =>
+                              setValorUnitarioEdicao(
+                                ev.target
+                                  .value
+                              )
+                            }
+                            placeholder="R$ 0,00"
+                          />
+                        </label>
 
                         <label>
-                          Local
-                          habitual
-                        </label>
+                          Local habitual
 
-                        <select
-                          value={
-                            localEdicao
-                          }
-                          onChange={(
-                            ev
-                          ) =>
-                            setLocalEdicao(
+                          <select
+                            value={
+                              localEdicao
+                            }
+                            onChange={(
                               ev
-                                .target
-                                .value
-                            )
-                          }
-                        >
-                          <option value="">
-                            Não
-                            definido
-                          </option>
+                            ) =>
+                              setLocalEdicao(
+                                ev.target
+                                  .value
+                              )
+                            }
+                          >
+                            <option value="">
+                              Não definido
+                            </option>
 
-                          {locais.map(
-                            (
-                              local
-                            ) => (
-                              <option
-                                key={
-                                  local.id
-                                }
-                                value={
-                                  local.id
-                                }
-                              >
-                                {
-                                  local.nome
-                                }
-                              </option>
-                            )
-                          )}
-                        </select>
+                            {locais.map(
+                              (
+                                local
+                              ) => (
+                                <option
+                                  key={
+                                    local.id
+                                  }
+                                  value={
+                                    local.id
+                                  }
+                                >
+                                  {
+                                    local.nome
+                                  }
+                                </option>
+                              )
+                            )}
+                          </select>
+                        </label>
 
                         <label>
                           Situação
+
+                          <select
+                            value={
+                              situacaoEdicao
+                            }
+                            onChange={(
+                              ev
+                            ) =>
+                              setSituacaoEdicao(
+                                ev.target
+                                  .value as Situacao
+                              )
+                            }
+                          >
+                            <option value="ATIVO">
+                              Ativo
+                            </option>
+
+                            <option value="INATIVO">
+                              Inativo
+                            </option>
+                          </select>
                         </label>
 
-                        <select
-                          value={
-                            situacaoEdicao
-                          }
-                          onChange={(
-                            ev
-                          ) =>
-                            setSituacaoEdicao(
-                              ev
-                                .target
-                                .value as Situacao
-                            )
-                          }
-                        >
-                          <option value="ATIVO">
-                            Ativo
-                          </option>
-
-                          <option value="INATIVO">
-                            Inativo
-                          </option>
-                        </select>
+                        {erro && (
+                          <div
+                            className="error"
+                            role="alert"
+                          >
+                            {erro}
+                          </div>
+                        )}
 
                         <div
                           style={{
                             display:
-                              'flex',
-                            gap:
-                              '8px',
-                            marginTop:
-                              '12px',
-                            flexWrap:
-                              'wrap',
+                              'grid',
+                            gridTemplateColumns:
+                              'repeat(2, minmax(0, 1fr))',
+                            gap: '8px',
                           }}
                         >
                           <button
@@ -1214,146 +1518,252 @@ export default function GenerosClient() {
                             type="submit"
                           >
                             Salvar
-                            alterações
                           </button>
 
                           <button
-                            className="linkbtn"
                             type="button"
                             onClick={
                               cancelarEdicao
                             }
+                            style={{
+                              minHeight:
+                                '44px',
+                              borderRadius:
+                                '11px',
+                              border:
+                                '1px solid #284334',
+                              background:
+                                '#0c1811',
+                              color:
+                                '#fff',
+                              fontWeight:
+                                700,
+                              cursor:
+                                'pointer',
+                            }}
                           >
                             Cancelar
                           </button>
                         </div>
-
-                        {erro && (
-                          <p
-                            className="error"
-                            role="alert"
-                          >
-                            {erro}
-                          </p>
-                        )}
                       </form>
                     ) : (
                       <>
-                        <div>
-                          <b>
+                        <div
+                          style={{
+                            display:
+                              'flex',
+                            justifyContent:
+                              'space-between',
+                            alignItems:
+                              'flex-start',
+                            gap: '10px',
+                            paddingBottom:
+                              '10px',
+                            marginBottom:
+                              '10px',
+                            borderBottom:
+                              '1px solid rgba(255,255,255,.07)',
+                          }}
+                        >
+                          <div>
+                            <strong
+                              style={{
+                                fontSize:
+                                  '14px',
+                              }}
+                            >
+                              {
+                                genero.nome
+                              }
+                            </strong>
+
+                            <div
+                              className="muted"
+                              style={{
+                                marginTop:
+                                  '3px',
+                                fontSize:
+                                  '11px',
+                              }}
+                            >
+                              {genero
+                                .categoria
+                                ?.nome ||
+                                'Sem categoria'}
+                              {' · '}
+                              {
+                                genero
+                                  .unidade
+                                  .sigla
+                              }
+                            </div>
+                          </div>
+
+                          <span
+                            style={{
+                              padding:
+                                '4px 7px',
+                              borderRadius:
+                                '999px',
+                              background:
+                                genero.situacao ===
+                                'ATIVO'
+                                  ? 'rgba(43,138,87,.12)'
+                                  : 'rgba(245,158,11,.10)',
+                              border:
+                                genero.situacao ===
+                                'ATIVO'
+                                  ? '1px solid rgba(43,138,87,.45)'
+                                  : '1px solid rgba(245,158,11,.4)',
+                              fontSize:
+                                '10px',
+                              fontWeight:
+                                800,
+                            }}
+                          >
                             {
-                              genero.nome
+                              genero.situacao
                             }
-                          </b>
-
-                          <div className="muted">
-                            {genero
-                              .categoria
-                              ?.nome ||
-                              'Sem categoria'}
-                            {' · '}
-                            {
-                              genero
-                                .unidade
-                                .sigla
-                            }
-                          </div>
-
-                          <div className="muted">
-                            Lote:{' '}
-                            {genero.controlaLote
-                              ? 'Sim'
-                              : 'Não'}
-                            {' · '}
-                            Validade:{' '}
-                            {genero.controlaValidade
-                              ? 'Sim'
-                              : 'Não'}
-                          </div>
-
-                          <div className="muted">
-                            Estoque
-                            mínimo:{' '}
-                            {genero.estoqueMinimo ===
-                            null
-                              ? 'Não definido'
-                              : `${genero.estoqueMinimo} ${genero.unidade.sigla}`}
-                          </div>
-
-                          <div className="muted">
-                            Valor
-                            unitário de
-                            referência:{' '}
-                            {genero.valorUnitarioReferencia ===
-                            null
-                              ? 'Não definido'
-                              : `${formatarMoeda(
-                                  genero.valorUnitarioReferencia
-                                )}/${genero.unidade.sigla}`}
-                          </div>
-
-                          <div className="muted">
-                            Local
-                            habitual:{' '}
-                            {genero
-                              .localPadrao
-                              ?.nome ||
-                              'Não definido'}
-                          </div>
+                          </span>
                         </div>
 
                         <div
                           style={{
                             display:
-                              'flex',
-                            alignItems:
-                              'center',
+                              'grid',
+                            gridTemplateColumns:
+                              'repeat(2, minmax(0, 1fr))',
                             gap:
-                              '8px',
-                            flexWrap:
-                              'wrap',
+                              '11px 14px',
                           }}
                         >
-                          <span className="tag">
-                            {
-                              genero.situacao
+                          <CampoInfo
+                            titulo="Lote"
+                            valor={
+                              genero.controlaLote
+                                ? 'Sim'
+                                : 'Não'
                             }
-                          </span>
+                          />
 
-                          <button
-                            type="button"
-                            className="linkbtn"
-                            onClick={() =>
-                              iniciarEdicao(
-                                genero
-                              )
+                          <CampoInfo
+                            titulo="Validade"
+                            valor={
+                              genero.controlaValidade
+                                ? 'Sim'
+                                : 'Não'
                             }
-                          >
-                            Editar
-                          </button>
+                          />
+
+                          <CampoInfo
+                            titulo="Estoque mínimo"
+                            valor={
+                              genero.estoqueMinimo ===
+                              null
+                                ? 'Não definido'
+                                : `${genero.estoqueMinimo} ${genero.unidade.sigla}`
+                            }
+                          />
+
+                          <CampoInfo
+                            titulo="Local habitual"
+                            valor={
+                              genero
+                                .localPadrao
+                                ?.nome ||
+                              'Não definido'
+                            }
+                          />
                         </div>
+
+                        <div
+                          style={{
+                            marginTop:
+                              '11px',
+                            padding:
+                              '10px',
+                            borderRadius:
+                              '10px',
+                            background:
+                              '#0c1811',
+                            border:
+                              '1px solid rgba(255,255,255,.07)',
+                          }}
+                        >
+                          <CampoInfo
+                            titulo="Valor unitário de referência"
+                            valor={
+                              genero.valorUnitarioReferencia ===
+                              null
+                                ? 'Não definido'
+                                : `${formatarMoeda(
+                                    genero.valorUnitarioReferencia
+                                  )}/${genero.unidade.sigla}`
+                            }
+                          />
+                        </div>
+
+                        <button
+                          type="button"
+                          className="btn"
+                          onClick={() =>
+                            iniciarEdicao(
+                              genero
+                            )
+                          }
+                          style={{
+                            width: '100%',
+                            marginTop:
+                              '11px',
+                          }}
+                        >
+                          Editar gênero
+                        </button>
                       </>
                     )}
-                  </div>
+                  </article>
                 )
               )
             ) : (
-              <p className="muted">
-                Nenhum gênero{' '}
-                {classe}{' '}
-                cadastrado.
-              </p>
+              <div
+                style={{
+                  padding: '13px',
+                  borderRadius:
+                    '11px',
+                  background:
+                    '#102018',
+                  border:
+                    '1px solid #284334',
+                }}
+              >
+                <span className="muted">
+                  Nenhum gênero{' '}
+                  {classe} cadastrado.
+                </span>
+              </div>
             )}
 
             {sucesso &&
               !editando && (
-                <p role="status">
+                <div
+                  role="status"
+                  style={{
+                    padding: '11px',
+                    borderRadius:
+                      '10px',
+                    background:
+                      'rgba(43,138,87,.08)',
+                    border:
+                      '1px solid rgba(43,138,87,.4)',
+                    fontSize: '12px',
+                  }}
+                >
                   <strong>
                     ✓ {sucesso}
                   </strong>
-                </p>
+                </div>
               )}
-          </>
+          </div>
         )}
       </div>
     </>
