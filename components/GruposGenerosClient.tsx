@@ -20,26 +20,41 @@ type Grupo = {
 };
 
 export default function GruposGenerosClient() {
-  const [grupos, setGrupos] = useState<Grupo[]>([]);
-  const [erro, setErro] = useState('');
-  const [sucesso, setSucesso] = useState('');
+  const [grupos, setGrupos] =
+    useState<Grupo[]>([]);
 
-  const [mostrarGrupos, setMostrarGrupos] =
-    useState(false);
+  const [erro, setErro] =
+    useState('');
+
+  const [sucesso, setSucesso] =
+    useState('');
+
+  const [
+    mostrarGrupos,
+    setMostrarGrupos,
+  ] = useState(false);
 
   const [editando, setEditando] =
     useState<Grupo | null>(null);
 
-  const [nomeEdicao, setNomeEdicao] =
-    useState('');
+  const [
+    nomeEdicao,
+    setNomeEdicao,
+  ] = useState('');
 
-  const [descricaoEdicao, setDescricaoEdicao] =
-    useState('');
+  const [
+    descricaoEdicao,
+    setDescricaoEdicao,
+  ] = useState('');
 
-  const [situacaoEdicao, setSituacaoEdicao] =
+  const [
+    situacaoEdicao,
+    setSituacaoEdicao,
+  ] =
     useState<Situacao>('ATIVO');
 
-  const nomeRef = useRef<HTMLInputElement>(null);
+  const nomeRef =
+    useRef<HTMLInputElement>(null);
 
   async function carregarDados() {
     try {
@@ -50,13 +65,15 @@ export default function GruposGenerosClient() {
         }
       );
 
-      const dados = await resposta.json();
+      const dados =
+        await resposta.json();
 
       if (!resposta.ok) {
         setErro(
           dados.error ||
             'Não foi possível carregar os grupos.'
         );
+
         return;
       }
 
@@ -77,8 +94,11 @@ export default function GruposGenerosClient() {
   ) {
     ev.preventDefault();
 
-    const form = ev.currentTarget;
-    const dados = new FormData(form);
+    const form =
+      ev.currentTarget;
+
+    const dados =
+      new FormData(form);
 
     setErro('');
     setSucesso('');
@@ -89,7 +109,8 @@ export default function GruposGenerosClient() {
         {
           method: 'POST',
           headers: {
-            'content-type': 'application/json',
+            'content-type':
+              'application/json',
           },
           body: JSON.stringify({
             nome: String(
@@ -98,19 +119,23 @@ export default function GruposGenerosClient() {
 
             descricao:
               String(
-                dados.get('descricao') || ''
+                dados.get(
+                  'descricao'
+                ) || ''
               ).trim() || null,
           }),
         }
       );
 
-      const resultado = await resposta.json();
+      const resultado =
+        await resposta.json();
 
       if (!resposta.ok) {
         setErro(
           resultado.error ||
             'Não foi possível cadastrar o grupo.'
         );
+
         return;
       }
 
@@ -130,11 +155,23 @@ export default function GruposGenerosClient() {
     }
   }
 
-  function iniciarEdicao(grupo: Grupo) {
+  function iniciarEdicao(
+    grupo: Grupo
+  ) {
     setEditando(grupo);
-    setNomeEdicao(grupo.nome);
-    setDescricaoEdicao(grupo.descricao || '');
-    setSituacaoEdicao(grupo.situacao);
+
+    setNomeEdicao(
+      grupo.nome
+    );
+
+    setDescricaoEdicao(
+      grupo.descricao || ''
+    );
+
+    setSituacaoEdicao(
+      grupo.situacao
+    );
+
     setErro('');
     setSucesso('');
   }
@@ -165,25 +202,33 @@ export default function GruposGenerosClient() {
         {
           method: 'PUT',
           headers: {
-            'content-type': 'application/json',
+            'content-type':
+              'application/json',
           },
           body: JSON.stringify({
             id: editando.id,
-            nome: nomeEdicao.trim(),
+            nome:
+              nomeEdicao.trim(),
+
             descricao:
-              descricaoEdicao.trim() || null,
-            situacao: situacaoEdicao,
+              descricaoEdicao.trim() ||
+              null,
+
+            situacao:
+              situacaoEdicao,
           }),
         }
       );
 
-      const resultado = await resposta.json();
+      const resultado =
+        await resposta.json();
 
       if (!resposta.ok) {
         setErro(
           resultado.error ||
             'Não foi possível alterar o grupo.'
         );
+
         return;
       }
 
@@ -206,66 +251,183 @@ export default function GruposGenerosClient() {
 
   return (
     <>
-      <div className="card">
-        <h2>Novo grupo</h2>
+      <div
+        style={{
+          padding: '13px',
+          borderRadius: '12px',
+          background: '#0c1811',
+          border:
+            '1px solid #284334',
+          marginBottom: '16px',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            justifyContent:
+              'space-between',
+            alignItems:
+              'flex-start',
+            gap: '10px',
+            marginBottom: '15px',
+          }}
+        >
+          <div>
+            <strong
+              style={{
+                fontSize: '15px',
+              }}
+            >
+              Novo grupo
+            </strong>
 
-        <p className="muted">
-          Os grupos organizam as categorias do
-          estoque em grandes setores, facilitando
-          consultas, relatórios e planejamento.
-        </p>
+            <div
+              className="muted"
+              style={{
+                marginTop: '3px',
+                fontSize: '11px',
+                lineHeight: 1.4,
+              }}
+            >
+              Crie um grupo para
+              organizar categorias
+              semelhantes do estoque.
+            </div>
+          </div>
 
-        <form onSubmit={adicionar}>
-          <label>Nome do grupo</label>
+          <span
+            style={{
+              padding: '5px 8px',
+              borderRadius: '999px',
+              background: '#183d2a',
+              border:
+                '1px solid #284334',
+              fontSize: '10px',
+              fontWeight: 800,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            GRUPO
+          </span>
+        </div>
 
-          <input
-            ref={nomeRef}
-            name="nome"
-            required
-            autoFocus
-            maxLength={80}
-            placeholder="Ex.: Carnes"
-          />
+        <form
+          onSubmit={adicionar}
+          style={{
+            display: 'grid',
+            gap: '13px',
+          }}
+        >
+          <label>
+            Nome do grupo
 
-          <label>Descrição</label>
+            <input
+              ref={nomeRef}
+              name="nome"
+              required
+              autoFocus
+              maxLength={80}
+              placeholder="Ex.: Carnes"
+            />
+          </label>
 
-          <input
-            name="descricao"
-            maxLength={200}
-            placeholder="Ex.: Carnes bovinas, aves, suínos e peixes"
-          />
+          <label>
+            Descrição
+
+            <input
+              name="descricao"
+              maxLength={200}
+              placeholder="Ex.: Carnes bovinas, aves, suínos e peixes"
+            />
+          </label>
+
+          <div
+            style={{
+              padding: '10px 11px',
+              borderRadius: '10px',
+              background:
+                'rgba(43,138,87,.06)',
+              border:
+                '1px solid rgba(43,138,87,.3)',
+            }}
+          >
+            <span
+              className="muted"
+              style={{
+                fontSize: '11px',
+                lineHeight: 1.45,
+              }}
+            >
+              Depois de cadastrar o
+              grupo, ele poderá ser
+              selecionado no cadastro
+              das categorias.
+            </span>
+          </div>
 
           <button
             className="btn"
             type="submit"
+            style={{
+              width: '100%',
+              minHeight: '46px',
+            }}
           >
             Adicionar grupo
           </button>
 
-          {sucesso && !editando && (
-            <p role="status">
-              <strong>✓ {sucesso}</strong>
-            </p>
-          )}
+          {sucesso &&
+            !editando && (
+              <div
+                role="status"
+                style={{
+                  padding: '11px',
+                  borderRadius: '10px',
+                  background:
+                    'rgba(43,138,87,.08)',
+                  border:
+                    '1px solid rgba(43,138,87,.4)',
+                  fontSize: '12px',
+                }}
+              >
+                <strong>
+                  ✓ {sucesso}
+                </strong>
+              </div>
+            )}
 
-          {erro && !editando && (
-            <p
-              className="error"
-              role="alert"
-            >
-              {erro}
-            </p>
-          )}
+          {erro &&
+            !editando && (
+              <div
+                className="error"
+                role="alert"
+              >
+                {erro}
+              </div>
+            )}
         </form>
       </div>
 
-      <div className="card">
+      <div
+        style={{
+          padding: '13px',
+          borderRadius: '12px',
+          background: '#0c1811',
+          border:
+            '1px solid #284334',
+        }}
+      >
         <button
           type="button"
-          className="linkbtn"
+          className="btn"
           onClick={() =>
-            setMostrarGrupos(!mostrarGrupos)
+            setMostrarGrupos(
+              !mostrarGrupos
+            )
           }
+          style={{
+            width: '100%',
+          }}
         >
           {mostrarGrupos
             ? 'Ocultar grupos cadastrados'
@@ -273,158 +435,384 @@ export default function GruposGenerosClient() {
         </button>
 
         {mostrarGrupos && (
-          <>
-            <h2>Grupos cadastrados</h2>
+          <div
+            style={{
+              display: 'grid',
+              gap: '10px',
+              marginTop: '14px',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                justifyContent:
+                  'space-between',
+                alignItems: 'center',
+                gap: '10px',
+              }}
+            >
+              <strong>
+                Grupos cadastrados
+              </strong>
+
+              <span
+                className="muted"
+                style={{
+                  fontSize: '11px',
+                }}
+              >
+                {grupos.length}{' '}
+                grupo(s)
+              </span>
+            </div>
 
             {grupos.length > 0 ? (
-              grupos.map((grupo) => (
-                <div
-                  className="row"
-                  key={grupo.id}
-                >
-                  {editando?.id === grupo.id ? (
-                    <form
-                      onSubmit={salvarEdicao}
-                      style={{
-                        width: '100%',
-                      }}
-                    >
-                      <h3>Editar grupo</h3>
-
-                      <label>Nome</label>
-
-                      <input
-                        value={nomeEdicao}
-                        onChange={(e) =>
-                          setNomeEdicao(
-                            e.target.value
-                          )
+              grupos.map(
+                (grupo) => (
+                  <article
+                    key={grupo.id}
+                    style={{
+                      padding: '13px',
+                      borderRadius:
+                        '12px',
+                      background:
+                        '#102018',
+                      border:
+                        editando?.id ===
+                        grupo.id
+                          ? '1px solid rgba(43,138,87,.75)'
+                          : '1px solid #284334',
+                    }}
+                  >
+                    {editando?.id ===
+                    grupo.id ? (
+                      <form
+                        onSubmit={
+                          salvarEdicao
                         }
-                        required
-                        maxLength={80}
-                        autoFocus
-                      />
-
-                      <label>Descrição</label>
-
-                      <input
-                        value={descricaoEdicao}
-                        onChange={(e) =>
-                          setDescricaoEdicao(
-                            e.target.value
-                          )
-                        }
-                        maxLength={200}
-                      />
-
-                      <label>Situação</label>
-
-                      <select
-                        value={situacaoEdicao}
-                        onChange={(e) =>
-                          setSituacaoEdicao(
-                            e.target
-                              .value as Situacao
-                          )
-                        }
-                      >
-                        <option value="ATIVO">
-                          Ativo
-                        </option>
-
-                        <option value="INATIVO">
-                          Inativo
-                        </option>
-                      </select>
-
-                      <div
                         style={{
-                          display: 'flex',
-                          gap: '8px',
-                          marginTop: '12px',
-                          flexWrap: 'wrap',
+                          display:
+                            'grid',
+                          gap: '13px',
                         }}
                       >
+                        <div>
+                          <strong
+                            style={{
+                              fontSize:
+                                '15px',
+                            }}
+                          >
+                            Editar grupo
+                          </strong>
+
+                          <div
+                            className="muted"
+                            style={{
+                              marginTop:
+                                '3px',
+                              fontSize:
+                                '11px',
+                            }}
+                          >
+                            Atualize os
+                            dados e a
+                            situação deste
+                            grupo.
+                          </div>
+                        </div>
+
+                        <label>
+                          Nome
+
+                          <input
+                            value={
+                              nomeEdicao
+                            }
+                            onChange={(e) =>
+                              setNomeEdicao(
+                                e.target
+                                  .value
+                              )
+                            }
+                            required
+                            maxLength={80}
+                            autoFocus
+                          />
+                        </label>
+
+                        <label>
+                          Descrição
+
+                          <input
+                            value={
+                              descricaoEdicao
+                            }
+                            onChange={(e) =>
+                              setDescricaoEdicao(
+                                e.target
+                                  .value
+                              )
+                            }
+                            maxLength={200}
+                          />
+                        </label>
+
+                        <label>
+                          Situação
+
+                          <select
+                            value={
+                              situacaoEdicao
+                            }
+                            onChange={(e) =>
+                              setSituacaoEdicao(
+                                e.target
+                                  .value as Situacao
+                              )
+                            }
+                          >
+                            <option value="ATIVO">
+                              Ativo
+                            </option>
+
+                            <option value="INATIVO">
+                              Inativo
+                            </option>
+                          </select>
+                        </label>
+
+                        {erro && (
+                          <div
+                            className="error"
+                            role="alert"
+                          >
+                            {erro}
+                          </div>
+                        )}
+
+                        <div
+                          style={{
+                            display:
+                              'grid',
+                            gridTemplateColumns:
+                              'repeat(2, minmax(0, 1fr))',
+                            gap: '8px',
+                          }}
+                        >
+                          <button
+                            className="btn"
+                            type="submit"
+                          >
+                            Salvar
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={
+                              cancelarEdicao
+                            }
+                            style={{
+                              minHeight:
+                                '44px',
+                              borderRadius:
+                                '11px',
+                              border:
+                                '1px solid #284334',
+                              background:
+                                '#0c1811',
+                              color:
+                                '#fff',
+                              fontWeight:
+                                700,
+                              cursor:
+                                'pointer',
+                            }}
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      </form>
+                    ) : (
+                      <>
+                        <div
+                          style={{
+                            display:
+                              'flex',
+                            justifyContent:
+                              'space-between',
+                            alignItems:
+                              'flex-start',
+                            gap: '10px',
+                            paddingBottom:
+                              '10px',
+                            marginBottom:
+                              '11px',
+                            borderBottom:
+                              '1px solid rgba(255,255,255,.07)',
+                          }}
+                        >
+                          <div
+                            style={{
+                              minWidth: 0,
+                              flex: 1,
+                            }}
+                          >
+                            <strong
+                              style={{
+                                display:
+                                  'block',
+                                fontSize:
+                                  '14px',
+                              }}
+                            >
+                              {grupo.nome}
+                            </strong>
+
+                            <div
+                              className="muted"
+                              style={{
+                                marginTop:
+                                  '4px',
+                                fontSize:
+                                  '11px',
+                                lineHeight:
+                                  1.45,
+                              }}
+                            >
+                              {grupo.descricao ||
+                                'Sem descrição'}
+                            </div>
+                          </div>
+
+                          <span
+                            style={{
+                              padding:
+                                '4px 7px',
+                              borderRadius:
+                                '999px',
+                              background:
+                                grupo.situacao ===
+                                'ATIVO'
+                                  ? 'rgba(43,138,87,.12)'
+                                  : 'rgba(245,158,11,.10)',
+                              border:
+                                grupo.situacao ===
+                                'ATIVO'
+                                  ? '1px solid rgba(43,138,87,.45)'
+                                  : '1px solid rgba(245,158,11,.4)',
+                              fontSize:
+                                '10px',
+                              fontWeight:
+                                800,
+                              whiteSpace:
+                                'nowrap',
+                            }}
+                          >
+                            {
+                              grupo.situacao
+                            }
+                          </span>
+                        </div>
+
+                        <div
+                          style={{
+                            padding:
+                              '10px 11px',
+                            borderRadius:
+                              '10px',
+                            background:
+                              '#0c1811',
+                            border:
+                              '1px solid #284334',
+                          }}
+                        >
+                          <div
+                            className="muted"
+                            style={{
+                              fontSize:
+                                '10px',
+                              marginBottom:
+                                '2px',
+                            }}
+                          >
+                            Categorias
+                            vinculadas
+                          </div>
+
+                          <strong
+                            style={{
+                              fontSize:
+                                '14px',
+                            }}
+                          >
+                            {grupo._count
+                              ?.categorias ??
+                              0}
+                          </strong>
+                        </div>
+
                         <button
+                          type="button"
                           className="btn"
-                          type="submit"
-                        >
-                          Salvar alterações
-                        </button>
-
-                        <button
-                          className="linkbtn"
-                          type="button"
-                          onClick={cancelarEdicao}
-                        >
-                          Cancelar
-                        </button>
-                      </div>
-
-                      {erro && (
-                        <p
-                          className="error"
-                          role="alert"
-                        >
-                          {erro}
-                        </p>
-                      )}
-                    </form>
-                  ) : (
-                    <>
-                      <div>
-                        <b>{grupo.nome}</b>
-
-                        <div className="muted">
-                          {grupo.descricao ||
-                            'Sem descrição'}
-                        </div>
-
-                        <div className="muted">
-                          Categorias vinculadas:{' '}
-                          {grupo._count
-                            ?.categorias ?? 0}
-                        </div>
-                      </div>
-
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '8px',
-                          flexWrap: 'wrap',
-                        }}
-                      >
-                        <span className="tag">
-                          {grupo.situacao}
-                        </span>
-
-                        <button
-                          type="button"
-                          className="linkbtn"
                           onClick={() =>
-                            iniciarEdicao(grupo)
+                            iniciarEdicao(
+                              grupo
+                            )
                           }
+                          style={{
+                            width: '100%',
+                            marginTop:
+                              '12px',
+                          }}
                         >
-                          Editar
+                          Editar grupo
                         </button>
-                      </div>
-                    </>
-                  )}
-                </div>
-              ))
+                      </>
+                    )}
+                  </article>
+                )
+              )
             ) : (
-              <p className="muted">
-                Nenhum grupo cadastrado.
-              </p>
+              <div
+                style={{
+                  padding: '13px',
+                  borderRadius:
+                    '11px',
+                  background:
+                    '#102018',
+                  border:
+                    '1px solid #284334',
+                }}
+              >
+                <span className="muted">
+                  Nenhum grupo
+                  cadastrado.
+                </span>
+              </div>
             )}
 
-            {sucesso && !editando && (
-              <p role="status">
-                <strong>✓ {sucesso}</strong>
-              </p>
-            )}
-          </>
+            {sucesso &&
+              !editando && (
+                <div
+                  role="status"
+                  style={{
+                    padding: '11px',
+                    borderRadius:
+                      '10px',
+                    background:
+                      'rgba(43,138,87,.08)',
+                    border:
+                      '1px solid rgba(43,138,87,.4)',
+                    fontSize: '12px',
+                  }}
+                >
+                  <strong>
+                    ✓ {sucesso}
+                  </strong>
+                </div>
+              )}
+          </div>
         )}
       </div>
     </>
