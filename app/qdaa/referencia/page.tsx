@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import {
+  Suspense,
   useEffect,
   useMemo,
   useState,
@@ -75,7 +76,7 @@ function formatarNumero(
   );
 }
 
-export default function ReferenciaQSPage() {
+function ReferenciaQSContent() {
   const router = useRouter();
 
   const searchParams =
@@ -414,11 +415,6 @@ export default function ReferenciaQSPage() {
           'Referência registrada com sucesso.'
       );
 
-      /*
-       * Recarrega a lista para
-       * atualizar quais gêneros
-       * ainda estão pendentes.
-       */
       const params =
         new URLSearchParams({
           historico:
@@ -498,9 +494,7 @@ export default function ReferenciaQSPage() {
 
   if (carregando) {
     return (
-      <main
-        className="narrow"
-      >
+      <main className="narrow">
         <Link
           href="/qdaa"
           className="back"
@@ -527,9 +521,7 @@ export default function ReferenciaQSPage() {
     !genero
   ) {
     return (
-      <main
-        className="narrow"
-      >
+      <main className="narrow">
         <Link
           href="/qdaa"
           className="back"
@@ -561,9 +553,7 @@ export default function ReferenciaQSPage() {
     );
 
   return (
-    <main
-      className="narrow"
-    >
+    <main className="narrow">
       <div
         style={{
           display: 'flex',
@@ -885,5 +875,33 @@ export default function ReferenciaQSPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+function CarregandoReferencia() {
+  return (
+    <main className="narrow">
+      <div className="card">
+        <h1>
+          Referência de Consumo QS
+        </h1>
+
+        <p className="muted">
+          Carregando...
+        </p>
+      </div>
+    </main>
+  );
+}
+
+export default function ReferenciaQSPage() {
+  return (
+    <Suspense
+      fallback={
+        <CarregandoReferencia />
+      }
+    >
+      <ReferenciaQSContent />
+    </Suspense>
   );
 }
