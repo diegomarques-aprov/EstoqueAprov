@@ -5,6 +5,8 @@ import { requireAdmin } from '@/lib/guard';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+const MESES_CICLO_RESSUPRIMENTO_QS = 2;
+
 const itemSchema = z.object({
   generoId: z.string().min(1),
 
@@ -47,7 +49,18 @@ const bodySchema = z.object({
     z.number().int().min(1).max(12),
 
   mesesCiclo:
-    z.number().int().min(1).max(12),
+    z
+      .number()
+      .int()
+      .refine(
+        (valor) =>
+          valor ===
+          MESES_CICLO_RESSUPRIMENTO_QS,
+        {
+          message:
+            'O Ressuprimento QS normal deve possuir ciclo bimestral de 2 meses.',
+        }
+      ),
 
   margemSegurancaPercent:
     z.number().min(0).max(100),
@@ -356,6 +369,9 @@ export async function GET(req: Request) {
  *
  * Um planejamento FINALIZADO não pode ser
  * silenciosamente alterado.
+ *
+ * O Ressuprimento QS normal possui ciclo
+ * obrigatoriamente BIMESTRAL.
  */
 
 export async function POST(req: Request) {
@@ -385,9 +401,18 @@ export async function POST(req: Request) {
     bodySchema.safeParse(json);
 
   if (!parsed.success) {
+    const erroCiclo =
+      parsed.error.issues.find(
+        (issue) =>
+          issue.path.includes(
+            'mesesCiclo'
+          )
+      );
+
     return Response.json(
       {
         error:
+          erroCiclo?.message ||
           'Revise os dados do planejamento de ressuprimento QS.',
       },
       {
@@ -411,6 +436,31 @@ export async function POST(req: Request) {
    * VALIDAÇÕES
    * =====================================================
    */
+
+  /*
+   * Proteção adicional da regra operacional.
+   *
+   * O Ressuprimento QS NORMAL é sempre
+   * bimestral.
+   *
+   * Ressuprimentos complementares serão
+   * registrados separadamente e vinculados
+   * ao planejamento normal já finalizado.
+   */
+  if (
+    mesesCiclo !==
+    MESES_CICLO_RESSUPRIMENTO_QS
+  ) {
+    return Response.json(
+      {
+        error:
+          'O Ressuprimento QS normal deve possuir ciclo bimestral de 2 meses.',
+      },
+      {
+        status: 400,
+      }
+    );
+  }
 
   const idsGeneros =
     itens.map(
@@ -621,7 +671,8 @@ export async function POST(req: Request) {
                 data: {
                   mesesHistorico,
 
-                  mesesCiclo,
+                  mesesCiclo:
+                    MESES_CICLO_RESSUPRIMENTO_QS,
 
                   margemSegurancaPercent,
 
@@ -706,7 +757,8 @@ export async function POST(req: Request) {
                 dadosNovos: {
                   mesesHistorico,
 
-                  mesesCiclo,
+                  mesesCiclo:
+                    MESES_CICLO_RESSUPRIMENTO_QS,
 
                   margemSegurancaPercent,
 
@@ -756,8 +808,8 @@ export async function POST(req: Request) {
         mensagem:
           resultado.status ===
           'FINALIZADO'
-            ? 'Planejamento de Ressuprimento QS finalizado e registrado.'
-            : 'Rascunho do Ressuprimento QS atualizado.',
+            ? 'Planejamento bimestral de Ressuprimento QS finalizado e registrado.'
+            : 'Rascunho do Ressuprimento QS bimestral atualizado.',
       });
     } catch (error) {
       console.error(error);
@@ -792,7 +844,8 @@ export async function POST(req: Request) {
 
                 mesesHistorico,
 
-                mesesCiclo,
+                mesesCiclo:
+                  MESES_CICLO_RESSUPRIMENTO_QS,
 
                 margemSegurancaPercent,
 
@@ -878,7 +931,8 @@ export async function POST(req: Request) {
 
                 mesesHistorico,
 
-                mesesCiclo,
+                mesesCiclo:
+                  MESES_CICLO_RESSUPRIMENTO_QS,
 
                 margemSegurancaPercent,
 
@@ -946,8 +1000,8 @@ export async function POST(req: Request) {
       mensagem:
         resultado.status ===
         'FINALIZADO'
-          ? 'Planejamento de Ressuprimento QS finalizado e registrado.'
-          : 'Rascunho do Ressuprimento QS salvo.',
+          ? 'Planejamento bimestral de Ressuprimento QS finalizado e registrado.'
+          : 'Rascunho do Ressuprimento QS bimestral salvo.',
     });
   } catch (error) {
     console.error(error);
