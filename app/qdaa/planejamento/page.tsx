@@ -1,0 +1,1487 @@
+'use client';
+
+import Link from 'next/link';
+
+import {
+  useEffect,
+  useState,
+} from 'react';
+
+import NavegacaoInferior from '@/components/NavegacaoInferior';
+
+type DecisaoPlanejamento = {
+  quantidade: string;
+  justificativa: string;
+};
+
+function numeroCampo(
+  valor: string
+) {
+  const convertido = Number(
+    valor.replace(',', '.')
+  );
+
+  return Number.isFinite(
+    convertido
+  )
+    ? convertido
+    : null;
+}
+
+function formatarNumero(
+  valor: unknown
+) {
+  if (
+    valor === null ||
+    valor === undefined
+  ) {
+    return '—';
+  }
+
+  return Number(
+    valor
+  ).toLocaleString(
+    'pt-BR',
+    {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 3,
+    }
+  );
+}
+
+function diferente(
+  a: number,
+  b: number
+) {
+  return (
+    Math.abs(a - b) >
+    0.0005
+  );
+}
+
+function origemTexto(
+  origem: string
+) {
+  if (
+    origem ===
+    'HISTORICO_ESTOQUEAPROV'
+  ) {
+    return 'Histórico do EstoqueAprov';
+  }
+
+  if (
+    origem ===
+    'REFERENCIA_INICIAL'
+  ) {
+    return 'Referência inicial';
+  }
+
+  return 'Sem base de cálculo';
+}
+
+function Indicador({
+  titulo,
+  valor,
+  alerta = false,
+}: {
+  titulo: string;
+  valor: unknown;
+  alerta?: boolean;
+}) {
+  return (
+    <div
+      style={{
+        padding: '10px',
+        borderRadius: '10px',
+        background: alerta
+          ? 'rgba(245,158,11,.07)'
+          : '#0c1811',
+        border: alerta
+          ? '1px solid rgba(245,158,11,.5)'
+          : '1px solid #284334',
+      }}
+    >
+      <div
+        className="muted"
+        style={{
+          fontSize: '11px',
+          lineHeight: 1.3,
+        }}
+      >
+        {titulo}
+      </div>
+
+      <strong
+        style={{
+          display: 'block',
+          marginTop: '3px',
+          fontSize: '19px',
+        }}
+      >
+        {String(valor)}
+      </strong>
+    </div>
+  );
+}
+
+function Dado({
+  titulo,
+  valor,
+  forte = false,
+}: {
+  titulo: string;
+  valor: React.ReactNode;
+  forte?: boolean;
+}) {
+  return (
+    <div>
+      <div
+        className="muted"
+        style={{
+          fontSize: '11px',
+          marginBottom: '3px',
+        }}
+      >
+        {titulo}
+      </div>
+
+      <div
+        style={{
+          fontSize: '14px',
+          fontWeight:
+            forte ? 800 : 600,
+          lineHeight: 1.35,
+        }}
+      >
+        {valor}
+      </div>
+    </div>
+  );
+}
+
+export default function PlanejamentoQDAAPage() {
+  const [
+    ressuprimento,
+    setRessuprimento,
+  ] = useState<any>(null);
+
+  const [
+    carregando,
+    setCarregando,
+  ] = useState(false);
+
+  const [
+    erro,
+    setErro,
+  ] = useState('');
+
+  const [
+    mesesHistorico,
+    setMesesHistorico,
+  ] = useState(2);
+
+  const [
+    mesesCiclo,
+    setMesesCiclo,
+  ] = useState(2);
+
+  const [
+    margemSeguranca,
+    setMargemSeguranca,
+  ] = useState(10);
+
+  const [
+    decisoes,
+    setDecisoes,
+  ] = useState<
+    Record<
+      string,
+      DecisaoPlanejamento
+    >
+  >({});
+
+  const [
+    generoAberto,
+    setGeneroAberto,
+  ] = useState<string | null>(
+    null
+  );
+
+  const [
+    planejamentoId,
+    setPlanejamentoId,
+  ] = useState<
+    string | null
+  >(null);
+
+  const [
+    statusPlanejamento,
+    setStatusPlanejamento,
+  ] = useState<
+    | 'NOVO'
+    | 'RASCUNHO'
+    | 'FINALIZADO'
+  >('NOVO');
+
+  const [
+    observacao,
+    setObservacao,
+  ] = useState('');
+
+  const [
+    salvando,
+    setSalvando,
+  ] = useState(false);
+
+  const [
+    erroPlanejamento,
+    setErroPlanejamento,
+  ] = useState('');
+
+  const [
+    mensagem,
+    setMensagem,
+  ] = useState('');
+
+  async function carregarRessuprimento() {
+    setErro('');
+    setErroPlanejamento('');
+    setMensagem('');
+    setCarregando(true);
+
+    try {
+      const params =
+        new URLSearchParams({
+          historico:
+            String(
+              mesesHistorico
+            ),
+          ciclo:
+            String(
+              mesesCiclo
+            ),
+          margem:
+            String(
+              margemSeguranca
+            ),
+        });
+
+      const resposta =
+        await fetch(
+          `/api/relatorios/ressuprimento-qs?${params.toString()}`
+        );
+
+      const json =
+        await resposta.json();
+
+      if (!resposta.ok) {
+        setErro(
+          json.error ||
+            'Não foi possível calcular o ressuprimento QS.'
+        );
+
+        return;
+      }
+
+      setRessuprimento(json);
+
+      const novasDecisoes:
+        Record<
+          string,
+          DecisaoPlanejamento
+        > = {};
+
+      for (
+        const item of json.itens
+      ) {
+        if (
+          item.quantidadeSugerida !==
+          null
+        ) {
+          novasDecisoes[
+            item.generoId
+          ] = {
+            quantidade:
+              String(
+                item.quantidadeSugerida
+              ),
+            justificativa: '',
+          };
+        }
+      }
+
+      setDecisoes(
+        novasDecisoes
+      );
+
+      setGeneroAberto(null);
+      setPlanejamentoId(null);
+      setStatusPlanejamento(
+        'NOVO'
+      );
+      setObservacao('');
+    } catch {
+      setErro(
+        'Não foi possível calcular o ressuprimento QS.'
+      );
+    } finally {
+      setCarregando(false);
+    }
+  }
+
+  useEffect(() => {
+    carregarRessuprimento();
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function alternarGenero(
+    generoId: string
+  ) {
+    setGeneroAberto(
+      (atual) =>
+        atual === generoId
+          ? null
+          : generoId
+    );
+  }
+
+  function alterarQuantidade(
+    generoId: string,
+    valor: string
+  ) {
+    setDecisoes(
+      (atual) => ({
+        ...atual,
+
+        [generoId]: {
+          quantidade: valor,
+
+          justificativa:
+            atual[generoId]
+              ?.justificativa ||
+            '',
+        },
+      })
+    );
+
+    setMensagem('');
+    setErroPlanejamento('');
+  }
+
+  function alterarJustificativa(
+    generoId: string,
+    valor: string
+  ) {
+    setDecisoes(
+      (atual) => ({
+        ...atual,
+
+        [generoId]: {
+          quantidade:
+            atual[generoId]
+              ?.quantidade ||
+            '',
+
+          justificativa:
+            valor,
+        },
+      })
+    );
+
+    setMensagem('');
+    setErroPlanejamento('');
+  }
+
+  async function salvarPlanejamento(
+    finalizar: boolean
+  ) {
+    if (!ressuprimento) {
+      return;
+    }
+
+    const itensCalculados =
+      ressuprimento.itens.filter(
+        (item: any) =>
+          item.quantidadeSugerida !==
+            null &&
+          item.mediaMensalUtilizada !==
+            null &&
+          item.consumoProjetado !==
+            null &&
+          item.estoqueSeguranca !==
+            null
+      );
+
+    if (
+      itensCalculados.length ===
+      0
+    ) {
+      setErroPlanejamento(
+        'Para salvar o planejamento, informe primeiro as referências de consumo pendentes.'
+      );
+
+      return;
+    }
+
+    if (
+      finalizar &&
+      ressuprimento.itens.some(
+        (item: any) =>
+          item.quantidadeSugerida ===
+          null
+      )
+    ) {
+      setErroPlanejamento(
+        'Para finalizar, ainda existem gêneros QS sem base de cálculo.'
+      );
+
+      return;
+    }
+
+    const itens: any[] = [];
+
+    for (
+      const item of itensCalculados
+    ) {
+      const decisao =
+        decisoes[
+          item.generoId
+        ];
+
+      const quantidadePlanejada =
+        numeroCampo(
+          decisao?.quantidade ||
+            ''
+        );
+
+      if (
+        quantidadePlanejada ===
+          null ||
+        quantidadePlanejada < 0
+      ) {
+        setErroPlanejamento(
+          `Informe uma quantidade válida para ${item.genero}.`
+        );
+
+        return;
+      }
+
+      const alterado =
+        diferente(
+          quantidadePlanejada,
+          Number(
+            item
+              .quantidadeSugerida
+          )
+        );
+
+      const justificativa =
+        decisao
+          ?.justificativa
+          ?.trim() || '';
+
+      if (
+        alterado &&
+        !justificativa
+      ) {
+        setErroPlanejamento(
+          `Informe a justificativa da alteração de ${item.genero}.`
+        );
+
+        setGeneroAberto(
+          item.generoId
+        );
+
+        return;
+      }
+
+      itens.push({
+        generoId:
+          item.generoId,
+
+        origemMedia:
+          item.origemMedia,
+
+        mediaMensalUtilizada:
+          Number(
+            item
+              .mediaMensalUtilizada
+          ),
+
+        consumoProjetado:
+          Number(
+            item
+              .consumoProjetado
+          ),
+
+        estoqueSeguranca:
+          Number(
+            item
+              .estoqueSeguranca
+          ),
+
+        estoqueDisponivel:
+          Number(
+            item
+              .estoqueDisponivel
+          ),
+
+        previstoReceber:
+          Number(
+            item
+              .previstoReceber ||
+              0
+          ),
+
+        quantidadeSugerida:
+          Number(
+            item
+              .quantidadeSugerida
+          ),
+
+        quantidadePlanejada,
+
+        justificativaAlteracao:
+          alterado
+            ? justificativa
+            : null,
+      });
+    }
+
+    if (
+      finalizar &&
+      !window.confirm(
+        'Confirma a finalização do Planejamento de Ressuprimento QS? Após finalizar, ele ficará preservado no histórico e não poderá ser alterado.'
+      )
+    ) {
+      return;
+    }
+
+    setErroPlanejamento('');
+    setMensagem('');
+    setSalvando(true);
+
+    try {
+      const resposta =
+        await fetch(
+          '/api/relatorios/planejamento-ressuprimento-qs',
+          {
+            method: 'POST',
+
+            headers: {
+              'Content-Type':
+                'application/json',
+            },
+
+            body:
+              JSON.stringify({
+                planejamentoId,
+
+                mesesHistorico,
+
+                mesesCiclo,
+
+                margemSegurancaPercent:
+                  margemSeguranca,
+
+                observacao:
+                  observacao
+                    .trim() ||
+                  null,
+
+                finalizar,
+
+                itens,
+              }),
+          }
+        );
+
+      const json =
+        await resposta.json();
+
+      if (!resposta.ok) {
+        setErroPlanejamento(
+          json.error ||
+            'Não foi possível salvar o planejamento.'
+        );
+
+        return;
+      }
+
+      setPlanejamentoId(
+        json.planejamentoId
+      );
+
+      setStatusPlanejamento(
+        json.status
+      );
+
+      setMensagem(
+        json.mensagem ||
+          'Planejamento registrado.'
+      );
+    } catch {
+      setErroPlanejamento(
+        'Não foi possível salvar o planejamento de Ressuprimento QS.'
+      );
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  const quantidadeSemBase =
+    ressuprimento
+      ?.itens?.filter(
+        (item: any) =>
+          item.quantidadeSugerida ===
+          null
+      ).length || 0;
+
+  return (
+    <main>
+      <header
+        style={{
+          marginBottom: '16px',
+        }}
+      >
+        <Link
+          href="/qdaa"
+          className="back"
+        >
+          ← QDAA
+        </Link>
+
+        <div
+          style={{
+            marginTop: '14px',
+          }}
+        >
+          <h1
+            style={{
+              margin: 0,
+              fontSize: '22px',
+              lineHeight: 1.2,
+            }}
+          >
+            Planejamento de Ressuprimento QS
+          </h1>
+
+          <p
+            className="muted"
+            style={{
+              margin: '5px 0 0',
+              fontSize: '14px',
+              lineHeight: 1.4,
+            }}
+          >
+            Calcule e defina a necessidade do próximo ciclo.
+          </p>
+        </div>
+      </header>
+
+      <section
+        style={{
+          padding: '13px',
+          borderRadius: '12px',
+          border: '1px solid #284334',
+          background: '#0c1811',
+        }}
+      >
+        <strong>
+          Parâmetros
+        </strong>
+
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns:
+              'repeat(auto-fit, minmax(120px, 1fr))',
+            gap: '9px',
+            marginTop: '10px',
+          }}
+        >
+          <label>
+            Histórico
+
+            <select
+              value={
+                mesesHistorico
+              }
+              disabled={
+                statusPlanejamento ===
+                'FINALIZADO'
+              }
+              onChange={(e) =>
+                setMesesHistorico(
+                  Number(
+                    e.target.value
+                  )
+                )
+              }
+            >
+              <option value={1}>
+                1 mês
+              </option>
+
+              <option value={2}>
+                2 meses
+              </option>
+
+              <option value={3}>
+                3 meses
+              </option>
+
+              <option value={6}>
+                6 meses
+              </option>
+            </select>
+          </label>
+
+          <label>
+            Ciclo
+
+            <select
+              value={
+                mesesCiclo
+              }
+              disabled={
+                statusPlanejamento ===
+                'FINALIZADO'
+              }
+              onChange={(e) =>
+                setMesesCiclo(
+                  Number(
+                    e.target.value
+                  )
+                )
+              }
+            >
+              <option value={1}>
+                1 mês
+              </option>
+
+              <option value={2}>
+                2 meses
+              </option>
+
+              <option value={3}>
+                3 meses
+              </option>
+            </select>
+          </label>
+
+          <label>
+            Segurança (%)
+
+            <input
+              type="number"
+              min="0"
+              max="100"
+              step="1"
+              value={
+                margemSeguranca
+              }
+              disabled={
+                statusPlanejamento ===
+                'FINALIZADO'
+              }
+              onChange={(e) =>
+                setMargemSeguranca(
+                  Number(
+                    e.target.value
+                  )
+                )
+              }
+            />
+          </label>
+        </div>
+
+        <button
+          type="button"
+          className="btn"
+          onClick={
+            carregarRessuprimento
+          }
+          disabled={
+            carregando ||
+            statusPlanejamento ===
+              'FINALIZADO'
+          }
+          style={{
+            width: 'auto',
+            minWidth: '150px',
+            marginTop: '11px',
+          }}
+        >
+          {carregando
+            ? 'Calculando...'
+            : 'Calcular'}
+        </button>
+
+        {erro && (
+          <div
+            className="error"
+            style={{
+              marginTop: '11px',
+            }}
+          >
+            {erro}
+          </div>
+        )}
+      </section>
+
+      {ressuprimento && (
+        <>
+          <section
+            style={{
+              marginTop: '14px',
+            }}
+          >
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns:
+                  'repeat(3, minmax(0, 1fr))',
+                gap: '7px',
+              }}
+            >
+              <Indicador
+                titulo="Histórico"
+                valor={
+                  ressuprimento
+                    .estatisticas
+                    .usandoHistoricoEstoqueAprov
+                }
+              />
+
+              <Indicador
+                titulo="Referência"
+                valor={
+                  ressuprimento
+                    .estatisticas
+                    .usandoReferenciaInicial
+                }
+              />
+
+              <Indicador
+                titulo="Pendentes"
+                valor={
+                  ressuprimento
+                    .estatisticas
+                    .semBaseCalculo
+                }
+                alerta={
+                  quantidadeSemBase >
+                  0
+                }
+              />
+            </div>
+          </section>
+
+          {quantidadeSemBase >
+            0 && (
+            <section
+              style={{
+                marginTop: '12px',
+                padding: '12px',
+                borderRadius: '11px',
+                border:
+                  '1px solid rgba(245,158,11,.55)',
+                background:
+                  'rgba(245,158,11,.07)',
+              }}
+            >
+              <strong
+                style={{
+                  fontSize: '14px',
+                }}
+              >
+                ⚠ Referências pendentes
+              </strong>
+
+              <p
+                className="muted"
+                style={{
+                  margin: '5px 0 10px',
+                  fontSize: '12px',
+                  lineHeight: 1.4,
+                }}
+              >
+                Informe a referência dos gêneros sem base antes de finalizar.
+              </p>
+
+              <div
+                style={{
+                  display: 'grid',
+                  gap: '6px',
+                }}
+              >
+                {ressuprimento.itens
+                  .filter(
+                    (
+                      item: any
+                    ) =>
+                      item
+                        .quantidadeSugerida ===
+                      null
+                  )
+                  .map(
+                    (
+                      item: any
+                    ) => (
+                      <Link
+                        key={
+                          item.generoId
+                        }
+                        href={`/qdaa/referencia?generoId=${encodeURIComponent(
+                          item.generoId
+                        )}&historico=${mesesHistorico}&ciclo=${mesesCiclo}&margem=${margemSeguranca}`}
+                        style={{
+                          padding:
+                            '9px 10px',
+                          borderRadius:
+                            '9px',
+                          border:
+                            '1px solid rgba(245,158,11,.5)',
+                          background:
+                            'rgba(245,158,11,.05)',
+                          color:
+                            'inherit',
+                          textDecoration:
+                            'none',
+                          fontSize:
+                            '13px',
+                          fontWeight:
+                            700,
+                        }}
+                      >
+                        {item.genero}{' '}
+                        <span
+                          style={{
+                            float:
+                              'right',
+                          }}
+                        >
+                          ›
+                        </span>
+                      </Link>
+                    )
+                  )}
+              </div>
+            </section>
+          )}
+
+          <section
+            style={{
+              marginTop: '17px',
+            }}
+          >
+            <strong
+              style={{
+                fontSize: '16px',
+              }}
+            >
+              Necessidade por gênero
+            </strong>
+
+            <p
+              className="muted"
+              style={{
+                margin: '4px 0 10px',
+                fontSize: '12px',
+              }}
+            >
+              Toque em um gênero para consultar ou alterar o planejamento.
+            </p>
+
+            <div
+              style={{
+                display: 'grid',
+                gap: '7px',
+              }}
+            >
+              {ressuprimento.itens.map(
+                (item: any) => {
+                  const aberto =
+                    generoAberto ===
+                    item.generoId;
+
+                  const semBase =
+                    item.quantidadeSugerida ===
+                    null;
+
+                  const decisao =
+                    decisoes[
+                      item.generoId
+                    ];
+
+                  const planejado =
+                    numeroCampo(
+                      decisao
+                        ?.quantidade ||
+                        ''
+                    );
+
+                  const alterado =
+                    planejado !==
+                      null &&
+                    item.quantidadeSugerida !==
+                      null &&
+                    diferente(
+                      planejado,
+                      Number(
+                        item
+                          .quantidadeSugerida
+                      )
+                    );
+
+                  return (
+                    <article
+                      key={
+                        item.generoId
+                      }
+                      style={{
+                        overflow: 'hidden',
+                        borderRadius:
+                          '11px',
+                        border: semBase
+                          ? '1px solid rgba(245,158,11,.45)'
+                          : '1px solid #284334',
+                        background:
+                          '#0c1811',
+                      }}
+                    >
+                      <button
+                        type="button"
+                        onClick={() =>
+                          alternarGenero(
+                            item.generoId
+                          )
+                        }
+                        style={{
+                          width: '100%',
+                          minHeight: '46px',
+                          padding:
+                            '9px 11px',
+                          display: 'flex',
+                          alignItems:
+                            'center',
+                          justifyContent:
+                            'space-between',
+                          gap: '10px',
+                          border: 0,
+                          borderRadius: 0,
+                          background:
+                            'transparent',
+                          color: 'inherit',
+                          textAlign:
+                            'left',
+                          cursor:
+                            'pointer',
+                          font: 'inherit',
+                        }}
+                      >
+                        <div
+                          style={{
+                            minWidth: 0,
+                          }}
+                        >
+                          <strong
+                            style={{
+                              display:
+                                'block',
+                              fontSize:
+                                '14px',
+                            }}
+                          >
+                            {item.genero}
+                          </strong>
+
+                          <span
+                            className="muted"
+                            style={{
+                              display:
+                                'block',
+                              marginTop:
+                                '2px',
+                              fontSize:
+                                '11px',
+                            }}
+                          >
+                            {semBase
+                              ? 'Referência pendente'
+                              : `Sugerido: ${formatarNumero(
+                                  item.quantidadeSugerida
+                                )} ${item.unidade}`}
+                          </span>
+                        </div>
+
+                        <span
+                          aria-hidden="true"
+                          style={{
+                            fontSize:
+                              '18px',
+                            transform:
+                              aberto
+                                ? 'rotate(90deg)'
+                                : 'none',
+                          }}
+                        >
+                          ›
+                        </span>
+                      </button>
+
+                      {aberto && (
+                        <div
+                          style={{
+                            padding:
+                              '12px',
+                            borderTop:
+                              '1px solid #284334',
+                            background:
+                              '#101d15',
+                          }}
+                        >
+                          <div
+                            style={{
+                              display:
+                                'grid',
+                              gridTemplateColumns:
+                                'repeat(2, minmax(0, 1fr))',
+                              gap:
+                                '11px 14px',
+                            }}
+                          >
+                            <Dado
+                              titulo="Base"
+                              valor={origemTexto(
+                                item.origemMedia
+                              )}
+                            />
+
+                            <Dado
+                              titulo="Média/mês"
+                              valor={formatarNumero(
+                                item
+                                  .mediaMensalUtilizada
+                              )}
+                            />
+
+                            <Dado
+                              titulo="Projeção"
+                              valor={formatarNumero(
+                                item
+                                  .consumoProjetado
+                              )}
+                            />
+
+                            <Dado
+                              titulo="Segurança"
+                              valor={formatarNumero(
+                                item
+                                  .estoqueSeguranca
+                              )}
+                            />
+
+                            <Dado
+                              titulo="Estoque"
+                              valor={formatarNumero(
+                                item
+                                  .estoqueDisponivel
+                              )}
+                            />
+
+                            <Dado
+                              titulo="Prev. receber"
+                              valor={formatarNumero(
+                                item
+                                  .previstoReceber
+                              )}
+                            />
+
+                            <Dado
+                              titulo="Sugerido"
+                              valor={
+                                <>
+                                  {formatarNumero(
+                                    item
+                                      .quantidadeSugerida
+                                  )}{' '}
+                                  {item.unidade}
+                                </>
+                              }
+                              forte
+                            />
+                          </div>
+
+                          {semBase ? (
+                            <Link
+                              href={`/qdaa/referencia?generoId=${encodeURIComponent(
+                                item.generoId
+                              )}&historico=${mesesHistorico}&ciclo=${mesesCiclo}&margem=${margemSeguranca}`}
+                              className="btn"
+                              style={{
+                                display:
+                                  'inline-flex',
+                                width: 'auto',
+                                marginTop:
+                                  '11px',
+                                textDecoration:
+                                  'none',
+                              }}
+                            >
+                              Informar referência
+                            </Link>
+                          ) : (
+                            <div
+                              style={{
+                                marginTop:
+                                  '12px',
+                                paddingTop:
+                                  '11px',
+                                borderTop:
+                                  '1px solid rgba(255,255,255,.07)',
+                              }}
+                            >
+                              <label>
+                                Quantidade planejada
+
+                                <input
+                                  type="text"
+                                  inputMode="decimal"
+                                  value={
+                                    decisao
+                                      ?.quantidade ||
+                                    ''
+                                  }
+                                  disabled={
+                                    statusPlanejamento ===
+                                    'FINALIZADO'
+                                  }
+                                  onChange={(
+                                    e
+                                  ) =>
+                                    alterarQuantidade(
+                                      item.generoId,
+                                      e
+                                        .target
+                                        .value
+                                    )
+                                  }
+                                />
+                              </label>
+
+                              {alterado && (
+                                <label
+                                  style={{
+                                    display:
+                                      'block',
+                                    marginTop:
+                                      '9px',
+                                  }}
+                                >
+                                  Justificativa
+
+                                  <input
+                                    type="text"
+                                    value={
+                                      decisao
+                                        ?.justificativa ||
+                                      ''
+                                    }
+                                    disabled={
+                                      statusPlanejamento ===
+                                      'FINALIZADO'
+                                    }
+                                    onChange={(
+                                      e
+                                    ) =>
+                                      alterarJustificativa(
+                                        item.generoId,
+                                        e
+                                          .target
+                                          .value
+                                      )
+                                    }
+                                    placeholder="Obrigatória"
+                                  />
+                                </label>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </article>
+                  );
+                }
+              )}
+            </div>
+          </section>
+
+          <section
+            style={{
+              marginTop: '17px',
+              padding: '13px',
+              borderRadius: '12px',
+              border: '1px solid #284334',
+              background: '#0c1811',
+            }}
+          >
+            <strong>
+              Finalização
+            </strong>
+
+            <label
+              style={{
+                display: 'block',
+                marginTop: '10px',
+              }}
+            >
+              Observação geral
+
+              <textarea
+                value={
+                  observacao
+                }
+                disabled={
+                  statusPlanejamento ===
+                  'FINALIZADO'
+                }
+                onChange={(e) =>
+                  setObservacao(
+                    e.target.value
+                  )
+                }
+                rows={3}
+                placeholder="Observação operacional, se necessária."
+                style={{
+                  width: '100%',
+                  resize: 'vertical',
+                  boxSizing:
+                    'border-box',
+                }}
+              />
+            </label>
+
+            <div
+              style={{
+                marginTop: '10px',
+                fontSize: '13px',
+              }}
+            >
+              Situação:{' '}
+              <strong>
+                {statusPlanejamento ===
+                'NOVO'
+                  ? 'Novo planejamento'
+                  : statusPlanejamento ===
+                      'RASCUNHO'
+                    ? 'Rascunho salvo'
+                    : 'Finalizado'}
+              </strong>
+            </div>
+
+            {erroPlanejamento && (
+              <div
+                className="error"
+                style={{
+                  marginTop:
+                    '10px',
+                }}
+              >
+                {erroPlanejamento}
+              </div>
+            )}
+
+            {mensagem && (
+              <div
+                className="success"
+                style={{
+                  marginTop:
+                    '10px',
+                }}
+              >
+                {mensagem}
+              </div>
+            )}
+
+            {statusPlanejamento !==
+              'FINALIZADO' && (
+              <div
+                style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: '7px',
+                  marginTop: '11px',
+                }}
+              >
+                <button
+                  type="button"
+                  className="btn secondary"
+                  disabled={
+                    salvando
+                  }
+                  onClick={() =>
+                    salvarPlanejamento(
+                      false
+                    )
+                  }
+                  style={{
+                    width: 'auto',
+                  }}
+                >
+                  {salvando
+                    ? 'Salvando...'
+                    : 'Salvar rascunho'}
+                </button>
+
+                <button
+                  type="button"
+                  className="btn"
+                  disabled={
+                    salvando ||
+                    quantidadeSemBase >
+                      0
+                  }
+                  onClick={() =>
+                    salvarPlanejamento(
+                      true
+                    )
+                  }
+                  style={{
+                    width: 'auto',
+                  }}
+                >
+                  Finalizar
+                </button>
+              </div>
+            )}
+
+            {quantidadeSemBase >
+              0 && (
+              <p
+                className="muted"
+                style={{
+                  margin:
+                    '10px 0 0',
+                  fontSize:
+                    '12px',
+                  lineHeight:
+                    1.4,
+                }}
+              >
+                A finalização será liberada após informar todas as referências pendentes.
+              </p>
+            )}
+          </section>
+        </>
+      )}
+
+      <NavegacaoInferior
+        voltarHref="/qdaa"
+        voltarTexto="QDAA"
+      />
+    </main>
+  );
+}
