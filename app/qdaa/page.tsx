@@ -1,218 +1,236 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { currentUser } from '@/lib/auth';
-import QDAAClient from '@/components/QDAAClient';
-import NavegacaoInferior from '@/components/NavegacaoInferior';
 
-export default async function Page() {
+import NavegacaoInferior from '@/components/NavegacaoInferior';
+import { currentUser } from '@/lib/auth';
+
+export const dynamic = 'force-dynamic';
+
+export default async function QDAAPage() {
   const usuario = await currentUser();
 
   if (!usuario) {
     redirect('/login');
   }
 
-  if (
-    ![
-      'ADMIN_PRINCIPAL',
-      'ADMINISTRADOR',
-    ].includes(usuario.perfil)
-  ) {
+  const podeAcessar =
+    usuario.perfil === 'ADMIN_PRINCIPAL' ||
+    usuario.perfil === 'ADMINISTRADOR';
+
+  if (!podeAcessar) {
     redirect('/inicio');
   }
 
+  const opcoes = [
+    {
+      titulo: 'Apoio ao QDAA',
+      descricao:
+        'Consolidação mensal e controle dos gêneros QS.',
+      href: '/qdaa/apoio',
+      icone: '▤',
+    },
+    {
+      titulo: 'Planejamento de Ressuprimento QS',
+      descricao:
+        'Cálculo das necessidades para o próximo ciclo.',
+      href: '/qdaa/planejamento',
+      icone: '⇄',
+    },
+    {
+      titulo: 'Referências de Consumo QS',
+      descricao:
+        'Consulte e informe referências de consumo pendentes.',
+      href: '/qdaa/referencias',
+      icone: '◈',
+    },
+    {
+      titulo: 'Histórico de Ressuprimentos',
+      descricao:
+        'Consulte planejamentos QS já registrados.',
+      href: '/qdaa/historico',
+      icone: '◷',
+    },
+  ];
+
   return (
     <main>
-      <Link
-        className="back"
-        href="/inicio"
-      >
-        ← Início
-      </Link>
-
       <header
         style={{
-          marginTop: '18px',
-          marginBottom: '20px',
-        }}
-      >
-        <h1
-          style={{
-            marginBottom: '6px',
-          }}
-        >
-          QDAA / Ressuprimento QS
-        </h1>
-
-        <p
-          className="muted"
-          style={{
-            margin: 0,
-            lineHeight: 1.5,
-          }}
-        >
-          Acompanhamento do consumo e
-          planejamento das necessidades da
-          cadeia de suprimento.
-        </p>
-      </header>
-
-      <section
-        className="card"
-        style={{
-          marginBottom: '16px',
+          marginBottom: '18px',
         }}
       >
         <div
           style={{
             display: 'flex',
-            alignItems: 'flex-start',
-            gap: '11px',
+            alignItems: 'center',
+            gap: '10px',
           }}
         >
           <div
+            aria-hidden="true"
             style={{
-              width: '38px',
-              height: '38px',
+              width: '40px',
+              height: '40px',
               flexShrink: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              display: 'grid',
+              placeItems: 'center',
               borderRadius: '11px',
-              background: '#183d2a',
-              border: '1px solid #284334',
+              border: '1px solid #315640',
+              background: '#102018',
               fontSize: '20px',
             }}
           >
-            ▦
-          </div>
-
-          <div
-            style={{
-              flex: 1,
-            }}
-          >
-            <strong
-              style={{
-                fontSize: '16px',
-              }}
-            >
-              Controle da cadeia de suprimento
-            </strong>
-
-            <p
-              style={{
-                margin: '7px 0 0',
-                fontSize: '14px',
-                lineHeight: 1.5,
-              }}
-            >
-              Área destinada ao acompanhamento
-              dos gêneros classificados como QS
-              e ao planejamento das necessidades
-              da cadeia de suprimento.
-            </p>
-          </div>
-        </div>
-
-        <div
-          style={{
-            marginTop: '14px',
-            padding: '12px',
-            borderRadius: '11px',
-            background: '#0c1811',
-            border: '1px solid #284334',
-          }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'flex-start',
-              gap: '9px',
-            }}
-          >
-            <span
-              style={{
-                flexShrink: 0,
-                fontSize: '17px',
-              }}
-            >
-              ℹ
-            </span>
-
-            <p
-              className="muted"
-              style={{
-                margin: 0,
-                fontSize: '13px',
-                lineHeight: 1.5,
-              }}
-            >
-              O QDAA é apurado mensalmente. O
-              histórico de consumo líquido real
-              dos gêneros é utilizado como base
-              para auxiliar o planejamento dos
-              próximos ciclos de ressuprimento.
-            </p>
-          </div>
-        </div>
-
-        <Link
-          className="btn"
-          href="/qdaa/historico"
-          style={{
-            width: '100%',
-            marginTop: '14px',
-            boxSizing: 'border-box',
-            textAlign: 'center',
-          }}
-        >
-          Histórico de Ressuprimentos QS
-        </Link>
-      </section>
-
-      <section className="card">
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'flex-start',
-            gap: '10px',
-            marginBottom: '17px',
-            paddingBottom: '14px',
-            borderBottom:
-              '1px solid rgba(255,255,255,0.08)',
-          }}
-        >
-          <div
-            style={{
-              fontSize: '21px',
-              lineHeight: 1,
-            }}
-          >
-            ≡
+            ▤
           </div>
 
           <div>
-            <strong>
-              Apuração e planejamento QS
-            </strong>
-
-            <div
-              className="muted"
+            <h1
               style={{
-                marginTop: '4px',
-                fontSize: '13px',
-                lineHeight: 1.45,
+                margin: 0,
+                fontSize: '22px',
+                lineHeight: 1.15,
               }}
             >
-              Consulte o consumo apurado e
-              utilize os dados para apoiar o
-              planejamento do próximo
-              ressuprimento.
-            </div>
+              QDAA / Ressuprimento QS
+            </h1>
+
+            <p
+              className="muted"
+              style={{
+                margin: '5px 0 0',
+                fontSize: '14px',
+                lineHeight: 1.4,
+              }}
+            >
+              Selecione a operação que deseja realizar.
+            </p>
           </div>
         </div>
+      </header>
 
-        <QDAAClient />
+      <section
+        style={{
+          display: 'grid',
+          gap: '9px',
+        }}
+      >
+        {opcoes.map((opcao) => (
+          <Link
+            key={opcao.href}
+            href={opcao.href}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              minHeight: '62px',
+              padding: '11px 13px',
+              borderRadius: '12px',
+              border: '1px solid #284334',
+              background: '#0c1811',
+              color: 'inherit',
+              textDecoration: 'none',
+              boxSizing: 'border-box',
+            }}
+          >
+            <div
+              aria-hidden="true"
+              style={{
+                width: '35px',
+                height: '35px',
+                flex: '0 0 35px',
+                display: 'grid',
+                placeItems: 'center',
+                borderRadius: '9px',
+                background: '#14271c',
+                border: '1px solid #315640',
+                fontSize: '17px',
+              }}
+            >
+              {opcao.icone}
+            </div>
+
+            <div
+              style={{
+                flex: 1,
+                minWidth: 0,
+              }}
+            >
+              <strong
+                style={{
+                  display: 'block',
+                  fontSize: '15px',
+                  lineHeight: 1.3,
+                }}
+              >
+                {opcao.titulo}
+              </strong>
+
+              <span
+                className="muted"
+                style={{
+                  display: 'block',
+                  marginTop: '3px',
+                  fontSize: '12px',
+                  lineHeight: 1.35,
+                }}
+              >
+                {opcao.descricao}
+              </span>
+            </div>
+
+            <span
+              aria-hidden="true"
+              style={{
+                flexShrink: 0,
+                fontSize: '20px',
+                lineHeight: 1,
+                opacity: 0.75,
+              }}
+            >
+              ›
+            </span>
+          </Link>
+        ))}
+      </section>
+
+      <section
+        style={{
+          marginTop: '15px',
+          padding: '11px 12px',
+          borderRadius: '11px',
+          border: '1px solid rgba(245,158,11,.35)',
+          background: 'rgba(245,158,11,.05)',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            gap: '8px',
+            alignItems: 'flex-start',
+          }}
+        >
+          <span
+            aria-hidden="true"
+            style={{
+              flexShrink: 0,
+            }}
+          >
+            ℹ
+          </span>
+
+          <p
+            className="muted"
+            style={{
+              margin: 0,
+              fontSize: '12px',
+              lineHeight: 1.45,
+            }}
+          >
+            O QDAA consolida os dados mensais dos gêneros QS.
+            O planejamento utiliza o histórico de consumo para
+            apoiar o próximo ressuprimento.
+          </p>
+        </div>
       </section>
 
       <NavegacaoInferior />
