@@ -24,29 +24,20 @@ export default async function QDAAPage() {
   const opcoes = [
     {
       titulo: 'Apoio ao QDAA',
-      descricao:
-        'Consolidação mensal e controle dos gêneros QS.',
+      descricao: 'Consolidação mensal e controle dos gêneros QS.',
       href: '/qdaa/apoio',
       icone: '▤',
     },
     {
       titulo: 'Planejamento de Ressuprimento QS',
       descricao:
-        'Cálculo das necessidades para o próximo ciclo.',
+        'Cálculo das necessidades, referências pendentes e próximo ciclo.',
       href: '/qdaa/planejamento',
       icone: '⇄',
     },
     {
-      titulo: 'Referências de Consumo QS',
-      descricao:
-        'Consulte e informe referências de consumo pendentes.',
-      href: '/qdaa/referencias',
-      icone: '◈',
-    },
-    {
       titulo: 'Histórico de Ressuprimentos',
-      descricao:
-        'Consulte planejamentos QS já registrados.',
+      descricao: 'Consulta dos planejamentos QS já registrados.',
       href: '/qdaa/historico',
       icone: '◷',
     },
@@ -226,9 +217,9 @@ export default async function QDAAPage() {
               lineHeight: 1.45,
             }}
           >
-            O QDAA consolida os dados mensais dos gêneros QS.
-            O planejamento utiliza o histórico de consumo para
-            apoiar o próximo ressuprimento.
+            O QDAA consolida os dados mensais dos gêneros QS. O
+            planejamento utiliza o histórico de consumo e as referências
+            necessárias para apoiar o próximo ressuprimento.
           </p>
         </div>
       </section>
