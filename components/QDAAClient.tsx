@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+
 import {
   useEffect,
   useState,
@@ -273,43 +275,6 @@ export default function QDAAClient() {
     setMensagemPlanejamento,
   ] = useState('');
 
-  const [
-    generoReferencia,
-    setGeneroReferencia,
-  ] = useState<any>(null);
-
-  const [
-    tipoReferencia,
-    setTipoReferencia,
-  ] = useState<
-    'MENSAL' | 'BIMESTRAL'
-  >('BIMESTRAL');
-
-  const [
-    quantidadeReferencia,
-    setQuantidadeReferencia,
-  ] = useState('');
-
-  const [
-    observacaoReferencia,
-    setObservacaoReferencia,
-  ] = useState('');
-
-  const [
-    salvandoReferencia,
-    setSalvandoReferencia,
-  ] = useState(false);
-
-  const [
-    mensagemReferencia,
-    setMensagemReferencia,
-  ] = useState('');
-
-  const [
-    erroReferencia,
-    setErroReferencia,
-  ] = useState('');
-
   async function carregarQDAA() {
     setErro('');
     setCarregando(true);
@@ -416,9 +381,11 @@ export default function QDAAClient() {
       );
 
       setPlanejamentoId(null);
+
       setStatusPlanejamento(
         'NOVO'
       );
+
       setObservacaoPlanejamento(
         ''
       );
@@ -428,152 +395,6 @@ export default function QDAAClient() {
       );
     } finally {
       setCarregandoRessuprimento(
-        false
-      );
-    }
-  }
-
-  function abrirReferencia(
-    item: any
-  ) {
-    setGeneroReferencia(item);
-
-    setTipoReferencia(
-      item.referenciaInicial
-        ?.tipo ||
-        'BIMESTRAL'
-    );
-
-    setQuantidadeReferencia(
-      item.referenciaInicial
-        ? String(
-            item
-              .referenciaInicial
-              .quantidade
-          )
-        : ''
-    );
-
-    setObservacaoReferencia(
-      item.referenciaInicial
-        ?.observacao || ''
-    );
-
-    setMensagemReferencia('');
-    setErroReferencia('');
-  }
-
-  function abrirReferenciaEPular(
-    item: any
-  ) {
-    abrirReferencia(item);
-
-    setTimeout(() => {
-      document
-        .getElementById(
-          'referencia-inicial-qs'
-        )
-        ?.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start',
-        });
-    }, 100);
-  }
-
-  function fecharReferencia() {
-    setGeneroReferencia(null);
-    setQuantidadeReferencia('');
-    setObservacaoReferencia('');
-    setMensagemReferencia('');
-    setErroReferencia('');
-  }
-
-  async function salvarReferencia() {
-    if (!generoReferencia) {
-      return;
-    }
-
-    const quantidade =
-      numeroCampo(
-        quantidadeReferencia
-      );
-
-    if (
-      quantidade === null ||
-      quantidade <= 0
-    ) {
-      setErroReferencia(
-        'Informe uma quantidade maior que zero.'
-      );
-
-      return;
-    }
-
-    setErroReferencia('');
-    setMensagemReferencia('');
-    setSalvandoReferencia(
-      true
-    );
-
-    try {
-      const resposta =
-        await fetch(
-          '/api/relatorios/referencia-consumo-qs',
-          {
-            method: 'POST',
-
-            headers: {
-              'Content-Type':
-                'application/json',
-            },
-
-            body:
-              JSON.stringify({
-                generoId:
-                  generoReferencia
-                    .generoId,
-
-                tipo:
-                  tipoReferencia,
-
-                quantidade,
-
-                observacao:
-                  observacaoReferencia
-                    .trim() ||
-                  null,
-              }),
-          }
-        );
-
-      const json =
-        await resposta.json();
-
-      if (!resposta.ok) {
-        setErroReferencia(
-          json.error ||
-            'Não foi possível salvar a referência.'
-        );
-
-        return;
-      }
-
-      setMensagemReferencia(
-        json.mensagem ||
-          'Referência registrada.'
-      );
-
-      await carregarRessuprimento();
-
-      setTimeout(() => {
-        fecharReferencia();
-      }, 800);
-    } catch {
-      setErroReferencia(
-        'Não foi possível salvar a referência.'
-      );
-    } finally {
-      setSalvandoReferencia(
         false
       );
     }
@@ -794,6 +615,7 @@ export default function QDAAClient() {
     }
 
     setErroPlanejamento('');
+
     setMensagemPlanejamento(
       ''
     );
@@ -901,9 +723,11 @@ export default function QDAAClient() {
         <div
           style={{
             display: 'flex',
-            alignItems: 'flex-start',
+            alignItems:
+              'flex-start',
             gap: '10px',
-            marginBottom: '14px',
+            marginBottom:
+              '14px',
           }}
         >
           <span
@@ -923,15 +747,18 @@ export default function QDAAClient() {
             <div
               className="muted"
               style={{
-                marginTop: '4px',
-                fontSize: '13px',
-                lineHeight: 1.45,
+                marginTop:
+                  '4px',
+                fontSize:
+                  '13px',
+                lineHeight:
+                  1.45,
               }}
             >
               Consolidação mensal dos
-              gêneros classificados como
-              QS e recebidos pela cadeia
-              de suprimento.
+              gêneros classificados
+              como QS e recebidos pela
+              cadeia de suprimento.
             </div>
           </div>
         </div>
@@ -1004,7 +831,8 @@ export default function QDAAClient() {
           }
           style={{
             width: '100%',
-            marginTop: '13px',
+            marginTop:
+              '13px',
           }}
         >
           {carregando
@@ -1029,8 +857,10 @@ export default function QDAAClient() {
         <>
           <section
             style={{
-              marginTop: '18px',
-              paddingTop: '18px',
+              marginTop:
+                '18px',
+              paddingTop:
+                '18px',
               borderTop:
                 '1px solid rgba(255,255,255,.08)',
             }}
@@ -1090,15 +920,18 @@ export default function QDAAClient() {
 
           <section
             style={{
-              marginTop: '18px',
-              paddingTop: '18px',
+              marginTop:
+                '18px',
+              paddingTop:
+                '18px',
               borderTop:
                 '1px solid rgba(255,255,255,.08)',
             }}
           >
             <strong
               style={{
-                fontSize: '16px',
+                fontSize:
+                  '16px',
               }}
             >
               Controle mensal por
@@ -1116,10 +949,11 @@ export default function QDAAClient() {
                   1.5,
               }}
             >
-              Estoque inicial + entradas
-              + devoluções − consumo −
-              perdas ± correções =
-              estoque final.
+              Estoque inicial +
+              entradas + devoluções −
+              consumo − perdas ±
+              correções = estoque
+              final.
             </p>
 
             {dados.itens.length ===
@@ -1131,7 +965,8 @@ export default function QDAAClient() {
             ) : (
               <div
                 style={{
-                  display: 'grid',
+                  display:
+                    'grid',
                   gap: '9px',
                 }}
               >
@@ -1279,7 +1114,8 @@ export default function QDAAClient() {
           style={{
             display: 'flex',
             gap: '10px',
-            alignItems: 'flex-start',
+            alignItems:
+              'flex-start',
           }}
         >
           <span
@@ -1293,7 +1129,8 @@ export default function QDAAClient() {
           <div>
             <strong
               style={{
-                fontSize: '16px',
+                fontSize:
+                  '16px',
               }}
             >
               Planejamento do
@@ -1321,10 +1158,13 @@ export default function QDAAClient() {
 
         <div
           style={{
-            marginTop: '13px',
+            marginTop:
+              '13px',
             padding: '11px',
-            borderRadius: '11px',
-            background: '#0c1811',
+            borderRadius:
+              '11px',
+            background:
+              '#0c1811',
             border:
               '1px solid #284334',
           }}
@@ -1333,16 +1173,19 @@ export default function QDAAClient() {
             className="muted"
             style={{
               margin: 0,
-              fontSize: '12px',
-              lineHeight: 1.5,
+              fontSize:
+                '12px',
+              lineHeight:
+                1.5,
             }}
           >
             O EstoqueAprov utiliza o
-            histórico real de consumo.
-            Na ausência de histórico,
-            poderá ser utilizada uma
-            referência inicial informada
-            pelo Administrador.
+            histórico real de
+            consumo. Na ausência de
+            histórico, poderá ser
+            utilizada uma referência
+            inicial informada pelo
+            Administrador.
           </p>
         </div>
 
@@ -1352,7 +1195,8 @@ export default function QDAAClient() {
             gridTemplateColumns:
               'repeat(auto-fit, minmax(130px, 1fr))',
             gap: '10px',
-            marginTop: '13px',
+            marginTop:
+              '13px',
           }}
         >
           <label>
@@ -1464,7 +1308,8 @@ export default function QDAAClient() {
           }
           style={{
             width: '100%',
-            marginTop: '13px',
+            marginTop:
+              '13px',
           }}
         >
           {carregandoRessuprimento
@@ -1491,15 +1336,18 @@ export default function QDAAClient() {
         <>
           <section
             style={{
-              marginTop: '20px',
-              paddingTop: '18px',
+              marginTop:
+                '20px',
+              paddingTop:
+                '18px',
               borderTop:
                 '1px solid rgba(255,255,255,.08)',
             }}
           >
             <strong
               style={{
-                fontSize: '16px',
+                fontSize:
+                  '16px',
               }}
             >
               Situação da base de
@@ -1512,7 +1360,8 @@ export default function QDAAClient() {
                 gridTemplateColumns:
                   'repeat(auto-fit, minmax(105px, 1fr))',
                 gap: '8px',
-                marginTop: '12px',
+                marginTop:
+                  '12px',
               }}
             >
               <BlocoIndicador
@@ -1573,8 +1422,10 @@ export default function QDAAClient() {
 
             <div
               style={{
-                marginTop: '13px',
-                padding: '13px',
+                marginTop:
+                  '13px',
+                padding:
+                  '13px',
                 border:
                   '1px solid #284334',
                 borderRadius:
@@ -1585,7 +1436,8 @@ export default function QDAAClient() {
             >
               <strong
                 style={{
-                  fontSize: '14px',
+                  fontSize:
+                    '14px',
                 }}
               >
                 Entenda a base de
@@ -1594,7 +1446,8 @@ export default function QDAAClient() {
 
               <div
                 style={{
-                  display: 'grid',
+                  display:
+                    'grid',
                   gap: '12px',
                   marginTop:
                     '11px',
@@ -1624,8 +1477,9 @@ export default function QDAAClient() {
                   >
                     Utiliza o consumo
                     real registrado no
-                    sistema para calcular
-                    a média mensal.
+                    sistema para
+                    calcular a média
+                    mensal.
                   </div>
                 </div>
 
@@ -1651,10 +1505,11 @@ export default function QDAAClient() {
                     }}
                   >
                     Utiliza uma
-                    quantidade de consumo
-                    informada pelo
-                    Administrador quando
-                    ainda não há histórico
+                    quantidade de
+                    consumo informada
+                    pelo Administrador
+                    quando ainda não há
+                    histórico
                     suficiente.
                   </div>
                 </div>
@@ -1681,9 +1536,10 @@ export default function QDAAClient() {
                     }}
                   >
                     O gênero ainda não
-                    possui histórico nem
-                    referência suficiente
-                    para o cálculo.
+                    possui histórico
+                    nem referência
+                    suficiente para o
+                    cálculo.
                   </div>
                 </div>
               </div>
@@ -1761,21 +1617,18 @@ export default function QDAAClient() {
                       (
                         item: any
                       ) => (
-                        <button
+                        <Link
                           key={
                             item.generoId
                           }
-                          type="button"
-                          onClick={() =>
-                            abrirReferenciaEPular(
-                              item
-                            )
-                          }
+                          href={`/qdaa/referencia?generoId=${encodeURIComponent(
+                            item.generoId
+                          )}&historico=${mesesHistorico}&ciclo=${mesesCiclo}&margem=${margemSeguranca}`}
                           style={{
                             width:
                               '100%',
-                            cursor:
-                              'pointer',
+                            display:
+                              'block',
                             padding:
                               '11px',
                             textAlign:
@@ -1790,12 +1643,16 @@ export default function QDAAClient() {
                               'inherit',
                             fontWeight:
                               700,
+                            textDecoration:
+                              'none',
+                            boxSizing:
+                              'border-box',
                           }}
                         >
                           {item.genero}{' '}
                           → informar
                           referência
-                        </button>
+                        </Link>
                       )
                     )}
                 </div>
@@ -1807,15 +1664,18 @@ export default function QDAAClient() {
 
           <section
             style={{
-              marginTop: '20px',
-              paddingTop: '18px',
+              marginTop:
+                '20px',
+              paddingTop:
+                '18px',
               borderTop:
                 '1px solid rgba(255,255,255,.08)',
             }}
           >
             <strong
               style={{
-                fontSize: '16px',
+                fontSize:
+                  '16px',
               }}
             >
               Necessidade por gênero QS
@@ -1936,7 +1796,8 @@ export default function QDAAClient() {
 
                         <span
                           style={{
-                            flexShrink: 0,
+                            flexShrink:
+                              0,
                             fontSize:
                               '12px',
                             fontWeight:
@@ -2027,34 +1888,13 @@ export default function QDAAClient() {
                                 '12px',
                             }}
                           >
-                            Para calcular
-                            este gênero,
-                            informe uma
-                            referência
-                            inicial.
+                            Referência
+                            pendente. Utilize
+                            o alerta de base
+                            de cálculo acima
+                            para informar a
+                            referência inicial.
                           </div>
-
-                          <button
-                            type="button"
-                            className="btn"
-                            disabled={
-                              statusPlanejamento ===
-                              'FINALIZADO'
-                            }
-                            onClick={() =>
-                              abrirReferencia(
-                                item
-                              )
-                            }
-                            style={{
-                              width:
-                                '100%',
-                            }}
-                          >
-                            {item.possuiReferenciaInicial
-                              ? 'Alterar referência'
-                              : 'Informar referência'}
-                          </button>
                         </div>
                       ) : (
                         <div
@@ -2133,30 +1973,6 @@ export default function QDAAClient() {
                               />
                             </label>
                           )}
-
-                          <button
-                            type="button"
-                            className="btn secondary"
-                            disabled={
-                              statusPlanejamento ===
-                              'FINALIZADO'
-                            }
-                            onClick={() =>
-                              abrirReferencia(
-                                item
-                              )
-                            }
-                            style={{
-                              width:
-                                '100%',
-                              marginTop:
-                                '9px',
-                            }}
-                          >
-                            {item.possuiReferenciaInicial
-                              ? 'Alterar referência inicial'
-                              : 'Informar referência inicial'}
-                          </button>
                         </div>
                       )}
                     </article>
@@ -2170,15 +1986,18 @@ export default function QDAAClient() {
 
           <section
             style={{
-              marginTop: '20px',
-              paddingTop: '18px',
+              marginTop:
+                '20px',
+              paddingTop:
+                '18px',
               borderTop:
                 '1px solid rgba(255,255,255,.08)',
             }}
           >
             <strong
               style={{
-                fontSize: '16px',
+                fontSize:
+                  '16px',
               }}
             >
               Decisão do Ressuprimento
@@ -2225,7 +2044,8 @@ export default function QDAAClient() {
                 placeholder="Ex.: previsão de exercício, aumento de efetivo, missão extraordinária ou outra consideração operacional."
                 rows={4}
                 style={{
-                  width: '100%',
+                  width:
+                    '100%',
                   minHeight:
                     '110px',
                   resize:
@@ -2238,8 +2058,10 @@ export default function QDAAClient() {
 
             <div
               style={{
-                marginTop: '13px',
-                padding: '12px',
+                marginTop:
+                  '13px',
+                padding:
+                  '12px',
                 borderRadius:
                   '11px',
                 background:
@@ -2251,7 +2073,8 @@ export default function QDAAClient() {
               <div
                 className="muted"
                 style={{
-                  fontSize: '11px',
+                  fontSize:
+                    '11px',
                 }}
               >
                 Situação
@@ -2259,8 +2082,10 @@ export default function QDAAClient() {
 
               <strong
                 style={{
-                  display: 'block',
-                  marginTop: '4px',
+                  display:
+                    'block',
+                  marginTop:
+                    '4px',
                 }}
               >
                 {statusPlanejamento ===
@@ -2310,7 +2135,9 @@ export default function QDAAClient() {
                     '12px',
                 }}
               >
-                {mensagemPlanejamento}
+                {
+                  mensagemPlanejamento
+                }
               </div>
             )}
 
@@ -2318,7 +2145,8 @@ export default function QDAAClient() {
               'FINALIZADO' && (
               <div
                 style={{
-                  display: 'grid',
+                  display:
+                    'grid',
                   gap: '8px',
                   marginTop:
                     '13px',
@@ -2336,7 +2164,8 @@ export default function QDAAClient() {
                     )
                   }
                   style={{
-                    width: '100%',
+                    width:
+                      '100%',
                   }}
                 >
                   {salvandoPlanejamento
@@ -2358,7 +2187,8 @@ export default function QDAAClient() {
                     )
                   }
                   style={{
-                    width: '100%',
+                    width:
+                      '100%',
                   }}
                 >
                   Finalizar planejamento
@@ -2418,297 +2248,6 @@ export default function QDAAClient() {
             )}
           </section>
         </>
-      )}
-
-      {/* REFERÊNCIA INICIAL */}
-
-      {generoReferencia && (
-        <section
-          id="referencia-inicial-qs"
-          style={{
-            marginTop: '20px',
-            padding: '15px',
-            scrollMarginTop:
-              '20px',
-            borderRadius: '13px',
-            background:
-              'rgba(245,158,11,.06)',
-            border:
-              '1px solid rgba(245,158,11,.55)',
-          }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'flex-start',
-              gap: '9px',
-            }}
-          >
-            <span
-              style={{
-                fontSize: '20px',
-              }}
-            >
-              ◈
-            </span>
-
-            <div>
-              <strong
-                style={{
-                  fontSize: '16px',
-                }}
-              >
-                Referência inicial
-              </strong>
-
-              <div
-                style={{
-                  marginTop: '3px',
-                  fontWeight: 700,
-                }}
-              >
-                {
-                  generoReferencia.genero
-                }
-              </div>
-            </div>
-          </div>
-
-          <p
-            style={{
-              margin:
-                '13px 0 5px',
-              fontSize: '13px',
-              lineHeight: 1.5,
-            }}
-          >
-            Informe o consumo conhecido
-            antes da implantação do
-            EstoqueAprov.
-          </p>
-
-          <p
-            className="muted"
-            style={{
-              margin:
-                '0 0 13px',
-              fontSize: '12px',
-              lineHeight: 1.5,
-            }}
-          >
-            A referência ficará
-            registrada com responsável
-            e data. Quando houver
-            histórico real suficiente,
-            o histórico do sistema será
-            utilizado no cálculo.
-          </p>
-
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns:
-                'repeat(auto-fit, minmax(140px, 1fr))',
-              gap: '10px',
-            }}
-          >
-            <label>
-              Tipo de referência
-
-              <select
-                value={
-                  tipoReferencia
-                }
-                onChange={(e) =>
-                  setTipoReferencia(
-                    e.target
-                      .value as
-                      | 'MENSAL'
-                      | 'BIMESTRAL'
-                  )
-                }
-              >
-                <option value="MENSAL">
-                  Consumo médio mensal
-                </option>
-
-                <option value="BIMESTRAL">
-                  Consumo bimestral
-                </option>
-              </select>
-            </label>
-
-            <label>
-              Quantidade (
-              {
-                generoReferencia.unidade
-              }
-              )
-
-              <input
-                type="text"
-                inputMode="decimal"
-                value={
-                  quantidadeReferencia
-                }
-                onChange={(e) =>
-                  setQuantidadeReferencia(
-                    e.target.value
-                  )
-                }
-                placeholder="Ex.: 800"
-              />
-            </label>
-          </div>
-
-          {tipoReferencia ===
-            'BIMESTRAL' &&
-            (numeroCampo(
-              quantidadeReferencia
-            ) || 0) >
-              0 && (
-              <div
-                style={{
-                  marginTop:
-                    '11px',
-                  padding:
-                    '10px 12px',
-                  borderRadius:
-                    '10px',
-                  background:
-                    '#0c1811',
-                  border:
-                    '1px solid #284334',
-                }}
-              >
-                <div
-                  className="muted"
-                  style={{
-                    fontSize:
-                      '11px',
-                  }}
-                >
-                  Média mensal
-                  equivalente
-                </div>
-
-                <strong
-                  style={{
-                    display:
-                      'block',
-                    marginTop:
-                      '3px',
-                  }}
-                >
-                  {formatarNumero(
-                    Number(
-                      numeroCampo(
-                        quantidadeReferencia
-                      )
-                    ) / 2
-                  )}{' '}
-                  {
-                    generoReferencia.unidade
-                  }
-                  /mês
-                </strong>
-              </div>
-            )}
-
-          <label
-            style={{
-              display: 'block',
-              marginTop: '11px',
-            }}
-          >
-            Observação
-
-            <textarea
-              value={
-                observacaoReferencia
-              }
-              onChange={(e) =>
-                setObservacaoReferencia(
-                  e.target.value
-                )
-              }
-              rows={3}
-              placeholder="Ex.: referência baseada no controle anterior da OM."
-              style={{
-                width: '100%',
-                resize: 'vertical',
-                boxSizing:
-                  'border-box',
-              }}
-            />
-          </label>
-
-          {erroReferencia && (
-            <div
-              className="error"
-              style={{
-                marginTop:
-                  '11px',
-              }}
-            >
-              {erroReferencia}
-            </div>
-          )}
-
-          {mensagemReferencia && (
-            <div
-              className="success"
-              style={{
-                marginTop:
-                  '11px',
-              }}
-            >
-              {mensagemReferencia}
-            </div>
-          )}
-
-          <div
-            style={{
-              display: 'grid',
-              gap: '8px',
-              marginTop: '13px',
-            }}
-          >
-            <button
-              className="btn"
-              type="button"
-              onClick={
-                salvarReferencia
-              }
-              disabled={
-                salvandoReferencia
-              }
-              style={{
-                width: '100%',
-              }}
-            >
-              {salvandoReferencia
-                ? 'Salvando...'
-                : 'Salvar referência'}
-            </button>
-
-            <button
-              className="btn secondary"
-              type="button"
-              onClick={
-                fecharReferencia
-              }
-              disabled={
-                salvandoReferencia
-              }
-              style={{
-                width: '100%',
-              }}
-            >
-              Cancelar
-            </button>
-          </div>
-        </section>
       )}
     </>
   );
