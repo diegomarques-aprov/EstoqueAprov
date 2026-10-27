@@ -14,6 +14,8 @@ import {
 
 import NavegacaoInferior from '@/components/NavegacaoInferior';
 
+const MESES_CICLO_RESSUPRIMENTO_QS = 2;
+
 type DecisaoPlanejamento = {
   quantidade: string;
   justificativa: string;
@@ -224,15 +226,6 @@ function PlanejamentoQDAAContent() {
       [1, 2, 3, 6]
     );
 
-  const cicloUrl =
-    parametroInteiro(
-      searchParams.get(
-        'ciclo'
-      ),
-      2,
-      [1, 2, 3]
-    );
-
   const margemUrl =
     parametroMargem(
       searchParams.get(
@@ -262,12 +255,8 @@ function PlanejamentoQDAAContent() {
     historicoUrl
   );
 
-  const [
-    mesesCiclo,
-    setMesesCiclo,
-  ] = useState(
-    cicloUrl
-  );
+  const mesesCiclo =
+    MESES_CICLO_RESSUPRIMENTO_QS;
 
   const [
     margemSeguranca,
@@ -332,8 +321,6 @@ function PlanejamentoQDAAContent() {
   async function carregarRessuprimento(
     historico =
       mesesHistorico,
-    ciclo =
-      mesesCiclo,
     margem =
       margemSeguranca
   ) {
@@ -347,9 +334,6 @@ function PlanejamentoQDAAContent() {
         new URLSearchParams({
           historico:
             String(historico),
-
-          ciclo:
-            String(ciclo),
 
           margem:
             String(margem),
@@ -430,24 +414,18 @@ function PlanejamentoQDAAContent() {
       historicoUrl
     );
 
-    setMesesCiclo(
-      cicloUrl
-    );
-
     setMargemSeguranca(
       margemUrl
     );
 
     carregarRessuprimento(
       historicoUrl,
-      cicloUrl,
       margemUrl
     );
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     historicoUrl,
-    cicloUrl,
     margemUrl,
   ]);
 
@@ -670,7 +648,7 @@ function PlanejamentoQDAAContent() {
     if (
       finalizar &&
       !window.confirm(
-        'Confirma a finalização do Planejamento de Ressuprimento QS? Após finalizar, ele ficará preservado no histórico e não poderá ser alterado.'
+        'Confirma a finalização do Planejamento Bimestral de Ressuprimento QS? Após finalizar, ele ficará preservado no histórico e não poderá ser alterado.'
       )
     ) {
       return;
@@ -700,7 +678,8 @@ function PlanejamentoQDAAContent() {
 
                 mesesHistorico,
 
-                mesesCiclo,
+                mesesCiclo:
+                  MESES_CICLO_RESSUPRIMENTO_QS,
 
                 margemSegurancaPercent:
                   margemSeguranca,
@@ -795,7 +774,7 @@ function PlanejamentoQDAAContent() {
               lineHeight: 1.4,
             }}
           >
-            Calcule e defina a necessidade do próximo ciclo.
+            Planejamento do ciclo normal bimestral de gêneros QS.
           </p>
         </div>
       </header>
@@ -815,15 +794,45 @@ function PlanejamentoQDAAContent() {
 
         <div
           style={{
+            marginTop: '10px',
+            padding: '10px 11px',
+            borderRadius: '9px',
+            border:
+              '1px solid #365744',
+            background: '#101d15',
+          }}
+        >
+          <div
+            className="muted"
+            style={{
+              fontSize: '11px',
+            }}
+          >
+            Ciclo normal
+          </div>
+
+          <strong
+            style={{
+              display: 'block',
+              marginTop: '2px',
+              fontSize: '15px',
+            }}
+          >
+            2 meses — Bimestral
+          </strong>
+        </div>
+
+        <div
+          style={{
             display: 'grid',
             gridTemplateColumns:
-              'repeat(auto-fit, minmax(120px, 1fr))',
+              'repeat(auto-fit, minmax(140px, 1fr))',
             gap: '9px',
             marginTop: '10px',
           }}
         >
           <label>
-            Histórico
+            Histórico para média
 
             <select
               value={
@@ -855,39 +864,6 @@ function PlanejamentoQDAAContent() {
 
               <option value={6}>
                 6 meses
-              </option>
-            </select>
-          </label>
-
-          <label>
-            Ciclo
-
-            <select
-              value={
-                mesesCiclo
-              }
-              disabled={
-                statusPlanejamento ===
-                'FINALIZADO'
-              }
-              onChange={(e) =>
-                setMesesCiclo(
-                  Number(
-                    e.target.value
-                  )
-                )
-              }
-            >
-              <option value={1}>
-                1 mês
-              </option>
-
-              <option value={2}>
-                2 meses
-              </option>
-
-              <option value={3}>
-                3 meses
               </option>
             </select>
           </label>
@@ -1058,7 +1034,7 @@ function PlanejamentoQDAAContent() {
                         }
                         href={`/qdaa/referencia?generoId=${encodeURIComponent(
                           item.generoId
-                        )}&historico=${mesesHistorico}&ciclo=${mesesCiclo}&margem=${margemSeguranca}`}
+                        )}&historico=${mesesHistorico}&margem=${margemSeguranca}`}
                         style={{
                           padding:
                             '9px 10px',
@@ -1301,7 +1277,7 @@ function PlanejamentoQDAAContent() {
                             />
 
                             <Dado
-                              titulo="Projeção"
+                              titulo="Projeção 2 meses"
                               valor={formatarNumero(
                                 item
                                   .consumoProjetado
@@ -1353,7 +1329,7 @@ function PlanejamentoQDAAContent() {
                             <Link
                               href={`/qdaa/referencia?generoId=${encodeURIComponent(
                                 item.generoId
-                              )}&historico=${mesesHistorico}&ciclo=${mesesCiclo}&margem=${margemSeguranca}`}
+                              )}&historico=${mesesHistorico}&margem=${margemSeguranca}`}
                               className="btn"
                               style={{
                                 display:
