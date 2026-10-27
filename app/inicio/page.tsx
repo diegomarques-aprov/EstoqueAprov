@@ -146,19 +146,69 @@ export default async function Inicio() {
 
   return (
     <main>
-      <header className="top">
-        <div>
-          <div className="brand">
-            EstoqueAprov
-          </div>
+      <header
+        className="top"
+        style={{
+          alignItems: 'center',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            minWidth: 0,
+          }}
+        >
+          <img
+            src="/icon-192.png"
+            alt=""
+            aria-hidden="true"
+            width={54}
+            height={54}
+            style={{
+              width: '54px',
+              height: '54px',
+              flexShrink: 0,
+              objectFit: 'cover',
+              borderRadius: '14px',
+              border:
+                '1px solid #284334',
+              boxShadow:
+                '0 5px 16px rgba(0,0,0,.22)',
+            }}
+          />
 
-          <span className="muted">
-            {u.postoGraduacao
-              ? `${u.postoGraduacao} `
-              : ''}
-            {u.nome} ·{' '}
-            {u.funcao || u.perfil}
-          </span>
+          <div
+            style={{
+              minWidth: 0,
+            }}
+          >
+            <div
+              className="brand"
+              style={{
+                lineHeight: 1.1,
+              }}
+            >
+              EstoqueAprov
+            </div>
+
+            <span
+              className="muted"
+              style={{
+                display: 'block',
+                marginTop: '5px',
+                fontSize: '11px',
+                lineHeight: 1.35,
+              }}
+            >
+              {u.postoGraduacao
+                ? `${u.postoGraduacao} `
+                : ''}
+              {u.nome} ·{' '}
+              {u.funcao || u.perfil}
+            </span>
+          </div>
         </div>
 
         <LogoutButton />
@@ -561,7 +611,7 @@ export default async function Inicio() {
           marginTop: '32px',
           paddingTop: '16px',
           paddingBottom:
-            'calc(12px + env(safe-area-inset-bottom))',
+            'calc(60px + env(safe-area-inset-bottom))',
           textAlign: 'center',
           fontSize: '11px',
           lineHeight: '1.5',
