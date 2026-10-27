@@ -147,11 +147,14 @@ export default async function Inicio() {
   return (
     <main>
       <header
-        className="top"
-        style={{
-          alignItems: 'center',
-        }}
-      >
+  className="top"
+  style={{
+    alignItems: 'center',
+    paddingTop:
+      'calc(34px + env(safe-area-inset-top))',
+    marginBottom: '8px',
+  }}
+>
         <div
           style={{
             display: 'flex',
