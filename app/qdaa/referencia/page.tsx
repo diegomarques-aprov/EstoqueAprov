@@ -7,6 +7,7 @@ import {
   useMemo,
   useState,
 } from 'react';
+
 import {
   useRouter,
   useSearchParams,
@@ -83,7 +84,9 @@ function ReferenciaQSContent() {
     useSearchParams();
 
   const generoId =
-    searchParams.get('generoId');
+    searchParams.get(
+      'generoId'
+    );
 
   const historico =
     Number(
@@ -156,6 +159,48 @@ function ReferenciaQSContent() {
     mensagem,
     setMensagem,
   ] = useState('');
+
+  function enderecoPlanejamento() {
+    const params =
+      new URLSearchParams({
+        historico:
+          String(historico),
+
+        ciclo:
+          String(ciclo),
+
+        margem:
+          String(margem),
+      });
+
+    return (
+      '/qdaa/planejamento?' +
+      params.toString()
+    );
+  }
+
+  function enderecoReferencia(
+    id: string
+  ) {
+    const params =
+      new URLSearchParams({
+        generoId: id,
+
+        historico:
+          String(historico),
+
+        ciclo:
+          String(ciclo),
+
+        margem:
+          String(margem),
+      });
+
+    return (
+      '/qdaa/referencia?' +
+      params.toString()
+    );
+  }
 
   async function carregar() {
     if (!generoId) {
@@ -319,29 +364,6 @@ function ReferenciaQSContent() {
         ]
       : null;
 
-  function enderecoReferencia(
-    id: string
-  ) {
-    const params =
-      new URLSearchParams({
-        generoId: id,
-
-        historico:
-          String(historico),
-
-        ciclo:
-          String(ciclo),
-
-        margem:
-          String(margem),
-      });
-
-    return (
-      '/qdaa/referencia?' +
-      params.toString()
-    );
-  }
-
   async function salvar() {
     if (!genero) {
       return;
@@ -481,7 +503,9 @@ function ReferenciaQSContent() {
       }
 
       setTimeout(() => {
-        router.push('/qdaa');
+        router.push(
+          enderecoPlanejamento()
+        );
       }, 700);
     } catch {
       setErro(
@@ -496,10 +520,12 @@ function ReferenciaQSContent() {
     return (
       <main className="narrow">
         <Link
-          href="/qdaa"
+          href={
+            enderecoPlanejamento()
+          }
           className="back"
         >
-          ← Voltar
+          ← Planejamento
         </Link>
 
         <div className="card">
@@ -523,10 +549,12 @@ function ReferenciaQSContent() {
     return (
       <main className="narrow">
         <Link
-          href="/qdaa"
+          href={
+            enderecoPlanejamento()
+          }
           className="back"
         >
-          ← Voltar
+          ← Planejamento
         </Link>
 
         <div className="card">
@@ -564,10 +592,12 @@ function ReferenciaQSContent() {
         }}
       >
         <Link
-          href="/qdaa"
+          href={
+            enderecoPlanejamento()
+          }
           className="back"
         >
-          ← Voltar
+          ← Planejamento
         </Link>
 
         <Link
@@ -792,7 +822,7 @@ function ReferenciaQSContent() {
           disabled={salvando}
           onClick={salvar}
           style={{
-            width: '100%',
+            width: 'auto',
           }}
         >
           {salvando
@@ -865,10 +895,12 @@ function ReferenciaQSContent() {
               </Link>
             ) : (
               <Link
-                href="/qdaa"
+                href={
+                  enderecoPlanejamento()
+                }
                 className="navigation-footer-link"
               >
-                Voltar ao QDAA
+                Voltar ao planejamento
               </Link>
             )}
           </div>
