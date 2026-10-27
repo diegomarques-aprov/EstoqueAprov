@@ -3,9 +3,14 @@
 import Link from 'next/link';
 
 import {
+  Suspense,
   useEffect,
   useState,
 } from 'react';
+
+import {
+  useSearchParams,
+} from 'next/navigation';
 
 import NavegacaoInferior from '@/components/NavegacaoInferior';
 
@@ -77,6 +82,53 @@ function origemTexto(
   }
 
   return 'Sem base de cálculo';
+}
+
+function parametroInteiro(
+  valor: string | null,
+  padrao: number,
+  permitidos?: number[]
+) {
+  if (!valor) {
+    return padrao;
+  }
+
+  const numero = Number(valor);
+
+  if (
+    !Number.isInteger(numero)
+  ) {
+    return padrao;
+  }
+
+  if (
+    permitidos &&
+    !permitidos.includes(numero)
+  ) {
+    return padrao;
+  }
+
+  return numero;
+}
+
+function parametroMargem(
+  valor: string | null
+) {
+  if (!valor) {
+    return 10;
+  }
+
+  const numero = Number(valor);
+
+  if (
+    !Number.isFinite(numero) ||
+    numero < 0 ||
+    numero > 100
+  ) {
+    return 10;
+  }
+
+  return numero;
 }
 
 function Indicador({
@@ -159,7 +211,35 @@ function Dado({
   );
 }
 
-export default function PlanejamentoQDAAPage() {
+function PlanejamentoQDAAContent() {
+  const searchParams =
+    useSearchParams();
+
+  const historicoUrl =
+    parametroInteiro(
+      searchParams.get(
+        'historico'
+      ),
+      2,
+      [1, 2, 3, 6]
+    );
+
+  const cicloUrl =
+    parametroInteiro(
+      searchParams.get(
+        'ciclo'
+      ),
+      2,
+      [1, 2, 3]
+    );
+
+  const margemUrl =
+    parametroMargem(
+      searchParams.get(
+        'margem'
+      )
+    );
+
   const [
     ressuprimento,
     setRessuprimento,
@@ -178,17 +258,23 @@ export default function PlanejamentoQDAAPage() {
   const [
     mesesHistorico,
     setMesesHistorico,
-  ] = useState(2);
+  ] = useState(
+    historicoUrl
+  );
 
   const [
     mesesCiclo,
     setMesesCiclo,
-  ] = useState(2);
+  ] = useState(
+    cicloUrl
+  );
 
   const [
     margemSeguranca,
     setMargemSeguranca,
-  ] = useState(10);
+  ] = useState(
+    margemUrl
+  );
 
   const [
     decisoes,
@@ -243,7 +329,14 @@ export default function PlanejamentoQDAAPage() {
     setMensagem,
   ] = useState('');
 
-  async function carregarRessuprimento() {
+  async function carregarRessuprimento(
+    historico =
+      mesesHistorico,
+    ciclo =
+      mesesCiclo,
+    margem =
+      margemSeguranca
+  ) {
     setErro('');
     setErroPlanejamento('');
     setMensagem('');
@@ -253,22 +346,21 @@ export default function PlanejamentoQDAAPage() {
       const params =
         new URLSearchParams({
           historico:
-            String(
-              mesesHistorico
-            ),
+            String(historico),
+
           ciclo:
-            String(
-              mesesCiclo
-            ),
+            String(ciclo),
+
           margem:
-            String(
-              margemSeguranca
-            ),
+            String(margem),
         });
 
       const resposta =
         await fetch(
-          `/api/relatorios/ressuprimento-qs?${params.toString()}`
+          `/api/relatorios/ressuprimento-qs?${params.toString()}`,
+          {
+            cache: 'no-store',
+          }
         );
 
       const json =
@@ -305,6 +397,7 @@ export default function PlanejamentoQDAAPage() {
               String(
                 item.quantidadeSugerida
               ),
+
             justificativa: '',
           };
         }
@@ -315,10 +408,13 @@ export default function PlanejamentoQDAAPage() {
       );
 
       setGeneroAberto(null);
+
       setPlanejamentoId(null);
+
       setStatusPlanejamento(
         'NOVO'
       );
+
       setObservacao('');
     } catch {
       setErro(
@@ -330,10 +426,30 @@ export default function PlanejamentoQDAAPage() {
   }
 
   useEffect(() => {
-    carregarRessuprimento();
+    setMesesHistorico(
+      historicoUrl
+    );
+
+    setMesesCiclo(
+      cicloUrl
+    );
+
+    setMargemSeguranca(
+      margemUrl
+    );
+
+    carregarRessuprimento(
+      historicoUrl,
+      cicloUrl,
+      margemUrl
+    );
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [
+    historicoUrl,
+    cicloUrl,
+    margemUrl,
+  ]);
 
   function alternarGenero(
     generoId: string
@@ -366,6 +482,7 @@ export default function PlanejamentoQDAAPage() {
     );
 
     setMensagem('');
+
     setErroPlanejamento('');
   }
 
@@ -390,6 +507,7 @@ export default function PlanejamentoQDAAPage() {
     );
 
     setMensagem('');
+
     setErroPlanejamento('');
   }
 
@@ -559,7 +677,9 @@ export default function PlanejamentoQDAAPage() {
     }
 
     setErroPlanejamento('');
+
     setMensagem('');
+
     setSalvando(true);
 
     try {
@@ -684,7 +804,8 @@ export default function PlanejamentoQDAAPage() {
         style={{
           padding: '13px',
           borderRadius: '12px',
-          border: '1px solid #284334',
+          border:
+            '1px solid #284334',
           background: '#0c1811',
         }}
       >
@@ -800,8 +921,8 @@ export default function PlanejamentoQDAAPage() {
         <button
           type="button"
           className="btn"
-          onClick={
-            carregarRessuprimento
+          onClick={() =>
+            carregarRessuprimento()
           }
           disabled={
             carregando ||
@@ -903,7 +1024,8 @@ export default function PlanejamentoQDAAPage() {
               <p
                 className="muted"
                 style={{
-                  margin: '5px 0 10px',
+                  margin:
+                    '5px 0 10px',
                   fontSize: '12px',
                   lineHeight: 1.4,
                 }}
@@ -957,6 +1079,7 @@ export default function PlanejamentoQDAAPage() {
                         }}
                       >
                         {item.genero}{' '}
+
                         <span
                           style={{
                             float:
@@ -988,7 +1111,8 @@ export default function PlanejamentoQDAAPage() {
             <p
               className="muted"
               style={{
-                margin: '4px 0 10px',
+                margin:
+                  '4px 0 10px',
                 fontSize: '12px',
               }}
             >
@@ -1042,12 +1166,14 @@ export default function PlanejamentoQDAAPage() {
                         item.generoId
                       }
                       style={{
-                        overflow: 'hidden',
+                        overflow:
+                          'hidden',
                         borderRadius:
                           '11px',
-                        border: semBase
-                          ? '1px solid rgba(245,158,11,.45)'
-                          : '1px solid #284334',
+                        border:
+                          semBase
+                            ? '1px solid rgba(245,158,11,.45)'
+                            : '1px solid #284334',
                         background:
                           '#0c1811',
                       }}
@@ -1061,30 +1187,36 @@ export default function PlanejamentoQDAAPage() {
                         }
                         style={{
                           width: '100%',
-                          minHeight: '46px',
+                          minHeight:
+                            '46px',
                           padding:
                             '9px 11px',
-                          display: 'flex',
+                          display:
+                            'flex',
                           alignItems:
                             'center',
                           justifyContent:
                             'space-between',
                           gap: '10px',
                           border: 0,
-                          borderRadius: 0,
+                          borderRadius:
+                            0,
                           background:
                             'transparent',
-                          color: 'inherit',
+                          color:
+                            'inherit',
                           textAlign:
                             'left',
                           cursor:
                             'pointer',
-                          font: 'inherit',
+                          font:
+                            'inherit',
                         }}
                       >
                         <div
                           style={{
-                            minWidth: 0,
+                            minWidth:
+                              0,
                           }}
                         >
                           <strong
@@ -1208,7 +1340,9 @@ export default function PlanejamentoQDAAPage() {
                                     item
                                       .quantidadeSugerida
                                   )}{' '}
-                                  {item.unidade}
+                                  {
+                                    item.unidade
+                                  }
                                 </>
                               }
                               forte
@@ -1224,7 +1358,8 @@ export default function PlanejamentoQDAAPage() {
                               style={{
                                 display:
                                   'inline-flex',
-                                width: 'auto',
+                                width:
+                                  'auto',
                                 marginTop:
                                   '11px',
                                 textDecoration:
@@ -1324,7 +1459,8 @@ export default function PlanejamentoQDAAPage() {
               marginTop: '17px',
               padding: '13px',
               borderRadius: '12px',
-              border: '1px solid #284334',
+              border:
+                '1px solid #284334',
               background: '#0c1811',
             }}
           >
@@ -1357,7 +1493,8 @@ export default function PlanejamentoQDAAPage() {
                 placeholder="Observação operacional, se necessária."
                 style={{
                   width: '100%',
-                  resize: 'vertical',
+                  resize:
+                    'vertical',
                   boxSizing:
                     'border-box',
                 }}
@@ -1371,6 +1508,7 @@ export default function PlanejamentoQDAAPage() {
               }}
             >
               Situação:{' '}
+
               <strong>
                 {statusPlanejamento ===
                 'NOVO'
@@ -1410,10 +1548,13 @@ export default function PlanejamentoQDAAPage() {
               'FINALIZADO' && (
               <div
                 style={{
-                  display: 'flex',
-                  flexWrap: 'wrap',
+                  display:
+                    'flex',
+                  flexWrap:
+                    'wrap',
                   gap: '7px',
-                  marginTop: '11px',
+                  marginTop:
+                    '11px',
                 }}
               >
                 <button
@@ -1428,7 +1569,8 @@ export default function PlanejamentoQDAAPage() {
                     )
                   }
                   style={{
-                    width: 'auto',
+                    width:
+                      'auto',
                   }}
                 >
                   {salvando
@@ -1450,7 +1592,8 @@ export default function PlanejamentoQDAAPage() {
                     )
                   }
                   style={{
-                    width: 'auto',
+                    width:
+                      'auto',
                   }}
                 >
                   Finalizar
@@ -1483,5 +1626,33 @@ export default function PlanejamentoQDAAPage() {
         voltarTexto="QDAA"
       />
     </main>
+  );
+}
+
+function CarregandoPlanejamento() {
+  return (
+    <main>
+      <div className="card">
+        <h1>
+          Planejamento de Ressuprimento QS
+        </h1>
+
+        <p className="muted">
+          Carregando planejamento...
+        </p>
+      </div>
+    </main>
+  );
+}
+
+export default function PlanejamentoQDAAPage() {
+  return (
+    <Suspense
+      fallback={
+        <CarregandoPlanejamento />
+      }
+    >
+      <PlanejamentoQDAAContent />
+    </Suspense>
   );
 }
