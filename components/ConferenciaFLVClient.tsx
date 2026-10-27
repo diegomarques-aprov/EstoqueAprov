@@ -20,36 +20,33 @@ type Conferencia = {
   usuario: UsuarioConferencia;
 };
 
-const estiloCampoObservacao = {
-  width: '100%',
-  minHeight: '105px',
-  boxSizing: 'border-box' as const,
-  marginTop: '8px',
-  padding: '14px 16px',
-  borderRadius: '10px',
-  border: '1px solid #315846',
-  background: '#071a12',
-  color: '#f8fafc',
-  fontSize: '16px',
-  lineHeight: '1.5',
-  resize: 'vertical' as const,
-};
-
 export default function ConferenciaFLVClient() {
-  const [carregando, setCarregando] =
-    useState(true);
+  const [
+    carregando,
+    setCarregando,
+  ] = useState(true);
 
-  const [salvando, setSalvando] =
-    useState(false);
+  const [
+    salvando,
+    setSalvando,
+  ] = useState(false);
 
-  const [conferencia, setConferencia] =
-    useState<Conferencia | null>(null);
+  const [
+    conferencia,
+    setConferencia,
+  ] = useState<Conferencia | null>(
+    null
+  );
 
-  const [observacao, setObservacao] =
-    useState('');
+  const [
+    observacao,
+    setObservacao,
+  ] = useState('');
 
-  const [mensagem, setMensagem] =
-    useState('');
+  const [
+    mensagem,
+    setMensagem,
+  ] = useState('');
 
   const [erro, setErro] =
     useState('');
@@ -80,7 +77,8 @@ export default function ConferenciaFLVClient() {
       }
 
       setConferencia(
-        dados.conferencia || null
+        dados.conferencia ||
+          null
       );
     } catch {
       setErro(
@@ -153,28 +151,67 @@ export default function ConferenciaFLVClient() {
 
   if (carregando) {
     return (
-      <div
+      <section
         className="card"
         style={{
           border:
-            '1px solid #f59e0b',
+            '1px solid rgba(245,158,11,.45)',
           background:
-            'rgba(245, 158, 11, 0.08)',
+            'rgba(245,158,11,.06)',
         }}
       >
-        <h2
+        <div
           style={{
-            marginTop: 0,
+            display: 'flex',
+            alignItems:
+              'flex-start',
+            gap: '10px',
           }}
         >
-          🥬 Conferência diária FLV
-        </h2>
+          <div
+            style={{
+              width: '38px',
+              height: '38px',
+              flexShrink: 0,
+              display: 'flex',
+              alignItems:
+                'center',
+              justifyContent:
+                'center',
+              borderRadius:
+                '11px',
+              background:
+                'rgba(245,158,11,.10)',
+              border:
+                '1px solid rgba(245,158,11,.3)',
+              fontSize: '18px',
+            }}
+          >
+            🥬
+          </div>
 
-        <p className="muted">
-          Verificando a conferência de
-          hoje...
-        </p>
-      </div>
+          <div>
+            <strong
+              style={{
+                fontSize: '15px',
+              }}
+            >
+              Conferência diária FLV
+            </strong>
+
+            <div
+              className="muted"
+              style={{
+                marginTop: '4px',
+                fontSize: '11px',
+              }}
+            >
+              Verificando a
+              conferência de hoje...
+            </div>
+          </div>
+        </div>
+      </section>
     );
   }
 
@@ -189,65 +226,173 @@ export default function ConferenciaFLVClient() {
         .join(' ');
 
     return (
-      <div
+      <section
         className="card"
         style={{
           border:
-            '1px solid #22c55e',
+            '1px solid rgba(43,138,87,.55)',
           background:
-            'rgba(34, 197, 94, 0.07)',
+            'rgba(43,138,87,.07)',
         }}
       >
-        <h2
+        <div
           style={{
-            marginTop: 0,
+            display: 'flex',
+            alignItems:
+              'flex-start',
+            gap: '10px',
+            marginBottom: '13px',
           }}
         >
-          ✓ Conferência FLV realizada
-        </h2>
+          <div
+            style={{
+              width: '38px',
+              height: '38px',
+              flexShrink: 0,
+              display: 'flex',
+              alignItems:
+                'center',
+              justifyContent:
+                'center',
+              borderRadius:
+                '11px',
+              background:
+                'rgba(43,138,87,.12)',
+              border:
+                '1px solid rgba(43,138,87,.35)',
+              fontSize: '18px',
+            }}
+          >
+            ✓
+          </div>
 
-        <p>
-          Os gêneros FLV já foram
-          conferidos hoje.
-        </p>
+          <div>
+            <strong
+              style={{
+                display: 'block',
+                fontSize: '15px',
+              }}
+            >
+              Conferência FLV
+              realizada
+            </strong>
 
-        <div className="row">
-          <span>
-            Conferido por
-          </span>
-
-          <strong>
-            {identificacao}
-          </strong>
+            <span
+              className="muted"
+              style={{
+                display: 'block',
+                marginTop: '4px',
+                fontSize: '11px',
+                lineHeight: 1.45,
+              }}
+            >
+              Os gêneros FLV já
+              foram conferidos hoje.
+            </span>
+          </div>
         </div>
 
-        {conferencia.usuario
-          .funcao && (
-          <div className="row">
-            <span>Função</span>
+        <div
+          style={{
+            display: 'grid',
+            gap: '8px',
+          }}
+        >
+          <div
+            style={{
+              padding: '11px',
+              borderRadius: '10px',
+              background: '#102018',
+              border:
+                '1px solid #284334',
+            }}
+          >
+            <div
+              className="muted"
+              style={{
+                fontSize: '9px',
+                marginBottom: '3px',
+              }}
+            >
+              CONFERIDO POR
+            </div>
 
-            <strong>
-              {
-                conferencia.usuario
-                  .funcao
-              }
+            <strong
+              style={{
+                fontSize: '12px',
+                lineHeight: 1.4,
+              }}
+            >
+              {identificacao}
             </strong>
           </div>
-        )}
+
+          {conferencia.usuario
+            .funcao && (
+            <div
+              style={{
+                padding: '11px',
+                borderRadius:
+                  '10px',
+                background:
+                  '#102018',
+                border:
+                  '1px solid #284334',
+              }}
+            >
+              <div
+                className="muted"
+                style={{
+                  fontSize: '9px',
+                  marginBottom:
+                    '3px',
+                }}
+              >
+                FUNÇÃO
+              </div>
+
+              <strong
+                style={{
+                  fontSize: '12px',
+                  lineHeight: 1.4,
+                }}
+              >
+                {
+                  conferencia.usuario
+                    .funcao
+                }
+              </strong>
+            </div>
+          )}
+        </div>
 
         {conferencia.observacao && (
           <div
             style={{
-              marginTop: 12,
+              marginTop: '10px',
+              padding: '11px',
+              borderRadius: '10px',
+              background:
+                '#0c1811',
+              border:
+                '1px solid #284334',
             }}
           >
-            <span className="muted">
-              Observação
-            </span>
+            <div
+              className="muted"
+              style={{
+                fontSize: '9px',
+                marginBottom: '5px',
+              }}
+            >
+              OBSERVAÇÃO
+            </div>
 
             <p
               style={{
-                marginBottom: 0,
+                margin: 0,
+                fontSize: '12px',
+                lineHeight: 1.5,
                 whiteSpace:
                   'pre-wrap',
               }}
@@ -261,74 +406,203 @@ export default function ConferenciaFLVClient() {
 
         {mensagem && (
           <div
-            className="success"
+            role="status"
             style={{
-              marginTop: 14,
+              marginTop: '11px',
+              padding: '10px',
+              borderRadius: '10px',
+              background:
+                'rgba(43,138,87,.10)',
+              border:
+                '1px solid rgba(43,138,87,.35)',
+              fontSize: '11px',
+              lineHeight: 1.4,
             }}
           >
-            {mensagem}
+            <strong>
+              ✓ {mensagem}
+            </strong>
           </div>
         )}
-      </div>
+      </section>
     );
   }
 
   return (
-    <div
+    <section
       className="card"
       style={{
         border:
-          '1px solid #f59e0b',
+          '1px solid rgba(245,158,11,.55)',
         background:
-          'rgba(245, 158, 11, 0.08)',
+          'rgba(245,158,11,.07)',
       }}
     >
-      <h2
+      <div
         style={{
-          marginTop: 0,
+          display: 'flex',
+          alignItems:
+            'flex-start',
+          gap: '10px',
+          marginBottom: '13px',
         }}
       >
-        ⚠ Conferência diária FLV
-      </h2>
+        <div
+          style={{
+            width: '38px',
+            height: '38px',
+            flexShrink: 0,
+            display: 'flex',
+            alignItems:
+              'center',
+            justifyContent:
+              'center',
+            borderRadius: '11px',
+            background:
+              'rgba(245,158,11,.10)',
+            border:
+              '1px solid rgba(245,158,11,.3)',
+            fontSize: '18px',
+          }}
+        >
+          🥬
+        </div>
 
-      <p>
-        A conferência dos gêneros
-        FLV ainda não foi registrada
-        hoje.
-      </p>
+        <div>
+          <strong
+            style={{
+              display: 'block',
+              fontSize: '15px',
+            }}
+          >
+            Conferência diária FLV
+          </strong>
 
-      <p className="muted">
-        Verifique fisicamente frutas,
-        legumes e verduras,
-        principalmente as condições de
-        conservação, qualidade e
-        quantidade disponível na Câmara
-        de Resfriamento.
-      </p>
+          <span
+            style={{
+              display: 'block',
+              marginTop: '4px',
+              fontSize: '11px',
+              lineHeight: 1.45,
+            }}
+          >
+            A conferência dos
+            gêneros FLV ainda não
+            foi registrada hoje.
+          </span>
+        </div>
+      </div>
 
       <div
         style={{
-          marginTop: 18,
+          padding: '12px',
+          borderRadius: '11px',
+          background: '#102018',
+          border:
+            '1px solid #284334',
+          marginBottom: '14px',
         }}
       >
-        <label
+        <div
           style={{
-            display: 'block',
-            fontWeight: 700,
-            fontSize: '15px',
+            display: 'flex',
+            gap: '9px',
+            alignItems:
+              'flex-start',
           }}
         >
-          📝 Observação da conferência
           <span
-            className="muted"
             style={{
-              fontWeight: 400,
+              fontSize: '16px',
             }}
           >
-            {' '}
-            (opcional)
+            ❄
           </span>
-        </label>
+
+          <div>
+            <strong
+              style={{
+                display: 'block',
+                fontSize: '11px',
+                marginBottom: '4px',
+              }}
+            >
+              Câmara de Resfriamento
+            </strong>
+
+            <span
+              className="muted"
+              style={{
+                display: 'block',
+                fontSize: '10px',
+                lineHeight: 1.5,
+              }}
+            >
+              Verifique fisicamente
+              frutas, legumes e
+              verduras, observando
+              quantidade disponível,
+              conservação, qualidade
+              e condições para
+              consumo.
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div
+        style={{
+          padding: '11px',
+          borderRadius: '10px',
+          background:
+            'rgba(245,158,11,.05)',
+          border:
+            '1px solid rgba(245,158,11,.25)',
+          marginBottom: '14px',
+        }}
+      >
+        <strong
+          style={{
+            display: 'block',
+            fontSize: '11px',
+            marginBottom: '4px',
+          }}
+        >
+          Prioridade de consumo
+        </strong>
+
+        <span
+          className="muted"
+          style={{
+            display: 'block',
+            fontSize: '10px',
+            lineHeight: 1.5,
+          }}
+        >
+          Caso algum FLV apresente
+          amadurecimento avançado ou
+          condição que exija consumo
+          prioritário, registre a
+          informação abaixo.
+        </span>
+      </div>
+
+      <label
+        style={{
+          display: 'block',
+          fontWeight: 700,
+          fontSize: '12px',
+        }}
+      >
+        Observação da conferência{' '}
+        <span
+          className="muted"
+          style={{
+            fontWeight: 400,
+          }}
+        >
+          (opcional)
+        </span>
 
         <textarea
           value={observacao}
@@ -339,51 +613,71 @@ export default function ConferenciaFLVClient() {
             )
           }
           placeholder="Ex.: tomate com amadurecimento avançado; priorizar consumo."
-          style={
-            estiloCampoObservacao
-          }
-        />
-
-        <div
-          className="muted"
           style={{
-            marginTop: 5,
-            textAlign: 'right',
-            fontSize: '12px',
+            width: '100%',
+            minHeight: '110px',
+            boxSizing:
+              'border-box',
+            marginTop: '7px',
+            padding: '13px',
+            borderRadius: '11px',
+            border:
+              '1px solid #315846',
+            background: '#071a12',
+            color: '#f8fafc',
+            fontSize: '16px',
+            lineHeight: 1.5,
+            resize: 'vertical',
           }}
-        >
-          {observacao.length}/500
-        </div>
+        />
+      </label>
+
+      <div
+        className="muted"
+        style={{
+          marginTop: '5px',
+          textAlign: 'right',
+          fontSize: '10px',
+        }}
+      >
+        {observacao.length}/500
       </div>
 
       {erro && (
         <div
-          className="error"
+          role="alert"
           style={{
-            marginTop: 12,
+            marginTop: '12px',
+            padding: '11px',
+            borderRadius: '10px',
+            background:
+              'rgba(239,68,68,.07)',
+            border:
+              '1px solid rgba(239,68,68,.5)',
+            color: '#ef4444',
+            fontSize: '11px',
+            lineHeight: 1.45,
           }}
         >
           {erro}
         </div>
       )}
 
-      <div
-        className="actions"
+      <button
+        type="button"
+        className="btn"
+        disabled={salvando}
+        onClick={confirmar}
         style={{
-          marginTop: 16,
+          width: '100%',
+          minHeight: '46px',
+          marginTop: '14px',
         }}
       >
-        <button
-          type="button"
-          className="btn"
-          disabled={salvando}
-          onClick={confirmar}
-        >
-          {salvando
-            ? 'Registrando...'
-            : 'Confirmar conferência FLV'}
-        </button>
-      </div>
-    </div>
+        {salvando
+          ? 'Registrando...'
+          : 'Confirmar conferência FLV'}
+      </button>
+    </section>
   );
 }
