@@ -5,7 +5,9 @@ import { prisma } from '@/lib/prisma';
 import ConferenciaFLVClient from '@/components/ConferenciaFLVClient';
 import NavegacaoInferior from '@/components/NavegacaoInferior';
 
-function inicioDoDiaUTC(data: Date) {
+function inicioDoDiaUTC(
+  data: Date
+) {
   return new Date(
     Date.UTC(
       data.getFullYear(),
@@ -19,7 +21,9 @@ function inicioDoDiaUTC(data: Date) {
   );
 }
 
-function fimDoDiaUTC(data: Date) {
+function fimDoDiaUTC(
+  data: Date
+) {
   return new Date(
     Date.UTC(
       data.getFullYear(),
@@ -33,13 +37,17 @@ function fimDoDiaUTC(data: Date) {
   );
 }
 
-function dataISO(data: Date) {
+function dataISO(
+  data: Date
+) {
   return data
     .toISOString()
     .slice(0, 10);
 }
 
-function dataBR(data: string) {
+function dataBR(
+  data: string
+) {
   const [ano, mes, dia] =
     data.split('-');
 
@@ -185,7 +193,9 @@ export default async function AvisosPage() {
       }
     >();
 
-  for (const estoque of estoques) {
+  for (
+    const estoque of estoques
+  ) {
     if (
       estoque.genero
         .estoqueMinimo == null
@@ -250,7 +260,9 @@ export default async function AvisosPage() {
   let quantidadeProximosDaValidade =
     0;
 
-  for (const estoque of estoques) {
+  for (
+    const estoque of estoques
+  ) {
     if (
       !estoque.lote?.validade
     ) {
@@ -368,6 +380,17 @@ export default async function AvisosPage() {
   const diasParaQDAA =
     25 - diaDoMes;
 
+  const semOutrasPendencias =
+    baixos.length === 0 &&
+    quantidadeProximosDaValidade ===
+      0 &&
+    quantidadeVencidos === 0 &&
+    fechamentosPendentes.length ===
+      0 &&
+    efetivoAmanhaInformado &&
+    !exibirLembreteCardapio &&
+    !exibirLembreteQDAA;
+
   return (
     <main>
       <Link
@@ -377,32 +400,97 @@ export default async function AvisosPage() {
         ← Início
       </Link>
 
-      <h1>
-        Painel de Avisos
-      </h1>
-
-      <div
+      <header
         style={{
-          marginBottom: 20,
+          marginTop: '18px',
+          marginBottom: '18px',
         }}
       >
-        <strong>
-          Consulte este painel
-          diariamente.
-        </strong>
+        <h1
+          style={{
+            marginBottom: '6px',
+          }}
+        >
+          Painel de Avisos
+        </h1>
 
         <p
           className="muted"
           style={{
-            marginBottom: 0,
+            margin: 0,
+            lineHeight: 1.5,
           }}
         >
-          Aqui ficam concentrados os
-          alertas e lembretes
-          operacionais do
+          Acompanhe diariamente
+          alertas, pendências e
+          lembretes operacionais do
           Aprovisionamento.
         </p>
-      </div>
+      </header>
+
+      <section
+        className="card"
+        style={{
+          marginBottom: '16px',
+          border:
+            '1px solid rgba(245,158,11,.35)',
+          background:
+            'rgba(245,158,11,.05)',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            gap: '11px',
+            alignItems: 'flex-start',
+          }}
+        >
+          <div
+            style={{
+              width: '38px',
+              height: '38px',
+              flexShrink: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: '11px',
+              background:
+                'rgba(245,158,11,.10)',
+              border:
+                '1px solid rgba(245,158,11,.3)',
+              fontSize: '18px',
+            }}
+          >
+            !
+          </div>
+
+          <div>
+            <strong
+              style={{
+                fontSize: '15px',
+              }}
+            >
+              Consulta diária
+            </strong>
+
+            <p
+              className="muted"
+              style={{
+                margin:
+                  '4px 0 0',
+                fontSize: '11px',
+                lineHeight: 1.5,
+              }}
+            >
+              Este painel concentra
+              informações que podem
+              exigir providências antes
+              da execução das atividades
+              do rancho.
+            </p>
+          </div>
+        </div>
+      </section>
 
       {/* FLV */}
 
@@ -415,26 +503,73 @@ export default async function AvisosPage() {
       {podeVerEfetivo &&
         quantidadeDiasPendentes >
           0 && (
-          <div
+          <section
             className="card"
             style={{
               border:
-                '1px solid #ef4444',
-
+                '1px solid rgba(239,68,68,.6)',
               background:
-                'rgba(239, 68, 68, 0.08)',
+                'rgba(239,68,68,.07)',
             }}
           >
-            <h2
+            <div
               style={{
-                marginTop: 0,
+                display: 'flex',
+                alignItems:
+                  'flex-start',
+                gap: '10px',
+                marginBottom:
+                  '12px',
               }}
             >
-              ⚠ Fechamento Diário
-              pendente
-            </h2>
+              <span
+                style={{
+                  fontSize: '20px',
+                }}
+              >
+                ⚠
+              </span>
 
-            <p>
+              <div>
+                <h2
+                  style={{
+                    margin: 0,
+                    fontSize:
+                      '17px',
+                  }}
+                >
+                  Fechamento Diário
+                  pendente
+                </h2>
+
+                <p
+                  className="muted"
+                  style={{
+                    margin:
+                      '4px 0 0',
+                    fontSize:
+                      '11px',
+                  }}
+                >
+                  Regularize os dias
+                  anteriores antes de
+                  manter o controle
+                  diário atualizado.
+                </p>
+              </div>
+            </div>
+
+            <div
+              style={{
+                padding: '11px',
+                borderRadius:
+                  '10px',
+                background:
+                  'rgba(0,0,0,.14)',
+                marginBottom:
+                  '10px',
+              }}
+            >
               Existem{' '}
               <strong>
                 {
@@ -448,13 +583,12 @@ export default async function AvisosPage() {
               com fechamento do
               efetivo alimentado
               pendente.
-            </p>
+            </div>
 
             <div
               style={{
                 display: 'grid',
-                gap: 12,
-                marginTop: 16,
+                gap: '9px',
               }}
             >
               {diasPendentes.map(
@@ -465,218 +599,376 @@ export default async function AvisosPage() {
                     }
                     style={{
                       padding:
-                        '14px 0',
-
-                      borderTop:
-                        '1px solid rgba(255,255,255,.12)',
+                        '12px',
+                      borderRadius:
+                        '11px',
+                      background:
+                        '#102018',
+                      border:
+                        '1px solid rgba(239,68,68,.3)',
                     }}
                   >
                     <div
-                      className="row"
                       style={{
-                        marginBottom: 10,
+                        display:
+                          'grid',
+                        gridTemplateColumns:
+                          'repeat(2, minmax(0, 1fr))',
+                        gap: '8px',
+                        marginBottom:
+                          '10px',
                       }}
                     >
-                      <span>
-                        Data pendente
-                      </span>
+                      <div>
+                        <div
+                          className="muted"
+                          style={{
+                            fontSize:
+                              '9px',
+                          }}
+                        >
+                          DATA
+                        </div>
 
-                      <strong>
-                        {dataBR(
-                          pendencia.data
-                        )}
-                      </strong>
-                    </div>
+                        <strong
+                          style={{
+                            fontSize:
+                              '12px',
+                          }}
+                        >
+                          {dataBR(
+                            pendencia.data
+                          )}
+                        </strong>
+                      </div>
 
-                    <div
-                      className="row"
-                      style={{
-                        marginBottom: 12,
-                      }}
-                    >
-                      <span>
-                        Refeições
-                        pendentes
-                      </span>
+                      <div>
+                        <div
+                          className="muted"
+                          style={{
+                            fontSize:
+                              '9px',
+                          }}
+                        >
+                          REFEIÇÕES
+                        </div>
 
-                      <strong>
-                        {
-                          pendencia.quantidadeRefeicoes
-                        }
-                      </strong>
+                        <strong
+                          style={{
+                            fontSize:
+                              '12px',
+                          }}
+                        >
+                          {
+                            pendencia.quantidadeRefeicoes
+                          }
+                        </strong>
+                      </div>
                     </div>
 
                     <Link
                       className="btn"
                       href={`/efetivo/fechamento?data=${pendencia.data}`}
+                      style={{
+                        width:
+                          '100%',
+                        textAlign:
+                          'center',
+                      }}
                     >
-                      Realizar
-                      fechamento de{' '}
-                      {dataBR(
-                        pendencia.data
-                      )}
+                      Realizar fechamento
                     </Link>
                   </div>
                 )
               )}
             </div>
-          </div>
+          </section>
         )}
 
       {/* EFETIVO DO DIA SEGUINTE */}
 
       {podeVerEfetivo &&
         (!efetivoAmanhaInformado ? (
-          <div
+          <section
             className="card"
             style={{
               border:
-                '1px solid #f59e0b',
-
+                '1px solid rgba(245,158,11,.55)',
               background:
-                'rgba(245, 158, 11, 0.08)',
+                'rgba(245,158,11,.07)',
             }}
           >
             <h2
               style={{
                 marginTop: 0,
+                fontSize: '17px',
               }}
             >
-              ⚠ Efetivo do dia
-              seguinte
+              ⚠ Efetivo de amanhã
             </h2>
 
-            <p>
+            <p
+              style={{
+                marginBottom:
+                  '6px',
+              }}
+            >
               O efetivo arranchado
               previsto para amanhã
-              ainda não foi
-              informado.
+              ainda não foi informado.
             </p>
 
-            <p className="muted">
-              O planejamento deve
-              estar disponível para
-              que o saque dos gêneros
-              ocorra antes das 15:00
-              do dia anterior.
+            <p
+              className="muted"
+              style={{
+                fontSize: '11px',
+                lineHeight: 1.5,
+              }}
+            >
+              O planejamento deve estar
+              disponível para que o
+              saque dos gêneros ocorra
+              antes das 15:00 do dia
+              anterior.
             </p>
 
-            <div className="actions">
-              <Link
-                className="btn"
-                href="/efetivo"
-              >
-                Informar efetivo de
-                amanhã
-              </Link>
-            </div>
-          </div>
+            <Link
+              className="btn"
+              href="/efetivo"
+              style={{
+                display:
+                  'block',
+                width: '100%',
+                textAlign:
+                  'center',
+                marginTop:
+                  '12px',
+              }}
+            >
+              Informar efetivo de amanhã
+            </Link>
+          </section>
         ) : (
-          <div
+          <section
             className="card"
             style={{
               border:
-                '1px solid #22c55e',
-
+                '1px solid rgba(43,138,87,.55)',
               background:
-                'rgba(34, 197, 94, 0.07)',
+                'rgba(43,138,87,.07)',
             }}
           >
             <h2
               style={{
                 marginTop: 0,
+                fontSize: '17px',
               }}
             >
-              ✓ Efetivo do dia
-              seguinte informado
+              ✓ Efetivo de amanhã
+              informado
             </h2>
 
-            <div className="row">
-              <span>
-                Refeições
-                relacionadas
-              </span>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns:
+                  'repeat(3, minmax(0, 1fr))',
+                gap: '7px',
+                marginTop: '12px',
+              }}
+            >
+              <div
+                style={{
+                  padding:
+                    '10px 7px',
+                  borderRadius:
+                    '10px',
+                  background:
+                    '#102018',
+                  border:
+                    '1px solid #284334',
+                  textAlign:
+                    'center',
+                }}
+              >
+                <div
+                  className="muted"
+                  style={{
+                    fontSize: '8px',
+                  }}
+                >
+                  REFEIÇÕES
+                </div>
 
-              <strong>
-                {
-                  arranchamentosAmanha.length
-                }
-              </strong>
+                <strong
+                  style={{
+                    display:
+                      'block',
+                    marginTop:
+                      '3px',
+                  }}
+                >
+                  {
+                    arranchamentosAmanha.length
+                  }
+                </strong>
+              </div>
+
+              <div
+                style={{
+                  padding:
+                    '10px 7px',
+                  borderRadius:
+                    '10px',
+                  background:
+                    '#102018',
+                  border:
+                    '1px solid #284334',
+                  textAlign:
+                    'center',
+                }}
+              >
+                <div
+                  className="muted"
+                  style={{
+                    fontSize: '8px',
+                  }}
+                >
+                  PREVISTO
+                </div>
+
+                <strong
+                  style={{
+                    display:
+                      'block',
+                    marginTop:
+                      '3px',
+                  }}
+                >
+                  {
+                    totalPrevistoAmanha
+                  }
+                </strong>
+              </div>
+
+              <div
+                style={{
+                  padding:
+                    '10px 7px',
+                  borderRadius:
+                    '10px',
+                  background:
+                    '#102018',
+                  border:
+                    '1px solid #284334',
+                  textAlign:
+                    'center',
+                }}
+              >
+                <div
+                  className="muted"
+                  style={{
+                    fontSize: '8px',
+                  }}
+                >
+                  PLANEJADO
+                </div>
+
+                <strong
+                  style={{
+                    display:
+                      'block',
+                    marginTop:
+                      '3px',
+                  }}
+                >
+                  {
+                    totalPlanejamentoAmanha
+                  }
+                </strong>
+              </div>
             </div>
-
-            <div className="row">
-              <span>
-                Efetivo previsto
-              </span>
-
-              <strong>
-                {
-                  totalPrevistoAmanha
-                }
-              </strong>
-            </div>
-
-            <div className="row">
-              <span>
-                Efetivo considerado
-                no planejamento
-              </span>
-
-              <strong>
-                {
-                  totalPlanejamentoAmanha
-                }
-              </strong>
-            </div>
-          </div>
+          </section>
         ))}
 
       {/* ESTOQUE ABAIXO DO MÍNIMO */}
 
       {podeVerEstoque &&
         baixos.length > 0 && (
-          <div
+          <section
             className="card"
             style={{
               border:
-                '1px solid #f59e0b',
-
+                '1px solid rgba(245,158,11,.55)',
               background:
-                'rgba(245, 158, 11, 0.08)',
+                'rgba(245,158,11,.07)',
             }}
           >
             <h2
               style={{
                 marginTop: 0,
+                fontSize: '17px',
               }}
             >
-              ⚠ Estoque abaixo do
-              mínimo
+              ⚠ Estoque abaixo do mínimo
             </h2>
 
-            <p>
-              Existem{' '}
-              <strong>
-                {baixos.length}
-              </strong>{' '}
-              gênero(s) abaixo do
-              estoque mínimo
-              definido.
-            </p>
-
-            <div className="actions">
-              <Link
-                className="btn secondary"
-                href={
-                  administrador
-                    ? '/relatorios'
-                    : '/estoque'
-                }
+            <div
+              style={{
+                display: 'flex',
+                alignItems:
+                  'center',
+                justifyContent:
+                  'space-between',
+                gap: '10px',
+                padding: '11px',
+                borderRadius:
+                  '10px',
+                background:
+                  '#102018',
+                border:
+                  '1px solid #284334',
+              }}
+            >
+              <span
+                className="muted"
+                style={{
+                  fontSize: '11px',
+                }}
               >
-                Consultar estoque
-              </Link>
+                Gêneros abaixo do
+                mínimo
+              </span>
+
+              <strong
+                style={{
+                  fontSize: '18px',
+                }}
+              >
+                {baixos.length}
+              </strong>
             </div>
-          </div>
+
+            <Link
+              className="btn"
+              href={
+                administrador
+                  ? '/relatorios'
+                  : '/estoque'
+              }
+              style={{
+                display:
+                  'block',
+                width: '100%',
+                textAlign:
+                  'center',
+                marginTop:
+                  '12px',
+              }}
+            >
+              Consultar estoque
+            </Link>
+          </section>
         )}
 
       {/* VALIDADE PRÓXIMA */}
@@ -684,19 +976,19 @@ export default async function AvisosPage() {
       {podeVerEstoque &&
         quantidadeProximosDaValidade >
           0 && (
-          <div
+          <section
             className="card"
             style={{
               border:
-                '1px solid #f59e0b',
-
+                '1px solid rgba(245,158,11,.55)',
               background:
-                'rgba(245, 158, 11, 0.08)',
+                'rgba(245,158,11,.07)',
             }}
           >
             <h2
               style={{
                 marginTop: 0,
+                fontSize: '17px',
               }}
             >
               ⏳ Validade próxima
@@ -712,19 +1004,24 @@ export default async function AvisosPage() {
               30 dias.
             </p>
 
-            <div className="actions">
-              <Link
-                className="btn secondary"
-                href={
-                  administrador
-                    ? '/relatorios'
-                    : '/estoque'
-                }
-              >
-                Consultar
-              </Link>
-            </div>
-          </div>
+            <Link
+              className="btn"
+              href={
+                administrador
+                  ? '/relatorios'
+                  : '/estoque'
+              }
+              style={{
+                display:
+                  'block',
+                width: '100%',
+                textAlign:
+                  'center',
+              }}
+            >
+              Consultar lotes
+            </Link>
+          </section>
         )}
 
       {/* LOTES VENCIDOS */}
@@ -732,19 +1029,19 @@ export default async function AvisosPage() {
       {podeVerEstoque &&
         quantidadeVencidos >
           0 && (
-          <div
+          <section
             className="card"
             style={{
               border:
-                '1px solid #ef4444',
-
+                '1px solid rgba(239,68,68,.6)',
               background:
-                'rgba(239, 68, 68, 0.08)',
+                'rgba(239,68,68,.07)',
             }}
           >
             <h2
               style={{
                 marginTop: 0,
+                fontSize: '17px',
               }}
             >
               ⚠ Lote vencido
@@ -761,37 +1058,42 @@ export default async function AvisosPage() {
               saldo registrado.
             </p>
 
-            <div className="actions">
-              <Link
-                className="btn secondary"
-                href={
-                  administrador
-                    ? '/relatorios'
-                    : '/estoque'
-                }
-              >
-                Verificar agora
-              </Link>
-            </div>
-          </div>
+            <Link
+              className="btn"
+              href={
+                administrador
+                  ? '/relatorios'
+                  : '/estoque'
+              }
+              style={{
+                display:
+                  'block',
+                width: '100%',
+                textAlign:
+                  'center',
+              }}
+            >
+              Verificar agora
+            </Link>
+          </section>
         )}
 
       {/* CARDÁPIO */}
 
       {exibirLembreteCardapio && (
-        <div
+        <section
           className="card"
           style={{
             border:
-              '1px solid #3b82f6',
-
+              '1px solid rgba(59,130,246,.55)',
             background:
-              'rgba(59, 130, 246, 0.08)',
+              'rgba(59,130,246,.07)',
           }}
         >
           <h2
             style={{
               marginTop: 0,
+              fontSize: '17px',
             }}
           >
             📅 Cardápio da próxima
@@ -804,7 +1106,13 @@ export default async function AvisosPage() {
             </strong>
           </p>
 
-          <p className="muted">
+          <p
+            className="muted"
+            style={{
+              fontSize: '11px',
+              lineHeight: 1.5,
+            }}
+          >
             Verifique e cadastre o
             cardápio previsto para a
             próxima semana. Esse
@@ -815,33 +1123,37 @@ export default async function AvisosPage() {
             especialmente os FLV.
           </p>
 
-          <div className="actions">
-            <Link
-              className="btn secondary"
-              href="/cardapio"
-            >
-              Acessar Cardápio
-            </Link>
-          </div>
-        </div>
+          <Link
+            className="btn"
+            href="/cardapio"
+            style={{
+              display: 'block',
+              width: '100%',
+              textAlign: 'center',
+              marginTop: '12px',
+            }}
+          >
+            Acessar Cardápio
+          </Link>
+        </section>
       )}
 
       {/* QDAA */}
 
       {exibirLembreteQDAA && (
-        <div
+        <section
           className="card"
           style={{
             border:
-              '1px solid #3b82f6',
-
+              '1px solid rgba(59,130,246,.55)',
             background:
-              'rgba(59, 130, 246, 0.08)',
+              'rgba(59,130,246,.07)',
           }}
         >
           <h2
             style={{
               marginTop: 0,
+              fontSize: '17px',
             }}
           >
             📋 Lembrete QDAA
@@ -869,50 +1181,78 @@ export default async function AvisosPage() {
             </p>
           )}
 
-          <div className="actions">
-            <Link
-              className="btn secondary"
-              href="/qdaa"
-            >
-              Acessar QDAA /
-              Ressuprimento QS
-            </Link>
-          </div>
-        </div>
+          <Link
+            className="btn"
+            href="/qdaa"
+            style={{
+              display: 'block',
+              width: '100%',
+              textAlign: 'center',
+              marginTop: '12px',
+            }}
+          >
+            Acessar QDAA /
+            Ressuprimento QS
+          </Link>
+        </section>
       )}
 
       {/* SEM PENDÊNCIAS */}
 
-      {baixos.length === 0 &&
-        quantidadeProximosDaValidade ===
-          0 &&
-        quantidadeVencidos === 0 &&
-        fechamentosPendentes.length ===
-          0 &&
-        efetivoAmanhaInformado &&
-        !exibirLembreteCardapio &&
-        !exibirLembreteQDAA && (
-          <div className="card">
-            <h2
+      {semOutrasPendencias && (
+        <section
+          className="card"
+          style={{
+            border:
+              '1px solid rgba(43,138,87,.45)',
+            background:
+              'rgba(43,138,87,.06)',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems:
+                'flex-start',
+              gap: '10px',
+            }}
+          >
+            <span
               style={{
-                marginTop: 0,
+                fontSize: '20px',
               }}
             >
-              ✓ Situação operacional
-            </h2>
+              ✓
+            </span>
 
-            <p
-              className="muted"
-              style={{
-                marginBottom: 0,
-              }}
-            >
-              Nenhuma outra pendência
-              operacional identificada
-              no momento.
-            </p>
+            <div>
+              <strong
+                style={{
+                  fontSize: '15px',
+                }}
+              >
+                Situação operacional
+              </strong>
+
+              <p
+                className="muted"
+                style={{
+                  margin:
+                    '4px 0 0',
+                  fontSize:
+                    '11px',
+                  lineHeight: 1.5,
+                }}
+              >
+                Nenhuma outra
+                pendência operacional
+                identificada no
+                momento.
+              </p>
+            </div>
           </div>
-        )}
+        </section>
+      )}
 
       <NavegacaoInferior />
     </main>
