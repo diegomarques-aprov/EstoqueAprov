@@ -4,6 +4,8 @@ import { requireAdmin } from '@/lib/guard';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+const MESES_CICLO_RESSUPRIMENTO_QS = 2;
+
 function primeiroDiaMesUTC(data: Date) {
   return new Date(
     Date.UTC(
@@ -58,9 +60,17 @@ export async function GET(req: Request) {
     q.get('historico') || 2
   );
 
-  const mesesCiclo = Number(
-    q.get('ciclo') || 2
-  );
+  /*
+   * O Ressuprimento QS normal é sempre
+   * BIMESTRAL.
+   *
+   * Eventuais necessidades surgidas dentro
+   * do ciclo serão tratadas posteriormente
+   * como Ressuprimento Complementar,
+   * sem alterar o ciclo normal.
+   */
+  const mesesCiclo =
+    MESES_CICLO_RESSUPRIMENTO_QS;
 
   const margemSeguranca = Number(
     q.get('margem') || 10
@@ -75,22 +85,6 @@ export async function GET(req: Request) {
       {
         error:
           'O histórico deve possuir entre 1 e 12 meses.',
-      },
-      {
-        status: 400,
-      }
-    );
-  }
-
-  if (
-    !Number.isInteger(mesesCiclo) ||
-    mesesCiclo < 1 ||
-    mesesCiclo > 12
-  ) {
-    return Response.json(
-      {
-        error:
-          'O ciclo deve possuir entre 1 e 12 meses.',
       },
       {
         status: 400,
@@ -463,11 +457,15 @@ export async function GET(req: Request) {
         'SEM_BASE_CALCULO';
     }
 
+    /*
+     * O consumo projetado corresponde sempre
+     * ao ciclo NORMAL de 2 meses.
+     */
     const consumoProjetado =
       mediaMensalUtilizada == null
         ? null
         : mediaMensalUtilizada *
-          mesesCiclo;
+          MESES_CICLO_RESSUPRIMENTO_QS;
 
     const estoqueSeguranca =
       consumoProjetado == null
@@ -609,10 +607,11 @@ export async function GET(req: Request) {
             ),
 
       /*
-       * Projeção.
+       * Projeção bimestral.
        */
 
-      mesesCiclo,
+      mesesCiclo:
+        MESES_CICLO_RESSUPRIMENTO_QS,
 
       consumoProjetado:
         consumoProjetado == null
@@ -822,14 +821,15 @@ export async function GET(req: Request) {
       'PLANEJAMENTO_RESSUPRIMENTO_QS',
 
     descricao:
-      'Estimativa de necessidade de gêneros QS para o próximo ciclo de ressuprimento.',
+      'Estimativa bimestral da necessidade de gêneros QS para o ciclo normal de ressuprimento.',
 
     classe: 'QS',
 
     parametros: {
       mesesHistorico,
 
-      mesesCiclo,
+      mesesCiclo:
+        MESES_CICLO_RESSUPRIMENTO_QS,
 
       margemSegurancaPercent:
         margemSeguranca,
@@ -869,10 +869,10 @@ export async function GET(req: Request) {
         'Consumo líquido real = saídas - devoluções',
 
       expressao:
-        'Consumo projetado + estoque de segurança - estoque disponível - quantidade prevista para receber',
+        'Consumo projetado bimestral + estoque de segurança - estoque disponível - quantidade prevista para receber',
 
       observacao:
-        'O histórico real do EstoqueAprov é a base automática do cálculo. A referência inicial somente é utilizada quando ainda não existe histórico real para o gênero.',
+        'O Ressuprimento QS normal possui ciclo fixo de 2 meses. O histórico real do EstoqueAprov é a base automática do cálculo. A referência inicial somente é utilizada quando ainda não existe histórico real para o gênero.',
     },
 
     itens,
@@ -881,6 +881,8 @@ export async function GET(req: Request) {
       totais,
 
     avisos: [
+      'O Ressuprimento QS normal é sempre bimestral.',
+      'Necessidades extraordinárias dentro do ciclo devem ser registradas como Ressuprimento Complementar.',
       'O histórico automático utiliza o consumo líquido real dos meses completos.',
       'As devoluções são descontadas das saídas antes do cálculo do consumo histórico.',
       'Saídas canceladas não são consideradas consumo.',
