@@ -737,6 +737,22 @@ function PlanejamentoQDAAContent() {
           null
       ).length || 0;
 
+  const quantidadeComBase =
+    ressuprimento
+      ? Number(
+          ressuprimento
+            .estatisticas
+            ?.usandoHistoricoEstoqueAprov ||
+            0
+        ) +
+        Number(
+          ressuprimento
+            .estatisticas
+            ?.usandoReferenciaInicial ||
+            0
+        )
+      : 0;
+
   return (
     <main>
       <header
@@ -942,17 +958,16 @@ function PlanejamentoQDAAContent() {
               titulo="Gêneros QS"
               valor={
                 ressuprimento
-                  .resumo
-                  .totalGenerosQS
+                  .estatisticas
+                  ?.generosQS ||
+                0
               }
             />
 
             <Indicador
               titulo="Com base"
               valor={
-                ressuprimento
-                  .resumo
-                  .comBaseCalculo
+                quantidadeComBase
               }
             />
 
@@ -960,14 +975,17 @@ function PlanejamentoQDAAContent() {
               titulo="Pendentes"
               valor={
                 ressuprimento
-                  .resumo
-                  .semBaseCalculo
+                  .estatisticas
+                  ?.semBaseCalculo ||
+                0
               }
               alerta={
-                ressuprimento
-                  .resumo
-                  .semBaseCalculo >
-                0
+                Number(
+                  ressuprimento
+                    .estatisticas
+                    ?.semBaseCalculo ||
+                    0
+                ) > 0
               }
             />
           </section>
