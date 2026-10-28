@@ -884,7 +884,7 @@ function ReferenciaQSContent() {
               </Link>
             )}
 
-            {proximo ? (
+            {proximo && (
               <Link
                 href={enderecoReferencia(
                   proximo.generoId
@@ -893,17 +893,26 @@ function ReferenciaQSContent() {
               >
                 Avançar →
               </Link>
-            ) : (
-              <Link
-                href={
-                  enderecoPlanejamento()
-                }
-                className="navigation-footer-link"
-              >
-                Voltar ao planejamento
-              </Link>
             )}
           </div>
+        </div>
+
+        <div
+          style={{
+            marginTop: '12px',
+            paddingTop: '12px',
+            borderTop:
+              '1px solid rgba(255,255,255,.08)',
+          }}
+        >
+          <Link
+            href={
+              enderecoPlanejamento()
+            }
+            className="navigation-footer-link"
+          >
+            ← Voltar ao planejamento
+          </Link>
         </div>
       </div>
     </main>
