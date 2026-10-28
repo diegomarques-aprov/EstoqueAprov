@@ -35,30 +35,31 @@ enum StatusPlanejamentoRessuprimentoQS {
 }
 
 model Usuario {
-  id                           String                          @id @default(cuid())
-  nome                         String
-  postoGraduacao               String?
-  funcao                       String?
-  login                        String                          @unique
-  senhaHash                    String
-  perfil                       PerfilSistema                   @default(GRADUADO_SERVICO)
-  situacao                     Situacao                        @default(ATIVO)
-  ultimoAcesso                 DateTime?
-  criadoEm                     DateTime                        @default(now())
-  atualizadoEm                 DateTime                        @updatedAt
-  generosCriados               Genero[]                        @relation("GeneroCriador")
-  auditorias                   Auditoria[]
-  recebimentos                 Recebimento[]                   @relation("RecebimentoCriador")
-  movimentacoesEstoque         MovimentacaoEstoque[]           @relation("MovUsuario")
-  saidas                       Saida[]                          @relation("SaidaCriador")
-  arranchamentos               Arranchamento[]                  @relation("ArranchamentoUsuario")
-  referenciasConsumoQS         ReferenciaConsumoQS[]            @relation("ReferenciaConsumoQSUsuario")
-  planejamentosRessuprimentoQS PlanejamentoRessuprimentoQS[]    @relation("PlanejamentoRessuprimentoQSUsuario")
-  recursosQR                   RecursoQR[]                      @relation("RecursoQRCriador")
-  movimentosFinanceirosQR      MovimentacaoFinanceiraQR[]       @relation("MovFinanceiraQRUsuario")
-  comprasQR                    CompraQR[]                       @relation("CompraQRCriador")
-  conferenciasFLV              ConferenciaFLV[]                 @relation("ConferenciaFLVUsuario")
-  cardapios                    Cardapio[]                       @relation("CardapioUsuario")
+  id                              String                           @id @default(cuid())
+  nome                            String
+  postoGraduacao                  String?
+  funcao                          String?
+  login                           String                           @unique
+  senhaHash                       String
+  perfil                          PerfilSistema                    @default(GRADUADO_SERVICO)
+  situacao                        Situacao                         @default(ATIVO)
+  ultimoAcesso                    DateTime?
+  criadoEm                        DateTime                         @default(now())
+  atualizadoEm                    DateTime                         @updatedAt
+  generosCriados                  Genero[]                         @relation("GeneroCriador")
+  auditorias                      Auditoria[]
+  recebimentos                    Recebimento[]                    @relation("RecebimentoCriador")
+  movimentacoesEstoque            MovimentacaoEstoque[]            @relation("MovUsuario")
+  saidas                          Saida[]                           @relation("SaidaCriador")
+  arranchamentos                  Arranchamento[]                   @relation("ArranchamentoUsuario")
+  referenciasConsumoQS            ReferenciaConsumoQS[]             @relation("ReferenciaConsumoQSUsuario")
+  planejamentosRessuprimentoQS    PlanejamentoRessuprimentoQS[]     @relation("PlanejamentoRessuprimentoQSUsuario")
+  ressuprimentosComplementaresQS  RessuprimentoComplementarQS[]     @relation("RessuprimentoComplementarQSUsuario")
+  recursosQR                      RecursoQR[]                       @relation("RecursoQRCriador")
+  movimentosFinanceirosQR         MovimentacaoFinanceiraQR[]        @relation("MovFinanceiraQRUsuario")
+  comprasQR                       CompraQR[]                        @relation("CompraQRCriador")
+  conferenciasFLV                 ConferenciaFLV[]                  @relation("ConferenciaFLVUsuario")
+  cardapios                       Cardapio[]                        @relation("CardapioUsuario")
 }
 
 model LocalArmazenamento {
@@ -110,33 +111,34 @@ model UnidadeMedida {
 }
 
 model Genero {
-  id                               String                            @id @default(cuid())
-  nome                             String
-  classe                           ClasseGenero
-  categoriaId                      String?
-  categoria                        Categoria?                        @relation(fields: [categoriaId], references: [id])
-  unidadeId                        String
-  unidade                          UnidadeMedida                     @relation(fields: [unidadeId], references: [id])
-  controlaLote                     Boolean                           @default(false)
-  controlaValidade                 Boolean                           @default(false)
-  estoqueMinimo                    Decimal?                          @db.Decimal(14, 3)
-  valorUnitarioReferencia          Decimal?                          @db.Decimal(14, 4)
-  localPadraoId                    String?
-  localPadrao                      LocalArmazenamento?               @relation(fields: [localPadraoId], references: [id])
-  situacao                         Situacao                          @default(ATIVO)
-  criadoPorId                      String
-  criadoPor                        Usuario                           @relation("GeneroCriador", fields: [criadoPorId], references: [id])
-  criadoEm                         DateTime                          @default(now())
-  atualizadoEm                     DateTime                          @updatedAt
-  lotes                            Lote[]
-  estoques                         EstoqueLocal[]
-  itensRecebimento                 ItemRecebimento[]
-  itensSaida                       ItemSaida[]
-  movimentacoesEstoque             MovimentacaoEstoque[]
-  referenciasConsumoQS             ReferenciaConsumoQS[]
-  itensPlanejamentoRessuprimentoQS ItemPlanejamentoRessuprimentoQS[]
-  itensCompraQR                    ItemCompraQR[]
-  itensRecebimentoCompraQR         ItemRecebimentoCompraQR[]
+  id                                    String                             @id @default(cuid())
+  nome                                  String
+  classe                                ClasseGenero
+  categoriaId                           String?
+  categoria                             Categoria?                         @relation(fields: [categoriaId], references: [id])
+  unidadeId                             String
+  unidade                               UnidadeMedida                      @relation(fields: [unidadeId], references: [id])
+  controlaLote                          Boolean                            @default(false)
+  controlaValidade                      Boolean                            @default(false)
+  estoqueMinimo                         Decimal?                           @db.Decimal(14, 3)
+  valorUnitarioReferencia               Decimal?                           @db.Decimal(14, 4)
+  localPadraoId                         String?
+  localPadrao                           LocalArmazenamento?                @relation(fields: [localPadraoId], references: [id])
+  situacao                              Situacao                           @default(ATIVO)
+  criadoPorId                           String
+  criadoPor                             Usuario                            @relation("GeneroCriador", fields: [criadoPorId], references: [id])
+  criadoEm                              DateTime                           @default(now())
+  atualizadoEm                          DateTime                           @updatedAt
+  lotes                                 Lote[]
+  estoques                              EstoqueLocal[]
+  itensRecebimento                      ItemRecebimento[]
+  itensSaida                            ItemSaida[]
+  movimentacoesEstoque                  MovimentacaoEstoque[]
+  referenciasConsumoQS                  ReferenciaConsumoQS[]
+  itensPlanejamentoRessuprimentoQS      ItemPlanejamentoRessuprimentoQS[]
+  itensRessuprimentoComplementarQS      ItemRessuprimentoComplementarQS[]
+  itensCompraQR                         ItemCompraQR[]
+  itensRecebimentoCompraQR              ItemRecebimentoCompraQR[]
 
   @@unique([nome, classe])
 }
@@ -160,19 +162,20 @@ model ReferenciaConsumoQS {
 }
 
 model PlanejamentoRessuprimentoQS {
-  id                     String                            @id @default(cuid())
-  dataReferencia         DateTime
-  mesesHistorico         Int
-  mesesCiclo             Int                               @default(2)
-  margemSegurancaPercent Decimal                           @db.Decimal(5, 2)
-  status                 StatusPlanejamentoRessuprimentoQS @default(RASCUNHO)
-  observacao             String?
-  usuarioId              String
-  usuario                Usuario                           @relation("PlanejamentoRessuprimentoQSUsuario", fields: [usuarioId], references: [id])
-  criadoEm               DateTime                          @default(now())
-  atualizadoEm           DateTime                          @updatedAt
-  finalizadoEm           DateTime?
-  itens                  ItemPlanejamentoRessuprimentoQS[]
+  id                        String                            @id @default(cuid())
+  dataReferencia            DateTime
+  mesesHistorico            Int
+  mesesCiclo                Int                               @default(2)
+  margemSegurancaPercent    Decimal                           @db.Decimal(5, 2)
+  status                    StatusPlanejamentoRessuprimentoQS @default(RASCUNHO)
+  observacao                String?
+  usuarioId                 String
+  usuario                   Usuario                           @relation("PlanejamentoRessuprimentoQSUsuario", fields: [usuarioId], references: [id])
+  criadoEm                  DateTime                          @default(now())
+  atualizadoEm              DateTime                          @updatedAt
+  finalizadoEm              DateTime?
+  itens                     ItemPlanejamentoRessuprimentoQS[]
+  ressuprimentosComplementares RessuprimentoComplementarQS[]
 
   @@index([dataReferencia])
   @@index([status])
@@ -200,6 +203,55 @@ model ItemPlanejamentoRessuprimentoQS {
   atualizadoEm DateTime @updatedAt
 
   @@unique([planejamentoId, generoId])
+  @@index([generoId])
+}
+
+/*
+ * =====================================================
+ * RESSUPRIMENTO COMPLEMENTAR QS
+ * =====================================================
+ *
+ * Registra uma necessidade extraordinária surgida
+ * dentro de um ciclo normal bimestral já planejado.
+ *
+ * Não substitui nem altera o planejamento original.
+ * Não movimenta estoque.
+ *
+ * O recebimento físico dos gêneros continua sendo
+ * registrado no módulo Recebimentos.
+ */
+
+model RessuprimentoComplementarQS {
+  id               String                      @id @default(cuid())
+  planejamentoId   String
+  planejamento     PlanejamentoRessuprimentoQS @relation(fields: [planejamentoId], references: [id], onDelete: Restrict)
+
+  justificativa    String
+
+  usuarioId        String
+  usuario          Usuario                     @relation("RessuprimentoComplementarQSUsuario", fields: [usuarioId], references: [id])
+
+  criadoEm         DateTime                    @default(now())
+
+  itens            ItemRessuprimentoComplementarQS[]
+
+  @@index([planejamentoId])
+  @@index([criadoEm])
+}
+
+model ItemRessuprimentoComplementarQS {
+  id                          String                       @id @default(cuid())
+  ressuprimentoComplementarId String
+  ressuprimentoComplementar   RessuprimentoComplementarQS @relation(fields: [ressuprimentoComplementarId], references: [id], onDelete: Cascade)
+
+  generoId                    String
+  genero                      Genero                       @relation(fields: [generoId], references: [id])
+
+  quantidade                  Decimal                      @db.Decimal(14, 3)
+
+  criadoEm                    DateTime                     @default(now())
+
+  @@unique([ressuprimentoComplementarId, generoId])
   @@index([generoId])
 }
 
