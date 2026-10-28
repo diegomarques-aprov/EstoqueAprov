@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+
 import {
   useEffect,
   useState,
@@ -974,6 +976,60 @@ export default function HistoricoRessuprimentoQSClient() {
             {selecionado.id}
           </div>
         </section>
+
+        {selecionado.status ===
+          'FINALIZADO' &&
+          Number(
+            selecionado.mesesCiclo
+          ) === 2 && (
+            <section
+              style={{
+                marginTop: '19px',
+                paddingTop: '17px',
+                borderTop:
+                  '1px solid rgba(255,255,255,.08)',
+              }}
+            >
+              <strong
+                style={{
+                  fontSize: '16px',
+                }}
+              >
+                Ressuprimentos complementares
+              </strong>
+
+              <p
+                className="muted"
+                style={{
+                  margin:
+                    '5px 0 11px',
+                  fontSize:
+                    '12px',
+                  lineHeight:
+                    1.5,
+                }}
+              >
+                Consulte os complementares já registrados neste ciclo ou registre uma necessidade extraordinária sem alterar o planejamento original.
+              </p>
+
+              <Link
+                href={`/qdaa/ressuprimento-complementar?planejamentoId=${encodeURIComponent(
+                  selecionado.id
+                )}`}
+                className="btn secondary"
+                style={{
+                  display:
+                    'inline-flex',
+                  width:
+                    'auto',
+                  textDecoration:
+                    'none',
+                }}
+              >
+                Ver / registrar complementar
+              </Link>
+            </section>
+          )}
       </>
     );
   }
