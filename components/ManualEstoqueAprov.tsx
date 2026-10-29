@@ -1426,6 +1426,268 @@ export default function ManualEstoqueAprov() {
             registradas pelo sistema para fins de rastreabilidade.
           </Aviso>
         </Tutorial>
+                {/* 15. GÊNEROS QS/QR */}
+
+        <Tutorial
+          id="generos-qs-qr"
+          icone="📦"
+          titulo="Gêneros QS/QR"
+          subtitulo="Cadastro e configuração dos gêneros controlados pelo estoque."
+        >
+          <Titulo>Para que serve</Titulo>
+
+          <Texto>
+            O cadastro de gêneros define os materiais que serão controlados
+            pelo Estoque Aprov. É nele que cada gênero recebe sua
+            classificação QS ou QR, categoria, unidade de medida e demais
+            regras utilizadas nas movimentações do estoque.
+          </Texto>
+
+          <Quadro titulo="Classificação">
+            <strong>QS — Cadeia de suprimento:</strong> gêneros recebidos
+            pela cadeia de suprimento.
+            <br />
+            <br />
+            <strong>QR — Compra local:</strong> gêneros obtidos por
+            aquisição local.
+          </Quadro>
+
+          <Aviso tipo="informacao">
+            As carnes fazem parte do <strong>QS</strong>. Antes de cadastrar
+            um gênero, confira sua classificação para evitar registros na
+            origem incorreta.
+          </Aviso>
+
+          <Titulo>Antes de cadastrar</Titulo>
+
+          <Texto>
+            Para facilitar o cadastro, é recomendável que a estrutura básica
+            do sistema já esteja organizada, principalmente unidades de
+            medida, grupos, categorias e locais de armazenamento.
+          </Texto>
+
+          <Titulo>Como cadastrar um gênero</Titulo>
+
+          <Passos>
+            <li>
+              Na tela inicial, acesse <strong>Gêneros QS/QR</strong>.
+            </li>
+            <li>
+              Escolha a classificação <strong>QS</strong> ou
+              <strong> QR</strong>.
+            </li>
+            <li>
+              Informe o <strong>Nome</strong> do gênero.
+            </li>
+            <li>
+              Selecione a <strong>Categoria</strong>, quando aplicável.
+            </li>
+            <li>
+              Selecione a <strong>Unidade de medida</strong>.
+            </li>
+            <li>
+              Defina se o gênero <strong>Controla lote</strong>.
+            </li>
+            <li>
+              Defina se o gênero <strong>Controla validade</strong>.
+            </li>
+            <li>
+              Informe o <strong>Estoque mínimo</strong>, quando desejar
+              utilizar esse parâmetro de controle.
+            </li>
+            <li>
+              Informe o <strong>Valor unitário de referência</strong>,
+              quando necessário.
+            </li>
+            <li>
+              Selecione o <strong>Local habitual</strong>, quando houver.
+            </li>
+            <li>
+              Confira os dados e toque em
+              <strong> Salvar gênero QS</strong> ou
+              <strong> Salvar gênero QR</strong>, conforme a classificação.
+            </li>
+          </Passos>
+
+          <Titulo>Categoria e padrões automáticos</Titulo>
+
+          <Texto>
+            Quando uma categoria é selecionada, o sistema pode preencher
+            automaticamente os padrões definidos nela para controle de lote,
+            controle de validade e local habitual.
+          </Texto>
+
+          <Aviso>
+            Os dados sugeridos pela categoria devem ser conferidos antes de
+            salvar. O gênero possui sua própria configuração e ela deve
+            representar a forma como o material realmente será controlado.
+          </Aviso>
+
+          <Titulo>Controle de lote</Titulo>
+
+          <Texto>
+            Marque <strong>Controla lote</strong> quando for necessário
+            identificar e acompanhar os diferentes lotes recebidos daquele
+            gênero. Esse controle auxilia a rastreabilidade das entradas,
+            saldos e saídas.
+          </Texto>
+
+          <Aviso>
+            Os gêneros classificados como <strong>FLV</strong> não devem
+            utilizar controle por lote. Para FLV, mantenha o controle de
+            lote desmarcado.
+          </Aviso>
+
+          <Titulo>Controle de validade</Titulo>
+
+          <Texto>
+            Marque <strong>Controla validade</strong> quando o gênero exigir
+            acompanhamento da data de vencimento. Essa informação permite
+            que o sistema auxilie no controle dos materiais que precisam ser
+            utilizados primeiro.
+          </Texto>
+
+          <Aviso tipo="informacao">
+            Para gêneros com validade, a movimentação do estoque deve
+            observar o princípio PVPS — Primeiro que Vence, Primeiro que
+            Sai.
+          </Aviso>
+
+          <Titulo>Estoque mínimo</Titulo>
+
+          <Texto>
+            O estoque mínimo é um parâmetro opcional utilizado para indicar
+            a quantidade mínima desejada para o gênero. Ele auxilia na
+            identificação de materiais que precisam de atenção para
+            reposição.
+          </Texto>
+
+          <Aviso>
+            Informe o estoque mínimo utilizando a mesma unidade de medida
+            cadastrada para o gênero.
+          </Aviso>
+
+          <Titulo>Valor unitário de referência</Titulo>
+
+          <Texto>
+            O valor unitário de referência é opcional e pode ser utilizado
+            pelo sistema em consultas de orçamento estimado.
+          </Texto>
+
+          <Aviso>
+            Esse valor <strong>não representa crédito, empenho ou saldo
+            financeiro</strong>. O Estoque Aprov não utiliza esse campo como
+            controle financeiro de QR.
+          </Aviso>
+
+          <Titulo>Local habitual</Titulo>
+
+          <Texto>
+            O local habitual indica onde o gênero normalmente é armazenado.
+            A seleção facilita a padronização das movimentações e a
+            organização do depósito.
+          </Texto>
+
+          <Aviso tipo="informacao">
+            Para os gêneros FLV, utilize como referência o local destinado
+            aos hortifrutigranjeiros, normalmente a
+            <strong> Câmara de Resfriamento</strong>, conforme a organização
+            física adotada pelo Aprovisionamento.
+          </Aviso>
+
+          <Titulo>Consultar os gêneros cadastrados</Titulo>
+
+          <Texto>
+            A relação de gêneros permite conferir a classificação QS ou QR,
+            categoria, unidade de medida, controles de lote e validade,
+            estoque mínimo, local habitual, valor unitário de referência e
+            situação do cadastro.
+          </Texto>
+
+          <Titulo>Editar um gênero</Titulo>
+
+          <Passos>
+            <li>
+              Abra a relação de gêneros cadastrados.
+            </li>
+            <li>
+              Localize o gênero desejado e toque em
+              <strong> Editar gênero</strong>.
+            </li>
+            <li>
+              Confira ou altere sua classificação QS ou QR.
+            </li>
+            <li>
+              Altere nome, categoria ou unidade de medida, quando
+              necessário.
+            </li>
+            <li>
+              Revise os controles de lote e validade.
+            </li>
+            <li>
+              Revise o estoque mínimo e o valor unitário de referência.
+            </li>
+            <li>
+              Altere o local habitual, se necessário.
+            </li>
+            <li>
+              Confira a situação <strong>Ativo</strong> ou
+              <strong> Inativo</strong>.
+            </li>
+            <li>
+              Salve as alterações.
+            </li>
+          </Passos>
+
+          <Aviso>
+            Para cadastrar ou alterar um gênero, a unidade de medida
+            selecionada deve estar ativa. Quando forem informados categoria
+            e local habitual, eles também precisam estar ativos.
+          </Aviso>
+
+          <Titulo>Ativo e inativo</Titulo>
+
+          <Texto>
+            A situação permite manter o histórico de um gênero que deixou
+            de ser utilizado sem precisar criar outro cadastro ou apagar
+            informações anteriores. Utilize a inativação quando o material
+            não fizer mais parte da rotina operacional.
+          </Texto>
+
+          <Titulo>Cuidados no cadastro</Titulo>
+
+          <Passos>
+            <li>
+              Evite cadastrar o mesmo gênero mais de uma vez na mesma
+              classificação.
+            </li>
+            <li>
+              Confirme sempre se o gênero pertence ao QS ou ao QR.
+            </li>
+            <li>
+              Utilize uma unidade de medida compatível com a forma de
+              recebimento e movimentação do material.
+            </li>
+            <li>
+              Configure lote e validade conforme a necessidade real de
+              controle.
+            </li>
+            <li>
+              Para FLV, não utilize controle por lote.
+            </li>
+            <li>
+              Defina estoque mínimo quando esse parâmetro for útil para o
+              acompanhamento operacional.
+            </li>
+          </Passos>
+
+          <Aviso tipo="informacao">
+            Um cadastro correto dos gêneros é fundamental porque essas
+            informações serão utilizadas posteriormente no estoque inicial,
+            recebimentos, saídas, consultas, alertas, relatórios e
+            planejamento do Aprovisionamento.
+          </Aviso>
+        </Tutorial>
       </div>
 
       <div
