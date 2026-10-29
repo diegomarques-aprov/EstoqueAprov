@@ -147,14 +147,14 @@ export default async function Inicio() {
   return (
     <main>
       <header
-  className="top"
-  style={{
-    alignItems: 'center',
-    paddingTop:
-      'calc(34px + env(safe-area-inset-top))',
-    marginBottom: '8px',
-  }}
->
+        className="top"
+        style={{
+          alignItems: 'center',
+          paddingTop:
+            'calc(34px + env(safe-area-inset-top))',
+          marginBottom: '8px',
+        }}
+      >
         <div
           style={{
             display: 'flex',
@@ -175,8 +175,7 @@ export default async function Inicio() {
               flexShrink: 0,
               objectFit: 'cover',
               borderRadius: '14px',
-              border:
-                '1px solid #284334',
+              border: '1px solid #284334',
               boxShadow:
                 '0 5px 16px rgba(0,0,0,.22)',
             }}
@@ -622,6 +621,34 @@ export default async function Inicio() {
           opacity: 0.9,
         }}
       >
+        <div
+          style={{
+            marginBottom: '16px',
+          }}
+        >
+          <Link
+            href="/sobre"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              minHeight: '38px',
+              padding: '8px 14px',
+              borderRadius: '11px',
+              border:
+                '1px solid rgba(250, 204, 21, .38)',
+              background:
+                'rgba(250, 204, 21, .07)',
+              color: '#facc15',
+              fontSize: '12px',
+              fontWeight: 800,
+              textDecoration: 'none',
+            }}
+          >
+            ◈ Sobre o Estoque Aprov
+          </Link>
+        </div>
+
         <div>
           Desenvolvido por: 1º Sgt Diego
           Marques - 18ª Bda Inf Pan -
