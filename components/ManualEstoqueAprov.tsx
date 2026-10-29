@@ -1108,6 +1108,701 @@ export default function ManualEstoqueAprov() {
             a consistência do estoque.
           </Aviso>
         </Tutorial>
+
+        {/* SAÍDA DE GÊNEROS */}
+
+        <Tutorial
+          id="saida-generos"
+          icone="↑"
+          titulo="Saída de gêneros"
+          subtitulo="Baixa dos materiais liberados para consumo ou utilização."
+        >
+          <TituloTutorial>
+            Para que serve
+          </TituloTutorial>
+
+          <TextoTutorial>
+            O módulo Saída de gêneros é utilizado para
+            registrar a retirada física dos materiais
+            do estoque. Ao confirmar a operação, as
+            quantidades liberadas são baixadas dos
+            saldos disponíveis e a movimentação fica
+            registrada para rastreabilidade.
+          </TextoTutorial>
+
+          <TituloTutorial>
+            Passo a passo
+          </TituloTutorial>
+
+          <Passos>
+            <li>
+              Na tela <strong>Início</strong>, acesse{' '}
+              <strong>Saída de gêneros</strong>.
+            </li>
+
+            <li>
+              Escolha a classe dos materiais:
+              <strong> QS</strong> ou{' '}
+              <strong>QR</strong>.
+            </li>
+
+            <li>
+              Em <strong>Destino da saída</strong>,
+              selecione a finalidade da retirada.
+            </li>
+
+            <li>
+              Confira ou informe a{' '}
+              <strong>data</strong> da saída.
+            </li>
+
+            <li>
+              Se necessário, utilize o campo{' '}
+              <strong>Observação</strong> para registrar
+              informação complementar.
+            </li>
+
+            <li>
+              No primeiro item, selecione o{' '}
+              <strong>Grupo</strong>.
+            </li>
+
+            <li>
+              Selecione a{' '}
+              <strong>Categoria</strong>.
+            </li>
+
+            <li>
+              Selecione o{' '}
+              <strong>Gênero</strong>.
+            </li>
+
+            <li>
+              Confira o saldo disponível apresentado
+              pelo sistema.
+            </li>
+
+            <li>
+              Informe a{' '}
+              <strong>Quantidade</strong> que será
+              liberada.
+            </li>
+
+            <li>
+              Para incluir outros gêneros na mesma
+              saída, toque em{' '}
+              <strong>+ Adicionar</strong>.
+            </li>
+
+            <li>
+              Depois de preencher todos os itens,
+              utilize a opção de revisão da saída.
+            </li>
+
+            <li>
+              Confira destino, data, gêneros e
+              quantidades antes da confirmação.
+            </li>
+
+            <li>
+              Estando tudo correto, confirme a saída.
+            </li>
+          </Passos>
+
+          <TituloTutorial>
+            Destinos disponíveis
+          </TituloTutorial>
+
+          <TextoTutorial>
+            A tela permite identificar a finalidade da
+            saída como <strong>Café da manhã</strong>,{' '}
+            <strong>Almoço</strong>,{' '}
+            <strong>Jantar</strong>,{' '}
+            <strong>Ceia</strong>,{' '}
+            <strong>Serviço do dia seguinte</strong> ou{' '}
+            <strong>Outro</strong>.
+          </TextoTutorial>
+
+          <Aviso tipo="informacao">
+            Na opção Serviço do dia seguinte, a
+            finalidade identifica que o material foi
+            retirado antecipadamente para o serviço
+            seguinte. A movimentação física permanece
+            registrada no momento real em que o
+            material sai do estoque.
+          </Aviso>
+
+          <TituloTutorial>
+            Saldo disponível
+          </TituloTutorial>
+
+          <TextoTutorial>
+            O sistema consulta o estoque da classe
+            selecionada e apresenta o saldo disponível
+            para cada gênero. Gêneros ativos continuam
+            visíveis na estrutura mesmo quando estão
+            sem saldo, permitindo identificar a falta
+            do material.
+          </TextoTutorial>
+
+          <Aviso>
+            Não é possível confirmar uma saída com
+            quantidade superior ao saldo disponível.
+            Gêneros sem estoque também não podem ser
+            liberados.
+          </Aviso>
+
+          <TituloTutorial>
+            Estoque mínimo
+          </TituloTutorial>
+
+          <TextoTutorial>
+            Quando o gênero possuir estoque mínimo
+            cadastrado, o sistema pode sinalizar que o
+            saldo disponível está abaixo desse nível,
+            auxiliando o responsável na avaliação da
+            situação antes da retirada.
+          </TextoTutorial>
+
+          <TituloTutorial>
+            Mais de um gênero
+          </TituloTutorial>
+
+          <TextoTutorial>
+            Uma mesma saída pode conter diversos
+            gêneros. Cada gênero deve ser incluído uma
+            única vez na operação, com sua respectiva
+            quantidade.
+          </TextoTutorial>
+
+          <Aviso>
+            O sistema impede que o mesmo gênero seja
+            adicionado mais de uma vez dentro da mesma
+            saída. Caso seja necessário alterar a
+            quantidade, corrija o próprio item já
+            incluído.
+          </Aviso>
+
+          <TituloTutorial>
+            PVPS e escolha física do estoque
+          </TituloTutorial>
+
+          <TextoTutorial>
+            Na confirmação, o sistema realiza a baixa
+            utilizando os saldos físicos válidos do
+            gênero. Para materiais controlados por
+            validade, a retirada segue a prioridade dos
+            lotes aplicáveis, preservando o princípio
+            PVPS — Primeiro que Vence, Primeiro que Sai.
+          </TextoTutorial>
+
+          <Aviso>
+            Saldo existente em lote vencido ou
+            bloqueado para consumo não deve ser
+            considerado como quantidade válida para
+            uma saída normal.
+          </Aviso>
+
+          <TituloTutorial>
+            Após a confirmação
+          </TituloTutorial>
+
+          <TextoTutorial>
+            O sistema registra a saída, seus itens e
+            cada movimentação física realizada nos
+            respectivos lotes e locais de origem. O
+            estoque é atualizado automaticamente.
+          </TextoTutorial>
+
+          <Aviso tipo="informacao">
+            Após uma saída concluída com sucesso, o
+            sistema apresenta o número da saída e
+            confirma que o estoque foi atualizado.
+          </Aviso>
+
+          <Aviso>
+            Se ocorrer uma falha durante a confirmação,
+            nenhuma baixa parcial deve permanecer
+            efetivada. A operação é tratada de forma
+            conjunta para preservar a consistência do
+            estoque.
+          </Aviso>
+        </Tutorial>
+
+        {/* DEVOLUÇÕES E AJUSTES */}
+
+        <Tutorial
+          id="devolucoes-ajustes"
+          icone="↺"
+          titulo="Devoluções e ajustes"
+          subtitulo="Transferências, devoluções, perdas, correções e cancelamentos."
+        >
+          <TituloTutorial>
+            Para que serve
+          </TituloTutorial>
+
+          <TextoTutorial>
+            O módulo Devoluções e ajustes reúne as
+            operações utilizadas para regularizar ou
+            movimentar saldos já existentes. A tela
+            possui cinco procedimentos distintos:
+            Transferência, Devolução, Perda/Descarte,
+            Correção e Cancelar saída.
+          </TextoTutorial>
+
+          <Aviso>
+            Utilize sempre o procedimento correspondente
+            ao fato que realmente ocorreu. Devolução,
+            perda, correção, transferência e
+            cancelamento possuem efeitos e registros
+            diferentes no histórico do estoque.
+          </Aviso>
+
+          <TituloTutorial>
+            1. Transferência
+          </TituloTutorial>
+
+          <TextoTutorial>
+            A Transferência é utilizada quando um
+            material permanece no estoque, mas muda de
+            local de armazenamento.
+          </TextoTutorial>
+
+          <Passos>
+            <li>
+              Acesse{' '}
+              <strong>Devoluções e ajustes</strong>.
+            </li>
+
+            <li>
+              Selecione{' '}
+              <strong>Transferência</strong>.
+            </li>
+
+            <li>
+              Escolha o saldo físico que será
+              transferido. O item identifica gênero,
+              local e lote, quando houver.
+            </li>
+
+            <li>
+              Selecione o{' '}
+              <strong>local de destino</strong>.
+            </li>
+
+            <li>
+              Informe a{' '}
+              <strong>quantidade</strong> a transferir.
+            </li>
+
+            <li>
+              Registre uma observação quando
+              necessário.
+            </li>
+
+            <li>
+              Confira os dados e confirme a
+              transferência.
+            </li>
+          </Passos>
+
+          <Aviso tipo="informacao">
+            A transferência mantém o mesmo gênero e o
+            mesmo lote. A quantidade é retirada do
+            local de origem e acrescentada ao local de
+            destino, preservando a rastreabilidade.
+          </Aviso>
+
+          <Aviso>
+            O local de destino precisa estar ativo e
+            deve ser diferente do local de origem. A
+            quantidade transferida também não pode ser
+            superior ao saldo disponível.
+          </Aviso>
+
+          <TituloTutorial>
+            2. Devolução ao depósito
+          </TituloTutorial>
+
+          <TextoTutorial>
+            A Devolução é utilizada quando parte ou
+            todo o material de uma saída anteriormente
+            confirmada retorna fisicamente ao depósito.
+          </TextoTutorial>
+
+          <Passos>
+            <li>
+              Selecione a opção{' '}
+              <strong>Devolução</strong>.
+            </li>
+
+            <li>
+              Em <strong>Saída original</strong>,
+              selecione a saída que gerou a retirada do
+              material.
+            </li>
+
+            <li>
+              Selecione o{' '}
+              <strong>gênero devolvido</strong> entre
+              os itens daquela saída.
+            </li>
+
+            <li>
+              Confira a quantidade originalmente
+              liberada.
+            </li>
+
+            <li>
+              Informe a{' '}
+              <strong>quantidade devolvida</strong>.
+            </li>
+
+            <li>
+              Se necessário, informe o motivo ou uma
+              observação.
+            </li>
+
+            <li>
+              Confirme a devolução.
+            </li>
+          </Passos>
+
+          <Aviso tipo="informacao">
+            A devolução recompõe o estoque utilizando
+            as movimentações físicas da saída
+            original. Dessa forma, o material retorna
+            ao gênero, lote e local de onde havia sido
+            efetivamente retirado.
+          </Aviso>
+
+          <Aviso>
+            Não é possível devolver quantidade superior
+            ao que ainda pode ser devolvido daquela
+            saída. O sistema considera também eventuais
+            devoluções anteriores do mesmo gênero.
+          </Aviso>
+
+          <TituloTutorial>
+            Devolução não é correção
+          </TituloTutorial>
+
+          <TextoTutorial>
+            Utilize Devolução quando o material
+            realmente saiu do depósito e depois
+            retornou. Se o problema for uma diferença
+            entre o saldo registrado e a quantidade
+            física encontrada, utilize a operação
+            Correção.
+          </TextoTutorial>
+
+          <TituloTutorial>
+            3. Perda / Descarte
+          </TituloTutorial>
+
+          <TextoTutorial>
+            A operação Perda/Descarte é utilizada para
+            registrar material perdido, inutilizado,
+            deteriorado ou descartado, reduzindo o
+            saldo físico correspondente.
+          </TextoTutorial>
+
+          <Passos>
+            <li>
+              Selecione{' '}
+              <strong>Perda / Descarte</strong>.
+            </li>
+
+            <li>
+              Escolha o saldo físico correspondente ao
+              gênero, local e lote afetados.
+            </li>
+
+            <li>
+              Confira o saldo disponível.
+            </li>
+
+            <li>
+              Informe a{' '}
+              <strong>quantidade da perda</strong>.
+            </li>
+
+            <li>
+              Informe obrigatoriamente o{' '}
+              <strong>motivo</strong>.
+            </li>
+
+            <li>
+              Confirme a perda ou descarte.
+            </li>
+          </Passos>
+
+          <Aviso>
+            A quantidade da perda não pode ser superior
+            ao saldo físico disponível. O motivo é
+            obrigatório e a operação fica registrada
+            para rastreabilidade e auditoria.
+          </Aviso>
+
+          <TituloTutorial>
+            4. Correção de estoque
+          </TituloTutorial>
+
+          <TextoTutorial>
+            A Correção é utilizada para ajustar
+            diferenças identificadas entre o saldo
+            registrado no sistema e o estoque físico
+            realmente existente.
+          </TextoTutorial>
+
+          <Passos>
+            <li>
+              Selecione{' '}
+              <strong>Correção</strong>.
+            </li>
+
+            <li>
+              Escolha o saldo físico que precisa ser
+              corrigido.
+            </li>
+
+            <li>
+              Confira gênero, classe, local, lote e
+              quantidade atual.
+            </li>
+
+            <li>
+              Em <strong>Valor do ajuste</strong>,
+              informe o valor da diferença.
+            </li>
+
+            <li>
+              Utilize um valor{' '}
+              <strong>positivo</strong> para acrescentar
+              quantidade ao saldo.
+            </li>
+
+            <li>
+              Utilize um valor{' '}
+              <strong>negativo</strong> para reduzir o
+              saldo.
+            </li>
+
+            <li>
+              Informe obrigatoriamente o{' '}
+              <strong>motivo da correção</strong>.
+            </li>
+
+            <li>
+              Confira e confirme a operação.
+            </li>
+          </Passos>
+
+          <Aviso tipo="informacao">
+            Exemplo: se o sistema registra 100 kg, mas
+            a conferência física identifica 103 kg, o
+            ajuste será <strong>+3</strong>. Se a
+            conferência física identificar 95 kg, o
+            ajuste será <strong>-5</strong>.
+          </Aviso>
+
+          <Aviso>
+            A correção nunca pode resultar em saldo
+            negativo. O sistema preserva o lançamento
+            original e registra a correção
+            separadamente, incluindo o saldo anterior,
+            o ajuste, o saldo resultante, o motivo e o
+            responsável.
+          </Aviso>
+
+          <TituloTutorial>
+            5. Cancelar saída
+          </TituloTutorial>
+
+          <TextoTutorial>
+            O cancelamento é utilizado quando uma saída
+            confirmada precisa ser anulada. A saída não
+            é apagada: permanece registrada no
+            histórico e recebe a identificação de
+            cancelamento.
+          </TextoTutorial>
+
+          <Passos>
+            <li>
+              Selecione{' '}
+              <strong>Cancelar saída</strong>.
+            </li>
+
+            <li>
+              Escolha a saída que será cancelada.
+            </li>
+
+            <li>
+              Confira o número, a classe, o destino e
+              os itens da saída selecionada.
+            </li>
+
+            <li>
+              Informe obrigatoriamente o{' '}
+              <strong>motivo do cancelamento</strong>.
+            </li>
+
+            <li>
+              Confirme o cancelamento.
+            </li>
+          </Passos>
+
+          <Aviso tipo="informacao">
+            Ao cancelar, o sistema realiza a
+            movimentação inversa e recompõe as
+            quantidades exatamente nos mesmos gêneros,
+            lotes e locais utilizados pela saída
+            original. O registro da saída é preservado
+            para auditoria.
+          </Aviso>
+
+          <Aviso>
+            Uma saída que já possui devolução não pode
+            ser cancelada diretamente, pois isso
+            poderia recompor o estoque duas vezes.
+            Nessa situação, a regularização deve ser
+            realizada por correção, preservando o
+            histórico.
+          </Aviso>
+
+          <TituloTutorial>
+            Qual operação utilizar?
+          </TituloTutorial>
+
+          <div
+            style={{
+              display: 'grid',
+              gap: '8px',
+              marginTop: '8px',
+            }}
+          >
+            <div
+              style={{
+                padding: '11px',
+                borderRadius: '11px',
+                background: 'rgba(55, 86, 61, .08)',
+                border:
+                  '1px solid rgba(55, 86, 61, .18)',
+                color: '#4e493e',
+                fontSize: '12px',
+                lineHeight: 1.5,
+              }}
+            >
+              <strong style={{ color: '#294735' }}>
+                ↔ Transferência
+              </strong>
+              <br />
+              O material continua no estoque, mas muda
+              de local de armazenamento.
+            </div>
+
+            <div
+              style={{
+                padding: '11px',
+                borderRadius: '11px',
+                background: 'rgba(55, 86, 61, .08)',
+                border:
+                  '1px solid rgba(55, 86, 61, .18)',
+                color: '#4e493e',
+                fontSize: '12px',
+                lineHeight: 1.5,
+              }}
+            >
+              <strong style={{ color: '#294735' }}>
+                ↩ Devolução
+              </strong>
+              <br />
+              O material saiu regularmente e depois
+              retornou ao depósito.
+            </div>
+
+            <div
+              style={{
+                padding: '11px',
+                borderRadius: '11px',
+                background: 'rgba(167, 121, 61, .08)',
+                border:
+                  '1px solid rgba(167, 121, 61, .20)',
+                color: '#4e493e',
+                fontSize: '12px',
+                lineHeight: 1.5,
+              }}
+            >
+              <strong style={{ color: '#79562f' }}>
+                ⚠ Perda / Descarte
+              </strong>
+              <br />
+              O material deixou de estar disponível por
+              perda, inutilização ou descarte.
+            </div>
+
+            <div
+              style={{
+                padding: '11px',
+                borderRadius: '11px',
+                background: 'rgba(55, 86, 61, .08)',
+                border:
+                  '1px solid rgba(55, 86, 61, .18)',
+                color: '#4e493e',
+                fontSize: '12px',
+                lineHeight: 1.5,
+              }}
+            >
+              <strong style={{ color: '#294735' }}>
+                ± Correção
+              </strong>
+              <br />
+              O saldo do sistema está diferente da
+              quantidade física encontrada.
+            </div>
+
+            <div
+              style={{
+                padding: '11px',
+                borderRadius: '11px',
+                background: 'rgba(167, 121, 61, .08)',
+                border:
+                  '1px solid rgba(167, 121, 61, .20)',
+                color: '#4e493e',
+                fontSize: '12px',
+                lineHeight: 1.5,
+              }}
+            >
+              <strong style={{ color: '#79562f' }}>
+                × Cancelar saída
+              </strong>
+              <br />
+              A própria saída foi lançada
+              indevidamente e precisa ser anulada.
+            </div>
+          </div>
+
+          <TituloTutorial>
+            Rastreabilidade
+          </TituloTutorial>
+
+          <TextoTutorial>
+            As operações deste módulo não devem apagar
+            silenciosamente o histórico. Transferências,
+            perdas, correções, devoluções e
+            cancelamentos geram movimentações que
+            permitem compreender posteriormente o que
+            aconteceu com o saldo.
+          </TextoTutorial>
+
+          <Aviso>
+            Antes de confirmar qualquer ajuste, confira
+            o gênero, o lote, o local e a quantidade.
+            Principalmente em correções, perdas e
+            cancelamentos, registre um motivo claro que
+            permita compreender a operação futuramente.
+          </Aviso>
+        </Tutorial>
       </div>
 
       <div
