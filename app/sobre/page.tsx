@@ -33,13 +33,13 @@ export default function SobrePage() {
           <img
             src="/icon-192.png"
             alt="Estoque Aprov"
-            width={82}
-            height={82}
+            width={100}
+            height={100}
             style={{
-              width: '82px',
-              height: '82px',
+              width: '100px',
+              height: '100px',
               objectFit: 'cover',
-              borderRadius: '20px',
+              borderRadius: '24px',
               border: '2px solid rgba(73, 48, 27, .35)',
               boxShadow:
                 '0 8px 22px rgba(66, 43, 23, .25)',
@@ -69,6 +69,25 @@ export default function SobrePage() {
           >
             Sistema de Gestão do Aprovisionamento
           </div>
+
+          <p
+            style={{
+              maxWidth: '620px',
+              margin: '18px auto 0',
+              padding: '0 8px',
+              fontSize: '14px',
+              lineHeight: 1.65,
+              fontStyle: 'italic',
+              fontWeight: 600,
+              color: '#4f3a25',
+              textAlign: 'center',
+            }}
+          >
+            “Sem o aprovisionamento correto, a bravura
+            dos soldados perde a força; a logística é a
+            verdadeira espinha dorsal que sustenta a
+            vitória no campo de batalha.”
+          </p>
         </header>
 
         {/* APRESENTAÇÃO */}
