@@ -1233,6 +1233,199 @@ export default function ManualEstoqueAprov() {
             relatórios e a administração do estoque no uso diário.
           </Aviso>
         </Tutorial>
+                {/* 14. USUÁRIOS E PERMISSÕES */}
+
+        <Tutorial
+          id="usuarios-permissoes"
+          icone="👤"
+          titulo="Usuários e permissões"
+          subtitulo="Cadastro de usuários e definição dos níveis de acesso."
+        >
+          <Titulo>Para que serve</Titulo>
+
+          <Texto>
+            O módulo Usuários e permissões controla quem pode acessar o
+            Estoque Aprov e quais áreas do sistema ficam disponíveis para
+            cada usuário. Cada militar ou usuário autorizado deve possuir
+            seu próprio acesso.
+          </Texto>
+
+          <Aviso tipo="informacao">
+            Somente o <strong>Administrador Principal</strong> pode
+            cadastrar, editar, ativar ou inativar usuários.
+          </Aviso>
+
+          <Titulo>Perfis disponíveis</Titulo>
+
+          <Quadro titulo="Administrador Principal">
+            Possui acesso administrativo ao sistema e é o único perfil
+            autorizado a gerenciar usuários e permissões.
+          </Quadro>
+
+          <Quadro titulo="Administrador">
+            Possui acesso às rotinas administrativas, configurações,
+            cadastros, relatórios, QDAA e Ressuprimento QS, além das
+            principais operações do estoque.
+          </Quadro>
+
+          <Quadro titulo="Chefe do Depósito">
+            Atua principalmente nas rotinas do depósito. Pode consultar
+            estoque, registrar estoque inicial, recebimentos, saídas,
+            devoluções e ajustes, conforme as permissões operacionais
+            disponibilizadas pelo sistema.
+          </Quadro>
+
+          <Quadro titulo="Graduado de Serviço">
+            Possui acesso às rotinas operacionais necessárias ao serviço,
+            como consulta de estoque, recebimentos, saídas, devoluções e
+            ajustes, além do registro e fechamento relacionados ao efetivo
+            alimentado.
+          </Quadro>
+
+          <Aviso>
+            Os módulos apresentados na tela inicial variam conforme o perfil
+            do usuário. Se determinada função não estiver autorizada para o
+            perfil, ela não ficará disponível normalmente para acesso.
+          </Aviso>
+
+          <Titulo>Como cadastrar um usuário</Titulo>
+
+          <Passos>
+            <li>
+              Na tela inicial, acesse
+              <strong> Usuários e permissões</strong>.
+            </li>
+            <li>
+              Em <strong>Novo usuário</strong>, informe o nome.
+            </li>
+            <li>
+              Informe posto ou graduação, quando aplicável.
+            </li>
+            <li>
+              Informe a função exercida pelo usuário, quando aplicável.
+            </li>
+            <li>
+              Crie um <strong>Login</strong> para acesso ao sistema.
+            </li>
+            <li>
+              Informe a <strong>Senha inicial</strong>.
+            </li>
+            <li>
+              Escolha o <strong>Perfil de acesso</strong> adequado às
+              atribuições do usuário.
+            </li>
+            <li>
+              Confira os dados e toque em
+              <strong> Cadastrar usuário</strong>.
+            </li>
+          </Passos>
+
+          <Aviso>
+            O login deve possuir pelo menos 3 caracteres e não pode estar
+            sendo utilizado por outro usuário. A senha deve possuir pelo
+            menos <strong>8 caracteres</strong>.
+          </Aviso>
+
+          <Aviso tipo="informacao">
+            Todo novo usuário é criado inicialmente com situação
+            <strong> Ativo</strong>.
+          </Aviso>
+
+          <Titulo>Consultar usuários</Titulo>
+
+          <Texto>
+            A relação de usuários permite verificar os dados de identificação,
+            login, perfil de acesso, situação e informação do último acesso.
+            Quando o usuário ainda não tiver utilizado o sistema, será
+            indicado que ele nunca acessou.
+          </Texto>
+
+          <Titulo>Editar um usuário</Titulo>
+
+          <Passos>
+            <li>
+              Localize o usuário cadastrado.
+            </li>
+            <li>
+              Toque em <strong>Editar usuário</strong>.
+            </li>
+            <li>
+              Altere nome, posto ou graduação e função, se necessário.
+            </li>
+            <li>
+              Altere o login, quando necessário.
+            </li>
+            <li>
+              Confira ou altere o perfil de acesso.
+            </li>
+            <li>
+              Confira a situação: <strong>Ativo</strong> ou
+              <strong> Inativo</strong>.
+            </li>
+            <li>
+              Para trocar a senha, informe uma nova senha no campo
+              correspondente.
+            </li>
+            <li>
+              Salve as alterações.
+            </li>
+          </Passos>
+
+          <Aviso tipo="informacao">
+            Ao editar um usuário, deixe o campo
+            <strong> Nova senha</strong> em branco quando desejar manter a
+            senha atual.
+          </Aviso>
+
+          <Titulo>Ativar ou inativar</Titulo>
+
+          <Texto>
+            Um usuário ativo permanece autorizado a acessar o Estoque Aprov
+            conforme seu perfil. Quando o acesso não for mais necessário,
+            o Administrador Principal pode alterar sua situação para
+            Inativo.
+          </Texto>
+
+          <Aviso>
+            O Administrador Principal que está utilizando o sistema
+            <strong> não pode inativar o próprio usuário</strong> e também
+            não pode retirar de si mesmo o perfil de Administrador
+            Principal.
+          </Aviso>
+
+          <Aviso>
+            O Estoque Aprov deve manter
+            <strong> pelo menos um Administrador Principal ativo</strong>.
+            Por segurança, o sistema bloqueia qualquer alteração que deixe
+            o sistema sem um Administrador Principal ativo.
+          </Aviso>
+
+          <Titulo>Boas práticas de acesso</Titulo>
+
+          <Passos>
+            <li>
+              Crie um usuário individual para cada pessoa autorizada.
+            </li>
+            <li>
+              Não compartilhe login e senha entre usuários.
+            </li>
+            <li>
+              Escolha o perfil de acordo com a função realmente exercida.
+            </li>
+            <li>
+              Inative acessos que não sejam mais necessários.
+            </li>
+            <li>
+              Altere a senha quando houver suspeita de comprometimento do
+              acesso.
+            </li>
+          </Passos>
+
+          <Aviso tipo="informacao">
+            As alterações realizadas no gerenciamento de usuários são
+            registradas pelo sistema para fins de rastreabilidade.
+          </Aviso>
+        </Tutorial>
       </div>
 
       <div
