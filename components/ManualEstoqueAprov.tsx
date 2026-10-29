@@ -1075,6 +1075,164 @@ export default function ManualEstoqueAprov() {
             durante a operação do estoque.
           </Aviso>
         </Tutorial>
+                {/* 13. CATEGORIAS DE GÊNEROS */}
+
+        <Tutorial
+          id="categorias-generos"
+          icone="▦"
+          titulo="Categorias de gêneros"
+          subtitulo="Organização dos gêneros e definição de padrões de controle."
+        >
+          <Titulo>Para que serve</Titulo>
+
+          <Texto>
+            As categorias representam o nível intermediário de organização
+            do estoque. Elas ficam abaixo dos grupos e servem para reunir
+            gêneros com características semelhantes, além de permitir a
+            definição de padrões que serão sugeridos no cadastro dos gêneros.
+          </Texto>
+
+          <Quadro titulo="Estrutura do estoque">
+            A organização segue a sequência:
+            <strong> Grupo → Categoria → Gênero</strong>.
+            Por exemplo, um grupo pode reunir várias categorias e cada
+            categoria pode possuir diversos gêneros vinculados.
+          </Quadro>
+
+          <Titulo>Como cadastrar uma categoria</Titulo>
+
+          <Passos>
+            <li>
+              Na tela inicial, acesse <strong>Categorias</strong>.
+            </li>
+            <li>
+              Em <strong>Nova categoria</strong>, informe o nome.
+            </li>
+            <li>
+              Selecione o <strong>Grupo de gêneros</strong> ao qual ela
+              pertence. Caso ainda não esteja definido, o campo pode
+              permanecer como <strong>Não definido</strong>.
+            </li>
+            <li>
+              Marque <strong>Controla lote</strong> quando esse for o
+              padrão esperado para os gêneros dessa categoria.
+            </li>
+            <li>
+              Marque <strong>Controla validade</strong> quando os gêneros
+              normalmente exigirem esse controle.
+            </li>
+            <li>
+              Se existir um local normalmente utilizado para essa categoria,
+              selecione-o em <strong>Local habitual da categoria</strong>.
+            </li>
+            <li>
+              Toque em <strong>Adicionar categoria</strong>.
+            </li>
+          </Passos>
+
+          <Aviso tipo="informacao">
+            Uma nova categoria é cadastrada como ativa. Somente grupos e
+            locais ativos podem ser selecionados no cadastro.
+          </Aviso>
+
+          <Titulo>Padrões de lote e validade</Titulo>
+
+          <Texto>
+            Os campos Controla lote e Controla validade funcionam como
+            padrões da categoria. Quando um gênero for vinculado a ela,
+            esses controles serão sugeridos automaticamente para facilitar
+            o cadastro.
+          </Texto>
+
+          <Aviso>
+            Esses campos são padrões sugeridos para os gêneros da categoria.
+            Antes de concluir o cadastro de cada gênero, confira se o controle
+            de lote e validade realmente corresponde à forma como aquele
+            material deve ser administrado.
+          </Aviso>
+
+          <Titulo>Local habitual</Titulo>
+
+          <Texto>
+            O local habitual indica onde os gêneros daquela categoria
+            normalmente ficam armazenados. Essa informação ajuda a
+            padronizar o cadastro e a organização física do depósito.
+          </Texto>
+
+          <Aviso tipo="informacao">
+            Local habitual não significa que o material esteja
+            obrigatoriamente naquele local. A posição real do estoque é
+            determinada pelas movimentações registradas no sistema.
+          </Aviso>
+
+          <Titulo>Consultar as categorias</Titulo>
+
+          <Passos>
+            <li>
+              Toque em <strong>Ver categorias cadastradas</strong>.
+            </li>
+            <li>Localize a categoria desejada.</li>
+            <li>Confira o grupo ao qual ela está vinculada.</li>
+            <li>Confira sua situação: Ativo ou Inativo.</li>
+            <li>
+              Confira os padrões de lote e validade.
+            </li>
+            <li>Confira o local habitual.</li>
+            <li>
+              Confira a quantidade de gêneros vinculados.
+            </li>
+          </Passos>
+
+          <Titulo>Editar uma categoria</Titulo>
+
+          <Passos>
+            <li>Abra as categorias cadastradas.</li>
+            <li>
+              Localize a categoria e toque em
+              <strong> Editar categoria</strong>.
+            </li>
+            <li>Altere o nome, quando necessário.</li>
+            <li>
+              Altere o grupo ao qual ela pertence, se necessário.
+            </li>
+            <li>
+              Revise os padrões de lote e validade.
+            </li>
+            <li>
+              Altere o local habitual, quando necessário.
+            </li>
+            <li>
+              Altere a situação entre <strong>Ativo</strong> e
+              <strong> Inativo</strong>, quando aplicável.
+            </li>
+            <li>Toque em <strong>Salvar</strong>.</li>
+          </Passos>
+
+          <Titulo>Ativar ou inativar</Titulo>
+
+          <Texto>
+            Uma categoria ativa permanece disponível para utilização no
+            cadastro dos gêneros. Quando não deve mais ser utilizada, pode
+            ser marcada como inativa.
+          </Texto>
+
+          <Aviso>
+            Uma categoria vinculada a um ou mais gêneros
+            <strong> não pode ser inativada</strong>. Primeiro será
+            necessário alterar os gêneros vinculados.
+          </Aviso>
+
+          <Aviso>
+            O nome da categoria deve ser único. O sistema não permite duas
+            categorias com o mesmo nome.
+          </Aviso>
+
+          <Aviso tipo="informacao">
+            Organize grupos e categorias antes de cadastrar os gêneros
+            definitivos. Uma estrutura bem definida facilita consultas,
+            relatórios e a administração do estoque no uso diário.
+          </Aviso>
+        </Tutorial>
       </div>
 
       <div
