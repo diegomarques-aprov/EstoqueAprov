@@ -961,6 +961,120 @@ export default function ManualEstoqueAprov() {
             as movimentações reais do estoque.
           </Aviso>
         </Tutorial>
+                {/* 12. GRUPOS DE GÊNEROS */}
+
+        <Tutorial
+          id="grupos-generos"
+          icone="≡"
+          titulo="Grupos de gêneros"
+          subtitulo="Organização das categorias em grandes grupos do estoque."
+        >
+          <Titulo>Para que serve</Titulo>
+
+          <Texto>
+            Os grupos representam o nível mais amplo de organização dos
+            gêneros alimentícios no Estoque Aprov. Eles reúnem categorias
+            com características semelhantes, facilitando a organização,
+            as consultas, os relatórios e o planejamento.
+          </Texto>
+
+          <Quadro titulo="Estrutura do cadastro">
+            A organização segue a sequência:
+            <strong> Grupo → Categoria → Gênero</strong>.
+            Primeiro é criado o grupo; depois, as categorias podem ser
+            vinculadas a ele; por fim, os gêneros são organizados dentro
+            das respectivas categorias.
+          </Quadro>
+
+          <Titulo>Como cadastrar um grupo</Titulo>
+
+          <Passos>
+            <li>
+              Na tela inicial, acesse <strong>Grupos</strong>.
+            </li>
+            <li>
+              Em <strong>Novo grupo</strong>, informe o nome do grupo.
+            </li>
+            <li>
+              Informe uma descrição para facilitar sua identificação,
+              quando necessário.
+            </li>
+            <li>
+              Toque em <strong>Adicionar grupo</strong>.
+            </li>
+          </Passos>
+
+          <Aviso tipo="informacao">
+            Todo novo grupo é cadastrado como ativo e, depois de criado,
+            fica disponível para seleção no cadastro das categorias.
+          </Aviso>
+
+          <Aviso>
+            O nome do grupo deve ser único. O sistema não permite
+            cadastrar dois grupos com o mesmo nome.
+          </Aviso>
+
+          <Titulo>Consultar os grupos cadastrados</Titulo>
+
+          <Passos>
+            <li>
+              Toque em <strong>Ver grupos cadastrados</strong>.
+            </li>
+            <li>
+              Localize o grupo desejado.
+            </li>
+            <li>
+              Confira seu nome, descrição e situação.
+            </li>
+            <li>
+              Confira também a quantidade de categorias vinculadas
+              ao grupo.
+            </li>
+          </Passos>
+
+          <Titulo>Editar um grupo</Titulo>
+
+          <Passos>
+            <li>
+              Abra a relação de grupos cadastrados.
+            </li>
+            <li>
+              Localize o grupo e toque em <strong>Editar grupo</strong>.
+            </li>
+            <li>
+              Altere o nome ou a descrição, quando necessário.
+            </li>
+            <li>
+              Se necessário, altere a situação entre
+              <strong> Ativo</strong> e <strong>Inativo</strong>.
+            </li>
+            <li>
+              Toque em <strong>Salvar</strong>.
+            </li>
+          </Passos>
+
+          <Titulo>Ativar ou inativar</Titulo>
+
+          <Texto>
+            Um grupo ativo permanece disponível para utilização na
+            organização das categorias. Quando ele não deve mais ser
+            utilizado, pode ser marcado como inativo.
+          </Texto>
+
+          <Aviso>
+            Um grupo que possui categorias vinculadas
+            <strong> não pode ser inativado</strong>. Antes da
+            inativação, as categorias vinculadas deverão ser alteradas
+            para outro grupo ou reorganizadas conforme a necessidade.
+          </Aviso>
+
+          <Aviso tipo="informacao">
+            Antes de iniciar o cadastro dos gêneros, procure definir uma
+            estrutura simples e coerente de grupos e categorias. Isso
+            evita duplicidades e facilita a localização dos materiais
+            durante a operação do estoque.
+          </Aviso>
+        </Tutorial>
       </div>
 
       <div
