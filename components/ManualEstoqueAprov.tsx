@@ -1605,6 +1605,601 @@ export default function ManualEstoqueAprov() {
             incluídas.
           </Aviso>
         </Tutorial>
+
+        {/* 9. QDAA / RESSUPRIMENTO QS */}
+
+        <Tutorial
+          id="qdaa-ressuprimento-qs"
+          icone="▤"
+          titulo="QDAA / Ressuprimento QS"
+          subtitulo="Controle mensal do QDAA e planejamento bimestral do Ressuprimento QS."
+        >
+          <TituloTutorial>Para que serve</TituloTutorial>
+
+          <TextoTutorial>
+            O módulo QDAA / Ressuprimento QS reúne os procedimentos de
+            acompanhamento mensal dos gêneros QS e de planejamento das
+            necessidades para o ressuprimento normal da Cadeia de
+            Suprimento.
+          </TextoTutorial>
+
+          <Aviso>
+            O <strong>QDAA é mensal</strong>. O{' '}
+            <strong>Ressuprimento QS normal é bimestral</strong>, com
+            ciclo fixo de 2 meses. São procedimentos relacionados, mas
+            possuem periodicidades diferentes.
+          </Aviso>
+
+          <TituloTutorial>Opções do módulo</TituloTutorial>
+
+          <TextoTutorial>
+            Ao acessar QDAA / Ressuprimento QS, o sistema apresenta três
+            áreas principais.
+          </TextoTutorial>
+
+          <div
+            style={{
+              display: 'grid',
+              gap: '8px',
+              marginTop: '10px',
+            }}
+          >
+            <Quadro titulo="▤ Apoio ao QDAA">
+              Consolidação mensal e controle dos gêneros QS.
+            </Quadro>
+
+            <Quadro titulo="⇄ Planejamento de Ressuprimento QS">
+              Cálculo das necessidades para o próximo ciclo normal de 2
+              meses.
+            </Quadro>
+
+            <Quadro titulo="◷ Histórico de Ressuprimentos">
+              Consulta dos planejamentos QS registrados e acesso aos
+              ressuprimentos complementares.
+            </Quadro>
+          </div>
+
+          <TituloTutorial>1. Apoio ao QDAA — mensal</TituloTutorial>
+
+          <TextoTutorial>
+            O Apoio ao QDAA consolida mensalmente os dados dos gêneros
+            QS registrados no Estoque Aprov.
+          </TextoTutorial>
+
+          <Passos>
+            <li>
+              Na tela <strong>Início</strong>, acesse{' '}
+              <strong>QDAA / Ressuprimento QS</strong>.
+            </li>
+
+            <li>
+              Selecione <strong>Apoio ao QDAA</strong>.
+            </li>
+
+            <li>
+              Em <strong>Período do QDAA</strong>, selecione o mês.
+            </li>
+
+            <li>Informe ou confira o ano.</li>
+
+            <li>
+              Toque em <strong>Gerar QDAA</strong>.
+            </li>
+
+            <li>
+              Confira os indicadores de gêneros{' '}
+              <strong>Cadastrados</strong>,{' '}
+              <strong>Com movimento</strong> e{' '}
+              <strong>Sem movimento</strong>.
+            </li>
+
+            <li>
+              Na relação de gêneros QS, toque no gênero que deseja
+              consultar.
+            </li>
+
+            <li>
+              Confira os dados mensais apresentados pelo sistema.
+            </li>
+          </Passos>
+
+          <TituloTutorial>Dados mensais por gênero</TituloTutorial>
+
+          <TextoTutorial>
+            Para cada gênero QS, o sistema apresenta as informações
+            utilizadas na consolidação do período, permitindo acompanhar
+            o comportamento do estoque durante o mês.
+          </TextoTutorial>
+
+          <div
+            style={{
+              display: 'grid',
+              gap: '8px',
+              marginTop: '10px',
+            }}
+          >
+            <Quadro titulo="Estoque inicial">
+              Quantidade considerada no início do período.
+            </Quadro>
+
+            <Quadro titulo="Entradas">
+              Recebimentos registrados durante o mês.
+            </Quadro>
+
+            <Quadro titulo="Devoluções">
+              Quantidades que retornaram ao estoque.
+            </Quadro>
+
+            <Quadro titulo="Consumo">
+              Quantidades consumidas no período.
+            </Quadro>
+
+            <Quadro titulo="Perdas">
+              Quantidades registradas como perda ou descarte.
+            </Quadro>
+
+            <Quadro titulo="Ajustes">
+              Correções de estoque registradas no período.
+            </Quadro>
+
+            <Quadro titulo="Estoque final" destaque>
+              Saldo final calculado para o gênero no período consultado.
+            </Quadro>
+          </div>
+
+          <Aviso tipo="informacao">
+            O QDAA utiliza os registros existentes no Estoque Aprov.
+            Portanto, recebimentos, saídas, devoluções, perdas e
+            correções precisam estar corretamente lançados para que a
+            consolidação mensal represente a realidade.
+          </Aviso>
+
+          <Aviso>
+            A realização mensal do QDAA não cria um novo ciclo de
+            ressuprimento. O ciclo normal de Ressuprimento QS continua
+            sendo de 2 meses.
+          </Aviso>
+
+          <TituloTutorial>
+            2. Planejamento de Ressuprimento QS
+          </TituloTutorial>
+
+          <TextoTutorial>
+            O planejamento calcula a necessidade estimada dos gêneros QS
+            para o próximo ciclo normal de ressuprimento, que é sempre
+            bimestral.
+          </TextoTutorial>
+
+          <Passos>
+            <li>
+              Em <strong>QDAA / Ressuprimento QS</strong>, acesse{' '}
+              <strong>Planejamento de Ressuprimento QS</strong>.
+            </li>
+
+            <li>
+              Em <strong>Parâmetros</strong>, escolha o período de
+              histórico que deseja utilizar no cálculo.
+            </li>
+
+            <li>
+              Informe ou confira a{' '}
+              <strong>Margem de segurança</strong>.
+            </li>
+
+            <li>
+              Aguarde o cálculo das necessidades dos gêneros QS.
+            </li>
+
+            <li>
+              Verifique se existem{' '}
+              <strong>Referências pendentes</strong>.
+            </li>
+
+            <li>
+              Quando houver pendências, informe as referências antes de
+              concluir o planejamento.
+            </li>
+
+            <li>
+              Analise o planejamento apresentado para cada gênero.
+            </li>
+
+            <li>
+              Confira a quantidade sugerida pelo Estoque Aprov.
+            </li>
+
+            <li>
+              Informe ou mantenha a{' '}
+              <strong>Quantidade planejada</strong>.
+            </li>
+
+            <li>
+              Caso altere a quantidade sugerida, informe a justificativa.
+            </li>
+
+            <li>
+              Registre uma observação geral quando necessário.
+            </li>
+
+            <li>
+              Utilize <strong>Salvar rascunho</strong> se ainda não
+              desejar encerrar o planejamento.
+            </li>
+
+            <li>
+              Quando tudo estiver conferido, toque em{' '}
+              <strong>Finalizar</strong>.
+            </li>
+          </Passos>
+
+          <TituloTutorial>
+            Histórico utilizado no cálculo
+          </TituloTutorial>
+
+          <TextoTutorial>
+            O sistema permite utilizar períodos de histórico de 1, 2, 3
+            ou 6 meses para determinar a média de consumo utilizada no
+            cálculo.
+          </TextoTutorial>
+
+          <Aviso>
+            O número de meses escolhido para o{' '}
+            <strong>histórico de consumo</strong> não altera a duração
+            do ciclo de ressuprimento. O ressuprimento normal permanece
+            sempre com <strong>2 meses — Bimestral</strong>.
+          </Aviso>
+
+          <TituloTutorial>Margem de segurança</TituloTutorial>
+
+          <TextoTutorial>
+            A margem de segurança é utilizada pelo cálculo para
+            acrescentar uma reserva à necessidade projetada. Ela pode
+            ser ajustada antes da elaboração do planejamento.
+          </TextoTutorial>
+
+          <TituloTutorial>
+            Informações calculadas por gênero
+          </TituloTutorial>
+
+          <TextoTutorial>
+            Ao abrir um gênero no planejamento, o sistema apresenta a
+            memória utilizada para apoiar a decisão.
+          </TextoTutorial>
+
+          <div
+            style={{
+              display: 'grid',
+              gap: '8px',
+              marginTop: '10px',
+            }}
+          >
+            <Quadro titulo="Média mensal">
+              Média de consumo utilizada como base para a projeção.
+            </Quadro>
+
+            <Quadro titulo="Projeção 2 meses">
+              Consumo projetado para o ciclo normal bimestral.
+            </Quadro>
+
+            <Quadro titulo="Estoque de segurança">
+              Quantidade correspondente à margem de segurança aplicada.
+            </Quadro>
+
+            <Quadro titulo="Estoque disponível">
+              Saldo considerado pelo sistema no momento do cálculo.
+            </Quadro>
+
+            <Quadro titulo="Previsto receber">
+              Quantidade já considerada como prevista para recebimento,
+              quando aplicável.
+            </Quadro>
+
+            <Quadro titulo="Sugestão EstoqueAprov" destaque>
+              Quantidade calculada pelo sistema como necessidade para o
+              próximo ressuprimento.
+            </Quadro>
+          </div>
+
+          <TituloTutorial>Quantidade planejada</TituloTutorial>
+
+          <TextoTutorial>
+            A sugestão do Estoque Aprov serve como apoio. O responsável
+            pode manter a quantidade sugerida ou informar outra
+            quantidade planejada.
+          </TextoTutorial>
+
+          <Aviso>
+            Sempre que a <strong>Quantidade planejada</strong> for
+            diferente da <strong>Sugestão EstoqueAprov</strong>, o
+            sistema exige uma justificativa para preservar a
+            rastreabilidade da decisão.
+          </Aviso>
+
+          <TituloTutorial>3. Referência de Consumo QS</TituloTutorial>
+
+          <TextoTutorial>
+            Quando um gênero QS ainda não possui histórico suficiente
+            para que o Estoque Aprov determine sua base de cálculo, ele
+            aparece na área de <strong>Referências pendentes</strong>.
+          </TextoTutorial>
+
+          <Passos>
+            <li>
+              No planejamento, localize{' '}
+              <strong>Referências pendentes</strong>.
+            </li>
+
+            <li>
+              Toque em <strong>Informar referência</strong> no gênero
+              desejado.
+            </li>
+
+            <li>
+              Confira o gênero e sua unidade de medida.
+            </li>
+
+            <li>
+              Escolha o tipo da referência:{' '}
+              <strong>Mensal</strong> ou <strong>Bimestral</strong>.
+            </li>
+
+            <li>
+              Informe uma quantidade maior que zero.
+            </li>
+
+            <li>
+              Registre uma observação quando necessário.
+            </li>
+
+            <li>
+              Toque em <strong>Salvar referência</strong>.
+            </li>
+          </Passos>
+
+          <Aviso tipo="informacao">
+            A observação pode indicar a origem utilizada para estabelecer
+            a referência, como dados de controle anterior da OM.
+          </Aviso>
+
+          <TextoTutorial>
+            Depois que uma referência é salva, o sistema atualiza o
+            cálculo. Havendo outra referência pendente, o fluxo pode
+            avançar para o próximo gênero. Quando não houver mais
+            pendências, o usuário retorna ao planejamento.
+          </TextoTutorial>
+
+          <Aviso>
+            Enquanto existirem gêneros QS sem base de cálculo, o
+            planejamento não poderá ser finalizado integralmente.
+          </Aviso>
+
+          <TituloTutorial>Salvar rascunho</TituloTutorial>
+
+          <TextoTutorial>
+            O planejamento pode ser salvo como rascunho enquanto ainda
+            estiver em elaboração. Isso permite registrar o trabalho sem
+            transformá-lo imediatamente em planejamento finalizado.
+          </TextoTutorial>
+
+          <TituloTutorial>Finalização do planejamento</TituloTutorial>
+
+          <TextoTutorial>
+            Após conferir todos os gêneros e resolver as referências
+            pendentes, utilize <strong>Finalizar</strong> para registrar
+            definitivamente o planejamento bimestral.
+          </TextoTutorial>
+
+          <Aviso>
+            Antes da finalização, o sistema solicita confirmação. Depois
+            de finalizado, o planejamento fica preservado no histórico e
+            não poderá ser alterado como um planejamento em elaboração.
+          </Aviso>
+
+          <TituloTutorial>
+            4. Histórico de Ressuprimentos
+          </TituloTutorial>
+
+          <TextoTutorial>
+            O Histórico de Ressuprimentos permite consultar os
+            planejamentos QS registrados anteriormente e verificar os
+            parâmetros e decisões utilizados em cada ciclo.
+          </TextoTutorial>
+
+          <Passos>
+            <li>
+              Em <strong>QDAA / Ressuprimento QS</strong>, acesse{' '}
+              <strong>Histórico de Ressuprimentos</strong>.
+            </li>
+
+            <li>
+              Consulte a relação de planejamentos registrados.
+            </li>
+
+            <li>
+              Toque em <strong>Abrir planejamento</strong>.
+            </li>
+
+            <li>
+              Confira a data de referência.
+            </li>
+
+            <li>
+              Confira o histórico considerado no cálculo.
+            </li>
+
+            <li>
+              Confira o ciclo planejado.
+            </li>
+
+            <li>
+              Confira a margem de segurança utilizada.
+            </li>
+
+            <li>
+              Consulte a memória do cálculo e as quantidades planejadas
+              por gênero.
+            </li>
+
+            <li>
+              Consulte as justificativas das alterações, quando houver.
+            </li>
+
+            <li>
+              Verifique os ressuprimentos complementares vinculados ao
+              planejamento.
+            </li>
+          </Passos>
+
+          <Aviso tipo="informacao">
+            O histórico preserva as informações administrativas do
+            planejamento, permitindo identificar os parâmetros
+            utilizados e o responsável pelo registro.
+          </Aviso>
+
+          <TituloTutorial>
+            5. Ressuprimento Complementar QS
+          </TituloTutorial>
+
+          <TextoTutorial>
+            O Ressuprimento Complementar é utilizado quando surge,
+            durante um ciclo normal de 2 meses, uma necessidade
+            extraordinária de complementar determinado gênero QS.
+          </TextoTutorial>
+
+          <TextoTutorial>
+            Isso pode ocorrer, por exemplo, quando a quantidade recebida
+            foi inferior à planejada, houve necessidade inesperada,
+            ocorreu correção de dados ou outra situação operacional
+            justificável.
+          </TextoTutorial>
+
+          <Aviso>
+            O Ressuprimento Complementar{' '}
+            <strong>não cria um novo ciclo bimestral</strong> e{' '}
+            <strong>não altera o planejamento original</strong>. Ele é
+            registrado separadamente e permanece vinculado ao ciclo
+            normal já finalizado.
+          </Aviso>
+
+          <TituloTutorial>Como registrar um complementar</TituloTutorial>
+
+          <Passos>
+            <li>
+              Abra um planejamento bimestral já{' '}
+              <strong>Finalizado</strong>.
+            </li>
+
+            <li>
+              Toque em{' '}
+              <strong>+ Ressuprimento complementar</strong> ou utilize{' '}
+              <strong>Ver / registrar complementar</strong> pelo
+              histórico.
+            </li>
+
+            <li>
+              Confira o planejamento normal ao qual o complementar será
+              vinculado.
+            </li>
+
+            <li>
+              Em <strong>Gêneros para complementar</strong>, selecione
+              apenas os gêneros necessários.
+            </li>
+
+            <li>
+              Informe a quantidade complementar de cada gênero
+              selecionado.
+            </li>
+
+            <li>
+              Informe obrigatoriamente a{' '}
+              <strong>Justificativa</strong>.
+            </li>
+
+            <li>
+              Confira os dados.
+            </li>
+
+            <li>
+              Toque em <strong>+ Registrar complementar</strong>.
+            </li>
+          </Passos>
+
+          <Aviso tipo="informacao">
+            Somente gêneros que já faziam parte do planejamento
+            bimestral original podem ser incluídos naquele ressuprimento
+            complementar.
+          </Aviso>
+
+          <Aviso tipo="informacao">
+            É possível registrar mais de um Ressuprimento Complementar
+            durante o mesmo ciclo bimestral, quando houver necessidade
+            operacional devidamente justificada.
+          </Aviso>
+
+          <TituloTutorial>
+            Complementar não movimenta o estoque
+          </TituloTutorial>
+
+          <TextoTutorial>
+            O registro do Ressuprimento Complementar representa a
+            necessidade adicional de suprimento. Ele não significa que o
+            material já chegou fisicamente ao depósito.
+          </TextoTutorial>
+
+          <Aviso>
+            Quando os gêneros do Ressuprimento Complementar forem
+            efetivamente recebidos, a entrada física deverá ser lançada
+            separadamente no módulo <strong>Novo recebimento</strong>.
+            Somente o recebimento atualiza o saldo do estoque.
+          </Aviso>
+
+          <TituloTutorial>Exemplo prático</TituloTutorial>
+
+          <TextoTutorial>
+            Se o planejamento normal do ciclo previa 500 kg de arroz e
+            somente 350 kg foram efetivamente fornecidos, poderá ser
+            registrado um Ressuprimento Complementar de 150 kg,
+            acompanhado da respectiva justificativa. O planejamento
+            original de 500 kg permanece preservado.
+          </TextoTutorial>
+
+          <TituloTutorial>Resumo das periodicidades</TituloTutorial>
+
+          <div
+            style={{
+              display: 'grid',
+              gap: '8px',
+              marginTop: '10px',
+            }}
+          >
+            <Quadro titulo="▤ QDAA — Mensal" destaque>
+              A consolidação do QDAA é realizada mês a mês.
+            </Quadro>
+
+            <Quadro titulo="⇄ Ressuprimento QS normal — Bimestral">
+              O planejamento normal sempre corresponde a um ciclo de 2
+              meses.
+            </Quadro>
+
+            <Quadro titulo="📈 Histórico de cálculo">
+              Pode utilizar 1, 2, 3 ou 6 meses para obtenção da média de
+              consumo. Isso não altera o ciclo bimestral.
+            </Quadro>
+
+            <Quadro titulo="+ Ressuprimento complementar">
+              Pode ocorrer excepcionalmente dentro do ciclo de 2 meses,
+              sem iniciar novo ciclo e sem alterar o planejamento
+              original.
+            </Quadro>
+          </div>
+
+          <Aviso>
+            Para que o planejamento seja confiável, mantenha as
+            movimentações do Estoque Aprov atualizadas. O cálculo depende
+            da qualidade dos dados registrados no sistema.
+          </Aviso>
+        </Tutorial>
       </div>
 
       <div
