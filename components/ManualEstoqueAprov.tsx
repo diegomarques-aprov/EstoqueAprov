@@ -1689,6 +1689,214 @@ export default function ManualEstoqueAprov() {
           </Aviso>
         </Tutorial>
       </div>
+              {/* 16. CARDÁPIO */}
+
+        <Tutorial
+          id="cardapio"
+          icone="🍽️"
+          titulo="Cardápio"
+          subtitulo="Planejamento e consulta das refeições do Aprovisionamento."
+        >
+          <Titulo>Para que serve</Titulo>
+
+          <Texto>
+            O módulo Cardápio registra as preparações previstas para cada
+            dia, permitindo que o Aprovisionamento consulte antecipadamente
+            as refeições e organize as atividades relacionadas ao consumo
+            dos gêneros.
+          </Texto>
+
+          <Aviso tipo="informacao">
+            O planejamento do cardápio também auxilia a preparação das
+            necessidades de gêneros perecíveis, especialmente os
+            <strong> FLV</strong>.
+          </Aviso>
+
+          <Titulo>Quem pode utilizar</Titulo>
+
+          <Quadro titulo="Administradores">
+            O Administrador Principal e o Administrador podem cadastrar,
+            consultar e alterar os cardápios.
+          </Quadro>
+
+          <Quadro titulo="Perfis operacionais">
+            O Chefe do Depósito e o Graduado de Serviço podem consultar os
+            cardápios cadastrados, mas não podem alterá-los.
+          </Quadro>
+
+          <Titulo>Como cadastrar o cardápio</Titulo>
+
+          <Passos>
+            <li>
+              Na tela inicial, acesse <strong>Cardápio</strong>.
+            </li>
+            <li>
+              Em <strong>Data do cardápio</strong>, selecione o dia que
+              deseja planejar.
+            </li>
+            <li>
+              Informe as preparações previstas para
+              <strong> Café</strong>, quando houver.
+            </li>
+            <li>
+              Informe as preparações do <strong>Almoço</strong>.
+            </li>
+            <li>
+              Informe as preparações do <strong>Jantar</strong>, quando
+              houver.
+            </li>
+            <li>
+              Informe as preparações da <strong>Ceia</strong>, quando
+              houver.
+            </li>
+            <li>
+              Utilize <strong>Observação</strong> para registrar alguma
+              informação complementar necessária.
+            </li>
+            <li>
+              Confira as informações e toque em
+              <strong> Cadastrar cardápio</strong>.
+            </li>
+          </Passos>
+
+          <Aviso>
+            Para cadastrar um cardápio é necessário informar pelo menos uma
+            refeição. O campo Observação, sozinho, não é suficiente para
+            criar o registro.
+          </Aviso>
+
+          <Titulo>Preenchimento das refeições</Titulo>
+
+          <Texto>
+            Em cada refeição, relacione de forma clara as preparações
+            previstas. Os campos permitem registrar mais de um item,
+            facilitando a leitura do cardápio completo daquele período.
+          </Texto>
+
+          <Quadro titulo="Exemplo de almoço">
+            Arroz
+            <br />
+            Feijão
+            <br />
+            Carne com mandioca
+            <br />
+            Salada
+          </Quadro>
+
+          <Aviso tipo="informacao">
+            Não é obrigatório preencher todas as refeições. Registre
+            somente aquelas previstas para a data selecionada.
+          </Aviso>
+
+          <Titulo>Consultar um cardápio</Titulo>
+
+          <Passos>
+            <li>
+              Acesse o módulo <strong>Cardápio</strong>.
+            </li>
+            <li>
+              Selecione a data desejada.
+            </li>
+            <li>
+              O sistema consultará automaticamente o cardápio daquela data.
+            </li>
+            <li>
+              Se existir registro, serão apresentadas as refeições e
+              observações cadastradas.
+            </li>
+          </Passos>
+
+          <Texto>
+            Os botões <strong>Anterior</strong>, <strong>Hoje</strong> e
+            <strong> Próximo</strong> permitem navegar rapidamente entre os
+            dias sem precisar selecionar cada data manualmente.
+          </Texto>
+
+          <Aviso tipo="informacao">
+            Quando houver um cardápio cadastrado, o sistema também apresenta
+            o usuário responsável pelo último registro ou alteração.
+          </Aviso>
+
+          <Titulo>Alterar um cardápio</Titulo>
+
+          <Passos>
+            <li>
+              Selecione a data do cardápio que deseja alterar.
+            </li>
+            <li>
+              O sistema carregará as informações já cadastradas.
+            </li>
+            <li>
+              Faça as correções necessárias nas refeições ou observações.
+            </li>
+            <li>
+              Toque em <strong>Salvar alterações</strong>.
+            </li>
+          </Passos>
+
+          <Aviso>
+            Ao salvar novamente uma data que já possui cardápio, o sistema
+            atualiza o registro existente. Não é criado um segundo cardápio
+            para o mesmo dia.
+          </Aviso>
+
+          <Titulo>Planejamento semanal</Titulo>
+
+          <Texto>
+            O cardápio deve ser mantido com antecedência suficiente para que
+            o depósito e os demais envolvidos no Aprovisionamento consigam
+            organizar os gêneros necessários para as refeições previstas.
+          </Texto>
+
+          <Aviso tipo="informacao">
+            Na sexta-feira, o Painel de Avisos pode apresentar um lembrete
+            relacionado ao cardápio da próxima semana, auxiliando o
+            planejamento antecipado, especialmente dos gêneros FLV.
+          </Aviso>
+
+          <Titulo>Cardápio e FLV</Titulo>
+
+          <Texto>
+            O planejamento das refeições deve servir como referência para a
+            verificação dos gêneros FLV que serão necessários nos dias
+            seguintes. Isso ajuda a evitar falta de material, excesso de
+            perecíveis e desperdícios.
+          </Texto>
+
+          <Aviso>
+            A existência do cardápio não substitui a conferência física dos
+            FLV. A verificação diária continua necessária para avaliar
+            quantidade disponível, condições do material e necessidade de
+            utilização.
+          </Aviso>
+
+          <Titulo>Boas práticas</Titulo>
+
+          <Passos>
+            <li>
+              Cadastre os cardápios com antecedência.
+            </li>
+            <li>
+              Descreva as preparações de forma simples e objetiva.
+            </li>
+            <li>
+              Confira se a data selecionada está correta antes de salvar.
+            </li>
+            <li>
+              Atualize o cardápio sempre que houver mudança no planejamento.
+            </li>
+            <li>
+              Utilize as informações para orientar a preparação e o uso dos
+              gêneros, principalmente os perecíveis.
+            </li>
+          </Passos>
+
+          <Aviso tipo="informacao">
+            Um cardápio atualizado melhora o planejamento do estoque e
+            permite que o Aprovisionamento antecipe necessidades antes da
+            preparação das refeições.
+          </Aviso>
+        </Tutorial>
 
       <div
         style={{
