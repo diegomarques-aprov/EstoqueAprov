@@ -118,7 +118,7 @@ function Tutorial({
   );
 }
 
-function TituloTutorial({
+function Titulo({
   children,
 }: {
   children: React.ReactNode;
@@ -136,7 +136,7 @@ function TituloTutorial({
   );
 }
 
-function TextoTutorial({
+function Texto({
   children,
 }: {
   children: React.ReactNode;
@@ -188,7 +188,7 @@ function Aviso({
   return (
     <div
       style={{
-        marginTop: '16px',
+        marginTop: '14px',
         padding: '12px 13px',
         borderRadius: '11px',
         background: informacao
@@ -218,33 +218,24 @@ function Aviso({
 function Quadro({
   titulo,
   children,
-  destaque = false,
 }: {
   titulo: string;
   children: React.ReactNode;
-  destaque?: boolean;
 }) {
   return (
     <div
       style={{
-        padding: '11px',
+        marginTop: '8px',
+        padding: '11px 12px',
         borderRadius: '11px',
-        background: destaque
-          ? 'rgba(167, 121, 61, .08)'
-          : 'rgba(55, 86, 61, .08)',
-        border: destaque
-          ? '1px solid rgba(167, 121, 61, .20)'
-          : '1px solid rgba(55, 86, 61, .18)',
+        background: 'rgba(55, 86, 61, .07)',
+        border: '1px solid rgba(55, 86, 61, .17)',
         color: '#4e493e',
         fontSize: '12px',
-        lineHeight: 1.5,
+        lineHeight: 1.55,
       }}
     >
-      <strong
-        style={{
-          color: destaque ? '#79562f' : '#294735',
-        }}
-      >
+      <strong style={{ color: '#294735' }}>
         {titulo}
       </strong>
 
@@ -286,7 +277,6 @@ export default function ManualEstoqueAprov() {
             background: '#294735',
             color: '#f4d79d',
             fontSize: '25px',
-            boxShadow: '0 5px 14px rgba(38, 57, 44, .18)',
           }}
         >
           📖
@@ -304,16 +294,16 @@ export default function ManualEstoqueAprov() {
 
         <p
           style={{
-            maxWidth: '560px',
+            maxWidth: '580px',
             margin: '8px auto 0',
             color: '#5f513f',
             fontSize: '13px',
             lineHeight: 1.55,
           }}
         >
-          Selecione abaixo o procedimento sobre o qual deseja
-          orientação. Cada item apresenta sua finalidade, forma de
-          utilização e cuidados importantes durante a operação.
+          Consulte o procedimento desejado para entender sua finalidade,
+          forma correta de utilização e os principais cuidados durante
+          a operação do Estoque Aprov.
         </p>
       </div>
 
@@ -327,7 +317,7 @@ export default function ManualEstoqueAprov() {
           letterSpacing: '1.2px',
         }}
       >
-        Operação
+        Operação e administração
       </div>
 
       <div
@@ -344,111 +334,47 @@ export default function ManualEstoqueAprov() {
           titulo="Painel de Avisos"
           subtitulo="Alertas, pendências e lembretes operacionais."
         >
-          <TituloTutorial>Para que serve</TituloTutorial>
+          <Titulo>Para que serve</Titulo>
 
-          <TextoTutorial>
-            O Painel de Avisos concentra informações que podem exigir
-            providências antes ou durante as atividades do
-            Aprovisionamento. Sua finalidade é facilitar o
-            acompanhamento diário das principais pendências do sistema.
-          </TextoTutorial>
+          <Texto>
+            O Painel de Avisos reúne situações que podem exigir
+            providência durante a rotina do Aprovisionamento. A consulta
+            diária ajuda a identificar pendências antes que elas afetem
+            o controle do estoque ou o planejamento.
+          </Texto>
 
-          <TituloTutorial>Quando consultar</TituloTutorial>
-
-          <TextoTutorial>
-            Recomenda-se consultar o Painel de Avisos diariamente,
-            especialmente no início das atividades, para verificar se
-            existe alguma situação que precise ser regularizada ou
-            acompanhada.
-          </TextoTutorial>
-
-          <TituloTutorial>O que o painel verifica</TituloTutorial>
+          <Titulo>O que pode aparecer</Titulo>
 
           <Passos>
-            <li>
-              <strong>Conferência FLV:</strong> permite acompanhar a
-              conferência diária dos gêneros classificados como FLV.
-            </li>
-
-            <li>
-              <strong>Fechamento diário pendente:</strong> informa
-              quando existem dias anteriores com refeições cujo
-              fechamento do efetivo alimentado ainda não foi realizado.
-            </li>
-
-            <li>
-              <strong>Efetivo de amanhã:</strong> verifica se o efetivo
-              previsto para o dia seguinte já foi informado.
-            </li>
-
-            <li>
-              <strong>Estoque abaixo do mínimo:</strong> identifica
-              gêneros cujo saldo total está abaixo do estoque mínimo
-              definido no cadastro.
-            </li>
-
-            <li>
-              <strong>Validade próxima:</strong> alerta sobre lotes com
-              saldo que vencem em até 30 dias.
-            </li>
-
-            <li>
-              <strong>Lotes vencidos:</strong> informa a existência de
-              lotes vencidos que ainda possuem saldo registrado.
-            </li>
-
-            <li>
-              <strong>Cardápio semanal:</strong> na sexta-feira,
-              apresenta ao Administrador o lembrete para verificar e
-              cadastrar o cardápio da próxima semana.
-            </li>
-
-            <li>
-              <strong>QDAA:</strong> entre os dias 23 e 25, apresenta ao
-              Administrador o lembrete para a realização do QDAA mensal,
-              com referência ao prazo do dia 25.
-            </li>
+            <li>Conferência diária dos gêneros FLV.</li>
+            <li>Fechamentos diários ainda pendentes.</li>
+            <li>Falta de registro do efetivo previsto para amanhã.</li>
+            <li>Gêneros abaixo do estoque mínimo.</li>
+            <li>Lotes próximos da validade ou vencidos.</li>
+            <li>Lembrete para o cardápio semanal.</li>
+            <li>Lembrete mensal do QDAA entre os dias 23 e 25.</li>
           </Passos>
 
-          <TituloTutorial>Como utilizar</TituloTutorial>
+          <Titulo>Como utilizar</Titulo>
 
           <Passos>
             <li>
-              Na tela <strong>Início</strong>, localize o{' '}
-              <strong>Painel de Avisos</strong>.
+              Na tela inicial, abra o <strong>Painel de Avisos</strong>.
             </li>
-
+            <li>Leia os alertas apresentados.</li>
             <li>
-              Toque em <strong>Consultar avisos</strong>.
+              Quando houver uma ação disponível, acesse o procedimento
+              correspondente e regularize a situação.
             </li>
-
             <li>
-              Verifique os alertas e pendências apresentados.
-            </li>
-
-            <li>
-              Quando houver um botão de ação, utilize-o para acessar
-              diretamente o procedimento correspondente.
-            </li>
-
-            <li>
-              Após regularizar a situação, consulte novamente o painel
-              para acompanhar o estado operacional atualizado.
+              Consulte novamente o painel para acompanhar a atualização.
             </li>
           </Passos>
 
           <Aviso tipo="informacao">
-            Quando nenhuma das pendências monitoradas estiver ativa e o
-            efetivo de amanhã já estiver informado, o sistema apresenta
-            a indicação de que nenhuma outra pendência operacional foi
-            identificada naquele momento.
-          </Aviso>
-
-          <Aviso>
-            Os avisos dependem das informações cadastradas no sistema.
-            Manter estoque, efetivo, fechamentos, validade, cardápio e
-            demais registros atualizados é essencial para que os alertas
-            sejam úteis.
+            Os avisos dependem dos registros existentes no sistema.
+            Quanto mais atualizadas estiverem as informações, mais útil
+            será o painel.
           </Aviso>
         </Tutorial>
 
@@ -460,111 +386,45 @@ export default function ManualEstoqueAprov() {
           titulo="Estoque inicial"
           subtitulo="Implantação dos saldos existentes no depósito."
         >
-          <TituloTutorial>Para que serve</TituloTutorial>
+          <Titulo>Para que serve</Titulo>
 
-          <TextoTutorial>
-            O Estoque Inicial é utilizado para registrar no sistema os
-            gêneros que já existem fisicamente no depósito no momento da
-            implantação do Estoque Aprov.
-          </TextoTutorial>
+          <Texto>
+            O Estoque Inicial registra os materiais que já existem
+            fisicamente no depósito quando o Estoque Aprov começa a ser
+            utilizado. Ele serve para fazer o sistema partir do saldo
+            real existente.
+          </Texto>
 
-          <TituloTutorial>Quando utilizar</TituloTutorial>
+          <Titulo>Antes de começar</Titulo>
 
-          <TextoTutorial>
-            Esse procedimento deve ser utilizado na implantação do
-            estoque, para que o saldo registrado no sistema corresponda
-            ao material que já se encontra fisicamente armazenado.
-          </TextoTutorial>
-
-          <Aviso>
-            Depois que o estoque inicial estiver implantado, as entradas
-            normais de novos gêneros devem ser registradas no módulo{' '}
-            <strong>Novo recebimento</strong>. Não utilize Estoque
-            Inicial como rotina normal de entrada de material.
-          </Aviso>
-
-          <TituloTutorial>Quem pode acessar</TituloTutorial>
-
-          <TextoTutorial>
-            O módulo está disponível para os perfis de Administrador
-            Principal, Administrador e Chefe do Depósito.
-          </TextoTutorial>
-
-          <TituloTutorial>Antes de começar</TituloTutorial>
-
-          <TextoTutorial>
+          <Texto>
             O gênero, sua unidade de medida e o local de armazenamento
-            precisam estar previamente cadastrados. As exigências de
-            lote e validade também são determinadas pelo cadastro do
-            gênero.
-          </TextoTutorial>
+            precisam estar cadastrados. As exigências de lote e validade
+            são determinadas pelas configurações do gênero.
+          </Texto>
 
-          <TituloTutorial>Passo a passo</TituloTutorial>
+          <Titulo>Passo a passo</Titulo>
 
           <Passos>
-            <li>
-              Na tela <strong>Início</strong>, acesse{' '}
-              <strong>Estoque inicial</strong>.
-            </li>
-
-            <li>
-              Escolha a classe do material: <strong>QS</strong> para
-              gêneros da Cadeia de Suprimento ou <strong>QR</strong>{' '}
-              para gêneros de Compra Local.
-            </li>
-
-            <li>
-              No campo <strong>Gênero</strong>, selecione o item que será
-              lançado.
-            </li>
-
-            <li>
-              Confira a unidade de medida apresentada pelo sistema e as
-              informações sobre controle de lote e validade.
-            </li>
-
-            <li>
-              Selecione o <strong>Local de armazenamento</strong> onde o
-              gênero se encontra fisicamente.
-            </li>
-
-            <li>
-              Informe a <strong>Quantidade</strong> existente,
-              respeitando a unidade de medida cadastrada para o gênero.
-            </li>
-
-            <li>
-              Se o gênero possuir controle de lote, informe o{' '}
-              <strong>Lote</strong>.
-            </li>
-
-            <li>
-              Se o gênero possuir controle de validade, informe a{' '}
-              <strong>Validade</strong>.
-            </li>
-
-            <li>Confira todas as informações antes de concluir.</li>
-
-            <li>
-              Toque em <strong>Registrar saldo inicial</strong>.
-            </li>
+            <li>Acesse <strong>Estoque inicial</strong>.</li>
+            <li>Escolha a classe <strong>QS</strong> ou <strong>QR</strong>.</li>
+            <li>Selecione o gênero.</li>
+            <li>Confira sua unidade de medida.</li>
+            <li>Selecione o local onde o material está armazenado.</li>
+            <li>Informe a quantidade física existente.</li>
+            <li>Informe lote e validade quando forem exigidos.</li>
+            <li>Confira os dados e registre o saldo inicial.</li>
           </Passos>
 
-          <TituloTutorial>Lote e validade</TituloTutorial>
-
-          <TextoTutorial>
-            Os campos de lote e validade aparecem de acordo com as
-            regras definidas no cadastro do gênero.
-          </TextoTutorial>
-
-          <Aviso tipo="informacao">
-            Para gêneros FLV configurados sem controle por lote, o
-            sistema não solicitará essa informação.
+          <Aviso>
+            Estoque Inicial é procedimento de implantação. Depois disso,
+            as novas entradas devem ser registradas em{' '}
+            <strong>Novo recebimento</strong>.
           </Aviso>
 
-          <Aviso>
-            Antes de registrar o saldo inicial real, faça a conferência
-            física do material.
+          <Aviso tipo="informacao">
+            Gêneros FLV configurados sem controle de lote não exigirão
+            essa informação.
           </Aviso>
         </Tutorial>
 
@@ -574,38 +434,33 @@ export default function ManualEstoqueAprov() {
           id="consultar-estoque"
           icone="🔎"
           titulo="Consultar estoque"
-          subtitulo="Consulta dos saldos disponíveis por gênero, local e lote."
+          subtitulo="Consulta dos saldos por gênero, local e lote."
         >
-          <TituloTutorial>Para que serve</TituloTutorial>
+          <Titulo>Para que serve</Titulo>
 
-          <TextoTutorial>
-            A consulta permite visualizar a situação atual dos gêneros
-            disponíveis no Estoque Aprov, separadamente entre QS e QR.
-          </TextoTutorial>
+          <Texto>
+            Permite verificar quanto existe de cada gênero e onde o
+            material está armazenado, mantendo a separação entre QS e
+            QR.
+          </Texto>
 
-          <TituloTutorial>Como consultar</TituloTutorial>
+          <Titulo>Como consultar</Titulo>
 
           <Passos>
-            <li>
-              Na tela <strong>Início</strong>, acesse{' '}
-              <strong>Consultar estoque</strong>.
-            </li>
+            <li>Acesse <strong>Consultar estoque</strong>.</li>
             <li>Escolha QS ou QR.</li>
-            <li>Localize o grupo.</li>
-            <li>Localize a categoria.</li>
-            <li>Localize o gênero.</li>
-            <li>Confira saldo e unidade de medida.</li>
-            <li>Verifique o local de armazenamento.</li>
-            <li>Quando houver, confira lote e validade.</li>
+            <li>Localize o grupo e a categoria.</li>
+            <li>Localize o gênero desejado.</li>
+            <li>Confira o saldo e a unidade de medida.</li>
+            <li>
+              Quando aplicável, confira local de armazenamento, lote e
+              validade.
+            </li>
           </Passos>
 
           <Aviso tipo="informacao">
-            Os totais respeitam a unidade de medida cadastrada.
-          </Aviso>
-
-          <Aviso>
-            Antes de movimentar material, confira gênero, local e lote,
-            especialmente para correta aplicação do PVPS.
+            A separação por local e lote ajuda na conferência física e
+            na aplicação do PVPS — Primeiro que Vence, Primeiro que Sai.
           </Aviso>
         </Tutorial>
 
@@ -615,40 +470,47 @@ export default function ManualEstoqueAprov() {
           id="novo-recebimento"
           icone="↓"
           titulo="Novo recebimento"
-          subtitulo="Entrada de novos gêneros QS ou QR no estoque."
+          subtitulo="Entrada normal de gêneros QS ou QR."
         >
-          <TituloTutorial>Para que serve</TituloTutorial>
+          <Titulo>Para que serve</Titulo>
 
-          <TextoTutorial>
-            Registra as entradas normais de gêneros após a implantação
-            do sistema.
-          </TextoTutorial>
+          <Texto>
+            O recebimento registra a entrada física de novos materiais
+            no depósito. Pode ser utilizado tanto para gêneros QS quanto
+            QR.
+          </Texto>
+
+          <Titulo>Passo a passo</Titulo>
 
           <Passos>
-            <li>Acesse Novo recebimento.</li>
-            <li>Selecione QS ou QR.</li>
-            <li>Informe a data.</li>
-            <li>Informe a origem.</li>
-            <li>Informe documento, quando houver.</li>
+            <li>Acesse <strong>Novo recebimento</strong>.</li>
+            <li>Escolha QS ou QR.</li>
+            <li>Informe a data do recebimento.</li>
+            <li>Informe a origem do material.</li>
+            <li>Informe documento e observação, quando houver.</li>
             <li>Selecione o gênero.</li>
-            <li>Informe a quantidade.</li>
-            <li>Selecione o local.</li>
+            <li>Informe a quantidade recebida.</li>
+            <li>Selecione o local de armazenamento.</li>
             <li>Informe lote e validade quando exigidos.</li>
-            <li>Informe valor unitário quando disponível.</li>
-            <li>Use + Adicionar para outros gêneros.</li>
-            <li>Toque em Revisar recebimento.</li>
-            <li>Confira os dados.</li>
-            <li>Confirme.</li>
+            <li>
+              Informe o valor unitário quando essa informação estiver
+              disponível.
+            </li>
+            <li>Adicione outros gêneros, se necessário.</li>
+            <li>Revise o recebimento e confirme.</li>
           </Passos>
 
-          <Aviso tipo="informacao">
-            O estoque somente é atualizado quando o recebimento é
-            confirmado.
+          <Aviso>
+            O estoque somente aumenta depois da confirmação do
+            recebimento. Confira principalmente gênero, quantidade,
+            lote, validade e local antes de confirmar.
           </Aviso>
 
-          <Aviso>
-            Confira cuidadosamente lote e validade, pois são utilizados
-            na rastreabilidade e no PVPS.
+          <Aviso tipo="informacao">
+            Para QS, a origem pode identificar a Cadeia de Suprimento ou
+            B Sup. Para QR, pode identificar o fornecedor ou a origem da
+            aquisição. O registro é operacional e não constitui controle
+            financeiro de QR.
           </Aviso>
         </Tutorial>
 
@@ -658,37 +520,41 @@ export default function ManualEstoqueAprov() {
           id="saida-generos"
           icone="↑"
           titulo="Saída de gêneros"
-          subtitulo="Baixa dos materiais liberados para consumo ou utilização."
+          subtitulo="Baixa dos materiais retirados do estoque."
         >
-          <TituloTutorial>Para que serve</TituloTutorial>
+          <Titulo>Para que serve</Titulo>
 
-          <TextoTutorial>
-            Registra a retirada física dos materiais do estoque.
-          </TextoTutorial>
+          <Texto>
+            Registra a retirada física de gêneros do depósito para
+            consumo ou utilização, reduzindo o saldo disponível.
+          </Texto>
+
+          <Titulo>Passo a passo</Titulo>
 
           <Passos>
-            <li>Acesse Saída de gêneros.</li>
+            <li>Acesse <strong>Saída de gêneros</strong>.</li>
             <li>Escolha QS ou QR.</li>
-            <li>Selecione o destino.</li>
+            <li>Selecione o destino da saída.</li>
             <li>Confira a data.</li>
-            <li>Selecione Grupo, Categoria e Gênero.</li>
-            <li>Confira o saldo.</li>
+            <li>Selecione grupo, categoria e gênero.</li>
+            <li>Confira o saldo disponível.</li>
             <li>Informe a quantidade.</li>
-            <li>Adicione outros gêneros quando necessário.</li>
-            <li>Revise e confirme.</li>
+            <li>Adicione outros gêneros, quando necessário.</li>
+            <li>Revise e confirme a saída.</li>
           </Passos>
 
-          <TituloTutorial>PVPS</TituloTutorial>
+          <Titulo>PVPS</Titulo>
 
-          <TextoTutorial>
-            Para materiais controlados por validade, a baixa segue a
-            prioridade dos lotes aplicáveis, preservando o princípio
-            Primeiro que Vence, Primeiro que Sai.
-          </TextoTutorial>
+          <Texto>
+            Para materiais controlados por validade, o sistema utiliza
+            os lotes aplicáveis respeitando a prioridade de vencimento,
+            auxiliando o uso do material que vence primeiro.
+          </Texto>
 
           <Aviso>
-            Não é possível confirmar quantidade superior ao saldo
-            disponível.
+            Não é permitido confirmar quantidade superior ao saldo
+            disponível. Confira sempre gênero, quantidade e destino
+            antes de concluir.
           </Aviso>
         </Tutorial>
 
@@ -700,51 +566,46 @@ export default function ManualEstoqueAprov() {
           titulo="Devoluções e ajustes"
           subtitulo="Transferências, devoluções, perdas, correções e cancelamentos."
         >
-          <TituloTutorial>Para que serve</TituloTutorial>
+          <Titulo>Para que serve</Titulo>
 
-          <TextoTutorial>
-            Reúne os procedimentos de Transferência, Devolução,
-            Perda/Descarte, Correção e Cancelamento de saída.
-          </TextoTutorial>
+          <Texto>
+            Este módulo trata situações em que o estoque precisa ser
+            movimentado ou corrigido fora de um recebimento ou saída
+            normal.
+          </Texto>
 
-          <TituloTutorial>Transferência</TituloTutorial>
+          <Quadro titulo="Transferência">
+            Utilize quando o material continua pertencendo ao estoque,
+            mas muda fisicamente de um local para outro.
+          </Quadro>
 
-          <TextoTutorial>
-            Utilize quando o material continua no estoque, mas muda de
-            local.
-          </TextoTutorial>
+          <Quadro titulo="Devolução">
+            Utilize quando parte de uma saída retorna fisicamente ao
+            depósito. A quantidade devolvida volta para o estoque de
+            origem correspondente.
+          </Quadro>
 
-          <TituloTutorial>Devolução</TituloTutorial>
+          <Quadro titulo="Perda / Descarte">
+            Utilize quando um material precisa ser baixado por perda,
+            deterioração, inutilização ou descarte. Informe o motivo.
+          </Quadro>
 
-          <TextoTutorial>
-            Utilize quando material de uma saída retorna fisicamente ao
-            depósito.
-          </TextoTutorial>
+          <Quadro titulo="Correção">
+            Utilize para ajustar uma divergência comprovada entre o saldo
+            do sistema e a quantidade física. A correção pode aumentar
+            ou diminuir o saldo e deve ser justificada.
+          </Quadro>
 
-          <TituloTutorial>Perda / Descarte</TituloTutorial>
-
-          <TextoTutorial>
-            Utilize para material perdido, deteriorado, inutilizado ou
-            descartado.
-          </TextoTutorial>
-
-          <TituloTutorial>Correção</TituloTutorial>
-
-          <TextoTutorial>
-            Utilize para ajustar diferenças entre o saldo do sistema e o
-            estoque físico.
-          </TextoTutorial>
-
-          <TituloTutorial>Cancelar saída</TituloTutorial>
-
-          <TextoTutorial>
-            A saída permanece registrada no histórico como cancelada e o
-            estoque é recomposto.
-          </TextoTutorial>
+          <Quadro titulo="Cancelar saída">
+            Utilize quando uma saída registrada precisa ser anulada. A
+            saída permanece no histórico como cancelada e o estoque é
+            recomposto.
+          </Quadro>
 
           <Aviso>
-            Utilize sempre a operação correspondente ao fato que
-            realmente ocorreu.
+            Não utilize Correção para substituir uma devolução, perda ou
+            transferência. Escolha sempre o procedimento que represente
+            o fato realmente ocorrido.
           </Aviso>
         </Tutorial>
 
@@ -754,43 +615,51 @@ export default function ManualEstoqueAprov() {
           id="efetivo-alimentado"
           icone="👥"
           titulo="Efetivo alimentado"
-          subtitulo="Planejamento do efetivo e fechamento diário das refeições."
+          subtitulo="Planejamento do arranchamento e fechamento diário."
         >
-          <TituloTutorial>Para que serve</TituloTutorial>
+          <Titulo>Para que serve</Titulo>
 
-          <TextoTutorial>
-            Permite registrar o efetivo previsto, aplicar margem de
-            segurança e posteriormente registrar o efetivo realmente
-            atendido.
-          </TextoTutorial>
+          <Texto>
+            Permite planejar o efetivo previsto para as refeições e,
+            posteriormente, registrar o resultado real do atendimento.
+            Essas informações apoiam o planejamento do consumo.
+          </Texto>
 
-          <TituloTutorial>Planejamento</TituloTutorial>
+          <Titulo>Planejamento</Titulo>
 
           <Passos>
-            <li>Acesse Efetivo alimentado.</li>
-            <li>Informe a data.</li>
+            <li>Acesse <strong>Efetivo alimentado</strong>.</li>
+            <li>Confira ou selecione a data planejada.</li>
             <li>Selecione a refeição.</li>
             <li>Informe o efetivo previsto.</li>
-            <li>Confira a margem de segurança.</li>
-            <li>Confira o efetivo considerado para planejamento.</li>
+            <li>Confira a margem de segurança aplicada.</li>
+            <li>Confira o total considerado para planejamento.</li>
             <li>Registre o arranchamento.</li>
           </Passos>
 
-          <TituloTutorial>Fechamento Diário</TituloTutorial>
+          <Aviso tipo="informacao">
+            A margem de segurança ajuda a absorver pequenas variações do
+            efetivo. Ela não significa que todo o acréscimo será
+            obrigatoriamente consumido.
+          </Aviso>
+
+          <Titulo>Fechamento Diário</Titulo>
 
           <Passos>
-            <li>Acesse Fechamento Diário.</li>
+            <li>Acesse <strong>Fechamento Diário</strong>.</li>
             <li>Selecione a data.</li>
             <li>Informe o efetivo realmente alimentado.</li>
-            <li>Informe faltas.</li>
-            <li>Informe militares não arranchados atendidos.</li>
-            <li>Informe a sobra pesada total.</li>
-            <li>Confira o resumo e confirme.</li>
+            <li>Informe as faltas.</li>
+            <li>Informe não arranchados que foram atendidos.</li>
+            <li>Informe a sobra pesada total, quando houver.</li>
+            <li>Confira o resumo e finalize.</li>
           </Passos>
 
           <Aviso>
-            A sobra do Fechamento Diário não substitui a devolução física
-            de gênero ao depósito.
+            A sobra informada no Fechamento Diário é um dado de
+            acompanhamento. Ela não devolve automaticamente gêneros ao
+            estoque. Havendo devolução física ao depósito, utilize o
+            procedimento próprio de devolução.
           </Aviso>
         </Tutorial>
 
@@ -800,415 +669,296 @@ export default function ManualEstoqueAprov() {
           id="relatorios"
           icone="📊"
           titulo="Relatórios"
-          subtitulo="Consulta, consolidação e exportação das informações operacionais."
+          subtitulo="Consulta, consolidação e exportação dos registros."
         >
-          <TituloTutorial>Para que serve</TituloTutorial>
+          <Titulo>Para que serve</Titulo>
 
-          <TextoTutorial>
-            Consolida movimentações, efetivo, refeições, estoque e
-            alertas operacionais.
-          </TextoTutorial>
+          <Texto>
+            Os relatórios consolidam as informações registradas no
+            Estoque Aprov e auxiliam a conferência, acompanhamento e
+            prestação de informações do Aprovisionamento.
+          </Texto>
+
+          <Titulo>Como gerar</Titulo>
 
           <Passos>
-            <li>Acesse Relatórios.</li>
-            <li>Informe data inicial.</li>
-            <li>Informe data final.</li>
-            <li>Escolha QS + QR, QS ou QR.</li>
-            <li>Selecione as informações desejadas.</li>
-            <li>Toque em Visualizar relatório.</li>
-            <li>Exporte em PDF ou Excel quando necessário.</li>
+            <li>Acesse <strong>Relatórios</strong>.</li>
+            <li>Informe a data inicial e final.</li>
+            <li>Escolha QS + QR, somente QS ou somente QR.</li>
+            <li>
+              Selecione as informações que deseja incluir, como
+              entradas, saídas, devoluções, estoque, efetivo e refeições.
+            </li>
+            <li>Visualize o relatório.</li>
+            <li>Exporte em PDF ou Excel, quando necessário.</li>
           </Passos>
 
-          <TituloTutorial>Alertas</TituloTutorial>
-
-          <TextoTutorial>
-            Os relatórios identificam estoque baixo, estoque zerado,
-            validade próxima e lotes vencidos com saldo.
-          </TextoTutorial>
+          <Aviso tipo="informacao">
+            As movimentações registradas permitem acompanhar saldo
+            inicial, recebimentos, saídas, devoluções, perdas, correções
+            e transferências.
+          </Aviso>
 
           <Aviso>
-            Os alertas de estoque são sempre incluídos no relatório.
+            Os alertas de estoque também são apresentados para auxiliar
+            na identificação de estoque baixo, falta de material e
+            problemas relacionados à validade.
           </Aviso>
         </Tutorial>
 
         {/* 9. QDAA / RESSUPRIMENTO QS */}
 
         <Tutorial
-          id="qdaa-ressuprimento-qs"
+          id="qdaa-ressuprimento"
           icone="▤"
           titulo="QDAA / Ressuprimento QS"
-          subtitulo="Controle mensal do QDAA e planejamento bimestral do Ressuprimento QS."
+          subtitulo="QDAA mensal e planejamento normal bimestral do QS."
         >
-          <TituloTutorial>Para que serve</TituloTutorial>
+          <Titulo>Entenda a diferença</Titulo>
 
-          <TextoTutorial>
-            Reúne o acompanhamento mensal dos gêneros QS e o
-            planejamento das necessidades para a Cadeia de Suprimento.
-          </TextoTutorial>
+          <Texto>
+            O módulo reúne procedimentos relacionados aos gêneros QS,
+            mas existem duas periodicidades diferentes que não devem ser
+            confundidas.
+          </Texto>
 
-          <Aviso>
-            O <strong>QDAA é mensal</strong>. O{' '}
-            <strong>Ressuprimento QS normal é bimestral</strong>, com
-            ciclo fixo de 2 meses.
-          </Aviso>
+          <Quadro titulo="QDAA">
+            É realizado mensalmente, com acompanhamento das informações
+            dos gêneros QS referentes ao mês.
+          </Quadro>
 
-          <TituloTutorial>Apoio ao QDAA</TituloTutorial>
+          <Quadro titulo="Ressuprimento QS normal">
+            É bimestral. Cada planejamento normal projeta a necessidade
+            de abastecimento para um período fixo de 2 meses.
+          </Quadro>
 
-          <TextoTutorial>
-            Consolida mensalmente os dados dos gêneros QS registrados no
-            Estoque Aprov.
-          </TextoTutorial>
+          <Titulo>Apoio ao QDAA</Titulo>
 
           <Passos>
-            <li>Acesse QDAA / Ressuprimento QS.</li>
-            <li>Selecione Apoio ao QDAA.</li>
-            <li>Selecione mês e ano.</li>
-            <li>Toque em Gerar QDAA.</li>
-            <li>Confira os gêneros e suas movimentações.</li>
+            <li>Acesse <strong>QDAA / Ressuprimento QS</strong>.</li>
+            <li>Entre em <strong>Apoio ao QDAA</strong>.</li>
+            <li>Selecione o mês e o ano.</li>
+            <li>Gere o QDAA.</li>
+            <li>Confira as informações e movimentações dos gêneros QS.</li>
           </Passos>
 
-          <TituloTutorial>Planejamento de Ressuprimento QS</TituloTutorial>
+          <Titulo>Planejamento de Ressuprimento QS</Titulo>
 
-          <TextoTutorial>
-            Calcula a necessidade estimada para o próximo ciclo normal
-            de dois meses.
-          </TextoTutorial>
+          <Texto>
+            O sistema utiliza informações de consumo e estoque para
+            auxiliar no cálculo da necessidade do próximo período
+            bimestral.
+          </Texto>
 
           <Passos>
-            <li>Acesse Planejamento de Ressuprimento QS.</li>
-            <li>Escolha o período histórico.</li>
+            <li>
+              Acesse <strong>Planejamento de Ressuprimento QS</strong>.
+            </li>
+            <li>
+              Escolha o período histórico que será usado para calcular a
+              média de consumo.
+            </li>
             <li>Confira a margem de segurança.</li>
-            <li>Resolva referências pendentes.</li>
-            <li>Confira a sugestão do Estoque Aprov.</li>
-            <li>Informe a quantidade planejada.</li>
-            <li>Justifique alterações quando necessário.</li>
-            <li>Salve como rascunho ou finalize.</li>
+            <li>
+              Resolva eventuais referências de consumo pendentes.
+            </li>
+            <li>Analise a sugestão calculada pelo Estoque Aprov.</li>
+            <li>Informe a quantidade que será efetivamente planejada.</li>
+            <li>
+              Quando alterar uma quantidade, registre a justificativa
+              quando solicitada.
+            </li>
+            <li>Salve como rascunho ou finalize o planejamento.</li>
           </Passos>
 
           <Aviso>
-            O histórico de 1, 2, 3 ou 6 meses serve para calcular a média
-            de consumo. Ele não altera o ciclo normal de 2 meses.
+            O período histórico de 1, 2, 3 ou 6 meses é utilizado apenas
+            para calcular a média de consumo. Ele não muda o ciclo de
+            ressuprimento normal, que permanece sempre em{' '}
+            <strong>2 meses</strong>.
           </Aviso>
 
-          <TituloTutorial>Referência de Consumo QS</TituloTutorial>
+          <Titulo>Referência de Consumo QS</Titulo>
 
-          <TextoTutorial>
-            Quando não existe histórico suficiente, informe uma
-            referência mensal ou bimestral para o gênero.
-          </TextoTutorial>
+          <Texto>
+            Quando ainda não existe histórico suficiente no Estoque
+            Aprov, pode ser necessário informar uma referência de
+            consumo para o gênero. Essa referência permite que o sistema
+            tenha uma base para auxiliar o planejamento.
+          </Texto>
 
-          <TituloTutorial>Histórico de Ressuprimentos</TituloTutorial>
+          <Titulo>Histórico de Ressuprimentos</Titulo>
 
-          <TextoTutorial>
-            Permite consultar os planejamentos registrados, parâmetros,
-            memória de cálculo, quantidades e justificativas.
-          </TextoTutorial>
+          <Texto>
+            Utilize o histórico para consultar planejamentos já
+            registrados, seus parâmetros, quantidades, justificativas e
+            demais informações relacionadas ao ciclo.
+          </Texto>
 
-          <TituloTutorial>Ressuprimento Complementar</TituloTutorial>
+          <Titulo>Ressuprimento Complementar</Titulo>
 
-          <TextoTutorial>
-            É utilizado excepcionalmente dentro de um ciclo bimestral
-            quando surge necessidade adicional de determinado gênero.
-          </TextoTutorial>
+          <Texto>
+            Durante um ciclo bimestral pode surgir, excepcionalmente, a
+            necessidade de solicitar quantidade adicional. Isso pode
+            ocorrer, por exemplo, quando o material recebido foi inferior
+            ao planejado, houve erro nos dados ou surgiu uma necessidade
+            operacional inesperada.
+          </Texto>
+
+          <Passos>
+            <li>Abra o planejamento bimestral finalizado.</li>
+            <li>
+              Acesse <strong>Ressuprimento complementar</strong>.
+            </li>
+            <li>Selecione somente os gêneros necessários.</li>
+            <li>Informe a quantidade adicional.</li>
+            <li>Registre obrigatoriamente a justificativa.</li>
+            <li>Confirme o complementar.</li>
+          </Passos>
 
           <Aviso>
-            O complementar não cria novo ciclo e não altera o
-            planejamento original.
+            O Ressuprimento Complementar não cria um novo ciclo e não
+            altera o planejamento original. Mais de um complementar pode
+            ser registrado durante o mesmo ciclo, quando necessário.
           </Aviso>
 
-          <Aviso>
-            O Ressuprimento Complementar não movimenta estoque. Quando o
-            material chegar fisicamente, a entrada deverá ser registrada
-            em <strong>Novo recebimento</strong>.
+          <Aviso tipo="informacao">
+            O complementar registra a necessidade de ressuprimento, mas
+            não movimenta o estoque. Quando o material chegar
+            fisicamente, registre a entrada em{' '}
+            <strong>Novo recebimento</strong>.
           </Aviso>
         </Tutorial>
 
         {/* 10. LOCAIS DE ARMAZENAMENTO */}
 
         <Tutorial
-          id="locais-armazenamento"
+          id="locais"
           icone="🏬"
           titulo="Locais de armazenamento"
-          subtitulo="Cadastro e manutenção dos locais físicos onde os gêneros são armazenados."
+          subtitulo="Organização dos espaços físicos do depósito."
         >
-          <TituloTutorial>Para que serve</TituloTutorial>
+          <Titulo>Para que serve</Titulo>
 
-          <TextoTutorial>
-            O cadastro de Locais de armazenamento identifica os espaços
-            físicos utilizados para guardar os gêneros alimentícios do
-            Aprovisionamento.
-          </TextoTutorial>
+          <Texto>
+            Identifica os espaços físicos onde os gêneros ficam
+            armazenados. O local registrado no sistema deve representar
+            onde o material realmente se encontra.
+          </Texto>
 
-          <TextoTutorial>
-            Esses locais são utilizados pelo Estoque Aprov para indicar
-            onde cada quantidade se encontra fisicamente, permitindo
-            organizar e rastrear corretamente os saldos.
-          </TextoTutorial>
-
-          <TituloTutorial>Exemplos de locais</TituloTutorial>
-
-          <div
-            style={{
-              display: 'grid',
-              gap: '8px',
-              marginTop: '10px',
-            }}
-          >
-            <Quadro titulo="Câmara de Resfriamento">
-              Pode ser utilizada para armazenamento de hortifrutigranjeiros
-              e outros gêneros que necessitem refrigeração.
-            </Quadro>
-
-            <Quadro titulo="Depósito">
-              Pode representar uma área física destinada aos gêneros
-              armazenados em temperatura ambiente.
-            </Quadro>
-
-            <Quadro titulo="Outros locais">
-              Novos locais podem ser cadastrados de acordo com a
-              organização física existente na OM.
-            </Quadro>
-          </div>
-
-          <TituloTutorial>Quem pode cadastrar</TituloTutorial>
-
-          <TextoTutorial>
-            O cadastro e a alteração dos locais são procedimentos
-            administrativos. O sistema exige permissão de Administrador
-            para criar ou editar esses registros.
-          </TextoTutorial>
-
-          <TituloTutorial>Como cadastrar um novo local</TituloTutorial>
+          <Titulo>Como cadastrar</Titulo>
 
           <Passos>
-            <li>
-              Na tela <strong>Início</strong>, localize a área de
-              configurações administrativas.
-            </li>
-
-            <li>
-              Acesse <strong>Locais</strong>.
-            </li>
-
-            <li>
-              Na área <strong>Novo local</strong>, informe o{' '}
-              <strong>Nome do local</strong>.
-            </li>
-
-            <li>
-              No campo <strong>Descrição</strong>, registre uma
-              informação que facilite a identificação ou indique a
-              finalidade do espaço.
-            </li>
-
-            <li>
-              Confira as informações.
-            </li>
-
-            <li>
-              Toque em <strong>Adicionar local</strong>.
-            </li>
-
-            <li>
-              Aguarde a confirmação de que o local foi cadastrado com
-              sucesso.
-            </li>
-          </Passos>
-
-          <TituloTutorial>Nome do local</TituloTutorial>
-
-          <TextoTutorial>
-            Utilize um nome claro e correspondente ao espaço físico
-            realmente existente. O nome deve permitir que o usuário
-            identifique facilmente onde o material está armazenado.
-          </TextoTutorial>
-
-          <Aviso>
-            O sistema não permite cadastrar dois locais com o mesmo
-            nome. Se já existir um registro com a mesma identificação,
-            será necessário utilizar o local existente ou corrigir o
-            cadastro.
-          </Aviso>
-
-          <TituloTutorial>Descrição</TituloTutorial>
-
-          <TextoTutorial>
-            A descrição é utilizada para complementar a identificação do
-            local. Ela pode informar, por exemplo, o tipo de material
-            normalmente armazenado naquele espaço.
-          </TextoTutorial>
-
-          <Aviso tipo="informacao">
-            Exemplo: para o local{' '}
-            <strong>Câmara de Resfriamento</strong>, a descrição pode
-            indicar <strong>Armazenamento de hortifruti / FLV</strong>.
-          </Aviso>
-
-          <TituloTutorial>Onde o local será utilizado</TituloTutorial>
-
-          <TextoTutorial>
-            Depois de cadastrado, o local poderá ser utilizado em
-            diferentes pontos do Estoque Aprov.
-          </TextoTutorial>
-
-          <div
-            style={{
-              display: 'grid',
-              gap: '8px',
-              marginTop: '10px',
-            }}
-          >
-            <Quadro titulo="📦 Estoque inicial">
-              Identifica onde o saldo existente está fisicamente
-              armazenado no momento da implantação.
-            </Quadro>
-
-            <Quadro titulo="↓ Recebimentos">
-              Define o local para onde o gênero recebido será
-              direcionado.
-            </Quadro>
-
-            <Quadro titulo="🏷 Local habitual do gênero">
-              Pode ser utilizado como referência padrão no cadastro do
-              gênero ou de sua categoria.
-            </Quadro>
-
-            <Quadro titulo="↔ Movimentações">
-              Permite identificar a origem e o destino nas transferências
-              entre locais.
-            </Quadro>
-
-            <Quadro titulo="🔎 Consulta de estoque">
-              Permite visualizar em qual local cada quantidade está
-              armazenada.
-            </Quadro>
-          </div>
-
-          <TituloTutorial>Consultar locais cadastrados</TituloTutorial>
-
-          <Passos>
-            <li>
-              Na tela de Locais, toque em{' '}
-              <strong>Ver locais cadastrados</strong>.
-            </li>
-
-            <li>
-              O sistema apresentará a quantidade de locais cadastrados.
-            </li>
-
-            <li>
-              Consulte o nome, a descrição e a situação de cada local.
-            </li>
-
-            <li>
-              Para recolher a relação, utilize{' '}
-              <strong>Ocultar locais cadastrados</strong>.
-            </li>
-          </Passos>
-
-          <TituloTutorial>Editar um local</TituloTutorial>
-
-          <TextoTutorial>
-            Quando for necessário corrigir o nome ou atualizar a
-            descrição de um local existente, utilize a função de edição.
-          </TextoTutorial>
-
-          <Passos>
-            <li>
-              Abra <strong>Ver locais cadastrados</strong>.
-            </li>
-
-            <li>
-              Localize o registro desejado.
-            </li>
-
-            <li>
-              Toque em <strong>Editar local</strong>.
-            </li>
-
-            <li>
-              Altere o <strong>Nome</strong> ou a{' '}
-              <strong>Descrição</strong>.
-            </li>
-
-            <li>
-              Toque em <strong>Salvar</strong>.
-            </li>
-
-            <li>
-              Caso não queira manter a alteração, toque em{' '}
-              <strong>Cancelar</strong>.
-            </li>
-          </Passos>
-
-          <Aviso tipo="informacao">
-            A edição altera a identificação do local já existente. Ela
-            não representa uma movimentação física de material.
-          </Aviso>
-
-          <TituloTutorial>Local e estoque físico</TituloTutorial>
-
-          <TextoTutorial>
-            O local registrado no sistema deve corresponder ao local
-            onde o material realmente se encontra. Essa correspondência
-            é importante para a conferência do depósito e para a
-            rastreabilidade das movimentações.
-          </TextoTutorial>
-
-          <Aviso>
-            Se um gênero for transferido fisicamente de um local para
-            outro, não altere apenas o cadastro do local. Utilize o
-            procedimento de <strong>Transferência</strong> em{' '}
-            <strong>Devoluções e ajustes</strong>, para que a
-            movimentação fique registrada corretamente.
-          </Aviso>
-
-          <TituloTutorial>Local habitual</TituloTutorial>
-
-          <TextoTutorial>
-            Um local cadastrado também pode ser definido como local
-            habitual de uma categoria ou gênero. Isso facilita o
-            preenchimento das operações em que o sistema pode sugerir
-            automaticamente o local normalmente utilizado.
-          </TextoTutorial>
-
-          <Aviso tipo="informacao">
-            O local habitual funciona como referência operacional. A
-            localização efetiva do saldo continua sendo determinada
-            pelas movimentações realizadas no estoque.
-          </Aviso>
-
-          <TituloTutorial>Boas práticas</TituloTutorial>
-
-          <Passos>
-            <li>
-              Cadastre somente locais físicos realmente utilizados.
-            </li>
-
-            <li>
-              Utilize nomes simples e padronizados.
-            </li>
-
-            <li>
-              Evite criar dois nomes diferentes para o mesmo espaço
-              físico.
-            </li>
-
-            <li>
-              Utilize a descrição para facilitar a identificação quando
-              necessário.
-            </li>
-
-            <li>
-              Sempre que houver movimentação física entre locais,
-              registre a transferência no sistema.
-            </li>
+            <li>Na tela inicial, acesse <strong>Locais</strong>.</li>
+            <li>Informe um nome claro para o local.</li>
+            <li>Informe uma descrição, quando necessário.</li>
+            <li>Toque em <strong>Adicionar local</strong>.</li>
           </Passos>
 
           <Aviso>
-            A organização correta dos locais é essencial para que o saldo
-            apresentado pelo Estoque Aprov corresponda à disposição
-            física dos gêneros no depósito.
+            Não cadastre nomes diferentes para o mesmo espaço físico. O
+            sistema também impede a duplicidade do nome do local.
+          </Aviso>
+
+          <Titulo>Onde é utilizado</Titulo>
+
+          <Texto>
+            Os locais são utilizados no Estoque Inicial, recebimentos,
+            consulta de saldos, transferências e como referência de
+            armazenamento nas configurações aplicáveis.
+          </Texto>
+
+          <Titulo>Editar um local</Titulo>
+
+          <Passos>
+            <li>Abra <strong>Ver locais cadastrados</strong>.</li>
+            <li>Localize o registro.</li>
+            <li>Toque em <strong>Editar local</strong>.</li>
+            <li>Corrija o nome ou a descrição.</li>
+            <li>Salve a alteração.</li>
+          </Passos>
+
+          <Aviso>
+            Editar o nome do local não representa movimentação física de
+            estoque. Se o gênero realmente mudar de um local para outro,
+            registre uma <strong>Transferência</strong> em Devoluções e
+            ajustes.
+          </Aviso>
+        </Tutorial>
+
+        {/* 11. UNIDADES DE MEDIDA */}
+
+        <Tutorial
+          id="unidades"
+          icone="⚖"
+          titulo="Unidades de medida"
+          subtitulo="Cadastro das unidades utilizadas nos gêneros."
+        >
+          <Titulo>Para que serve</Titulo>
+
+          <Texto>
+            A unidade de medida define como a quantidade de cada gênero
+            será controlada no Estoque Aprov. Exemplos comuns são kg
+            para quilograma, L para litro e un para unidade.
+          </Texto>
+
+          <Titulo>Como cadastrar</Titulo>
+
+          <Passos>
+            <li>Na tela inicial, acesse <strong>Unidades</strong>.</li>
+            <li>
+              Em Nova unidade, informe a <strong>Sigla</strong>, por
+              exemplo: kg.
+            </li>
+            <li>
+              Informe o <strong>Nome da unidade</strong>, por exemplo:
+              Quilograma.
+            </li>
+            <li>Toque em <strong>Adicionar unidade</strong>.</li>
+          </Passos>
+
+          <Aviso tipo="informacao">
+            A nova unidade é cadastrada como ativa e fica disponível para
+            utilização nos gêneros QS e QR.
+          </Aviso>
+
+          <Aviso>
+            A sigla deve ser única. Não é permitido cadastrar outra
+            unidade com a mesma sigla.
+          </Aviso>
+
+          <Titulo>Consultar e editar</Titulo>
+
+          <Passos>
+            <li>
+              Toque em <strong>Ver unidades cadastradas</strong>.
+            </li>
+            <li>Localize a unidade desejada.</li>
+            <li>Entre na edição.</li>
+            <li>
+              Altere sigla, nome ou situação, quando necessário.
+            </li>
+            <li>Salve.</li>
+          </Passos>
+
+          <Titulo>Ativar ou inativar</Titulo>
+
+          <Texto>
+            Uma unidade ativa permanece disponível para utilização nos
+            cadastros. Quando não deve mais ser utilizada, ela pode ser
+            marcada como inativa.
+          </Texto>
+
+          <Aviso>
+            Se a unidade estiver vinculada a um ou mais gêneros, o
+            sistema não permitirá sua inativação. Primeiro será
+            necessário alterar os gêneros vinculados.
+          </Aviso>
+
+          <Aviso tipo="informacao">
+            Como a unidade define a interpretação das quantidades do
+            gênero, confira esse cadastro cuidadosamente antes de iniciar
+            as movimentações reais do estoque.
           </Aviso>
         </Tutorial>
       </div>
@@ -1225,8 +975,8 @@ export default function ManualEstoqueAprov() {
           fontWeight: 700,
         }}
       >
-        Manual do Estoque Aprov · Os demais procedimentos serão
-        acrescentados progressivamente.
+        Manual do Estoque Aprov · Orientações para utilização segura e
+        correta do sistema.
       </div>
     </section>
   );
