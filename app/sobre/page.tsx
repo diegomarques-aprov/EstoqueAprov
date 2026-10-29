@@ -117,6 +117,8 @@ export default function SobrePage() {
               fontSize: '15px',
               lineHeight: 1.7,
               color: '#3f392f',
+              textAlign: 'justify',
+              textIndent: '1.8em',
             }}
           >
             O <strong>Estoque Aprov</strong> é um
@@ -134,6 +136,8 @@ export default function SobrePage() {
               fontSize: '15px',
               lineHeight: 1.7,
               color: '#3f392f',
+              textAlign: 'justify',
+              textIndent: '1.8em',
             }}
           >
             O projeto nasceu a partir das
@@ -252,6 +256,8 @@ export default function SobrePage() {
               fontSize: '15px',
               lineHeight: 1.7,
               color: '#f5ead6',
+              textAlign: 'justify',
+              textIndent: '1.8em',
             }}
           >
             O Estoque Aprov foi estruturado para
@@ -269,6 +275,8 @@ export default function SobrePage() {
               fontSize: '15px',
               lineHeight: 1.7,
               color: '#f5ead6',
+              textAlign: 'justify',
+              textIndent: '1.8em',
             }}
           >
             O planejamento de Ressuprimento QS
