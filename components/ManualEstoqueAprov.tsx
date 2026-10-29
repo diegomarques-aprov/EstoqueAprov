@@ -115,7 +115,8 @@ function Tutorial({
           id={`tutorial-${id}`}
           style={{
             padding: '0 18px 20px',
-            borderTop: '1px solid rgba(92, 62, 32, .12)',
+            borderTop:
+              '1px solid rgba(92, 62, 32, .12)',
           }}
         >
           {children}
@@ -258,7 +259,8 @@ export default function ManualEstoqueAprov() {
             background: '#294735',
             color: '#f4d79d',
             fontSize: '25px',
-            boxShadow: '0 5px 14px rgba(38, 57, 44, .18)',
+            boxShadow:
+              '0 5px 14px rgba(38, 57, 44, .18)',
           }}
         >
           📖
@@ -706,6 +708,404 @@ export default function ManualEstoqueAprov() {
             Quantidade, local, lote e validade, quando
             aplicáveis, devem corresponder ao que
             realmente existe no depósito.
+          </Aviso>
+        </Tutorial>
+
+        {/* CONSULTAR ESTOQUE */}
+
+        <Tutorial
+          id="consultar-estoque"
+          icone="🔎"
+          titulo="Consultar estoque"
+          subtitulo="Consulta dos saldos disponíveis por gênero, local e lote."
+        >
+          <TituloTutorial>
+            Para que serve
+          </TituloTutorial>
+
+          <TextoTutorial>
+            A consulta de estoque permite visualizar a
+            situação atual dos gêneros disponíveis no
+            Estoque Aprov. Os saldos são apresentados
+            separadamente entre QS e QR e organizados
+            para facilitar a identificação do gênero,
+            do local de armazenamento e, quando
+            aplicável, do lote e da validade.
+          </TextoTutorial>
+
+          <TituloTutorial>
+            Como consultar
+          </TituloTutorial>
+
+          <Passos>
+            <li>
+              Na tela <strong>Início</strong>, acesse{' '}
+              <strong>Consultar estoque</strong>.
+            </li>
+
+            <li>
+              Escolha a classe que deseja consultar:
+              <strong> QS</strong> ou{' '}
+              <strong>QR</strong>.
+            </li>
+
+            <li>
+              Aguarde o carregamento dos saldos
+              registrados para a classe selecionada.
+            </li>
+
+            <li>
+              Localize o <strong>grupo</strong> ao qual
+              pertence o gênero desejado.
+            </li>
+
+            <li>
+              Dentro do grupo, localize a{' '}
+              <strong>categoria</strong>.
+            </li>
+
+            <li>
+              Localize o <strong>gênero</strong> que
+              deseja consultar.
+            </li>
+
+            <li>
+              Confira o saldo total apresentado para o
+              gênero e sua respectiva unidade de
+              medida.
+            </li>
+
+            <li>
+              Verifique abaixo do gênero a distribuição
+              das quantidades por{' '}
+              <strong>local de armazenamento</strong>.
+            </li>
+
+            <li>
+              Quando houver controle de lote, confira
+              também o <strong>número do lote</strong>{' '}
+              e a <strong>validade</strong> exibidos
+              junto ao saldo.
+            </li>
+          </Passos>
+
+          <TituloTutorial>
+            Organização da consulta
+          </TituloTutorial>
+
+          <TextoTutorial>
+            Para facilitar a leitura, o sistema
+            organiza os registros em uma sequência
+            hierárquica: grupo, categoria, gênero e
+            local de armazenamento. Quando o gênero
+            possuir controle por lote, cada saldo
+            também poderá ser identificado pelo lote
+            correspondente.
+          </TextoTutorial>
+
+          <Aviso tipo="informacao">
+            Os totais apresentados respeitam a unidade
+            de medida cadastrada para cada gênero. O
+            sistema também apresenta totais por unidade
+            nos agrupamentos, evitando somar
+            diretamente unidades de natureza diferente.
+          </Aviso>
+
+          <TituloTutorial>
+            Saldo por gênero
+          </TituloTutorial>
+
+          <TextoTutorial>
+            O valor destacado ao lado do gênero
+            representa a soma das quantidades
+            disponíveis daquele gênero nos registros
+            apresentados, respeitando sua unidade de
+            medida.
+          </TextoTutorial>
+
+          <TituloTutorial>
+            Local e lote
+          </TituloTutorial>
+
+          <TextoTutorial>
+            Um mesmo gênero pode possuir saldo em
+            diferentes locais de armazenamento ou em
+            diferentes lotes. Por isso, além do total
+            geral do gênero, a tela detalha onde cada
+            quantidade está armazenada.
+          </TextoTutorial>
+
+          <Aviso>
+            Antes de realizar movimentações, confira se
+            o saldo apresentado corresponde ao gênero,
+            local e lote desejados. Essa verificação é
+            especialmente importante para gêneros com
+            controle de validade e para a correta
+            aplicação do PVPS.
+          </Aviso>
+
+          <TituloTutorial>
+            Quando não houver saldo
+          </TituloTutorial>
+
+          <TextoTutorial>
+            Caso não existam gêneros com quantidade
+            disponível na classe selecionada, o sistema
+            apresentará a mensagem{' '}
+            <strong>“Nenhum saldo registrado”</strong>.
+          </TextoTutorial>
+        </Tutorial>
+
+        {/* NOVO RECEBIMENTO */}
+
+        <Tutorial
+          id="novo-recebimento"
+          icone="↓"
+          titulo="Novo recebimento"
+          subtitulo="Entrada de novos gêneros QS ou QR no estoque."
+        >
+          <TituloTutorial>
+            Para que serve
+          </TituloTutorial>
+
+          <TextoTutorial>
+            O módulo Novo recebimento é utilizado para
+            registrar as entradas normais de gêneros no
+            estoque após a implantação do sistema. Cada
+            recebimento fica identificado e as
+            quantidades confirmadas são acrescentadas
+            aos saldos existentes.
+          </TextoTutorial>
+
+          <Aviso tipo="informacao">
+            Diferentemente do Estoque Inicial, que é
+            destinado à implantação dos saldos que já
+            existiam no depósito, este é o módulo
+            utilizado para registrar os novos
+            recebimentos realizados durante a operação
+            normal do Aprovisionamento.
+          </Aviso>
+
+          <TituloTutorial>
+            Antes de começar
+          </TituloTutorial>
+
+          <TextoTutorial>
+            Os gêneros e os locais de armazenamento
+            utilizados no recebimento precisam estar
+            cadastrados e ativos. O gênero também deve
+            pertencer à mesma classe, QS ou QR,
+            selecionada para o recebimento.
+          </TextoTutorial>
+
+          <TituloTutorial>
+            Passo a passo
+          </TituloTutorial>
+
+          <Passos>
+            <li>
+              Na tela <strong>Início</strong>, acesse{' '}
+              <strong>Novo recebimento</strong>.
+            </li>
+
+            <li>
+              Selecione <strong>QS</strong> ou{' '}
+              <strong>QR</strong>, conforme a
+              classificação dos gêneros que estão
+              sendo recebidos.
+            </li>
+
+            <li>
+              Confira ou informe a{' '}
+              <strong>data do recebimento</strong>.
+            </li>
+
+            <li>
+              No campo <strong>Origem</strong>, informe
+              a procedência do material quando
+              aplicável. Para QS, por exemplo, poderá
+              ser informado o B Sup. Para QR, poderá
+              ser informado o fornecedor.
+            </li>
+
+            <li>
+              No campo <strong>Documento</strong>,
+              informe, quando houver, a relação, nota
+              fiscal ou outro documento relacionado à
+              entrada.
+            </li>
+
+            <li>
+              Utilize o campo{' '}
+              <strong>Observação</strong> quando for
+              necessário registrar alguma informação
+              complementar sobre o recebimento.
+            </li>
+
+            <li>
+              Em <strong>Gêneros recebidos</strong>,
+              selecione o primeiro gênero da entrada.
+            </li>
+
+            <li>
+              Informe a <strong>quantidade</strong>,
+              respeitando a unidade de medida exibida
+              pelo sistema.
+            </li>
+
+            <li>
+              Selecione o{' '}
+              <strong>local de armazenamento</strong>.
+              Quando o gênero possuir local padrão
+              cadastrado, o sistema poderá preenchê-lo
+              automaticamente.
+            </li>
+
+            <li>
+              Se o gênero controlar lote, informe o{' '}
+              <strong>lote</strong>.
+            </li>
+
+            <li>
+              Se o gênero controlar validade, informe a{' '}
+              <strong>validade</strong>.
+            </li>
+
+            <li>
+              Informe o{' '}
+              <strong>valor unitário</strong> quando
+              essa informação estiver disponível para
+              o recebimento.
+            </li>
+
+            <li>
+              Caso existam outros gêneros no mesmo
+              recebimento, toque em{' '}
+              <strong>+ Adicionar</strong> e repita o
+              preenchimento para cada item.
+            </li>
+
+            <li>
+              Após informar todos os itens, toque em{' '}
+              <strong>Revisar recebimento</strong>.
+            </li>
+
+            <li>
+              Confira os gêneros, quantidades, locais,
+              lotes, validades e demais informações
+              antes de prosseguir.
+            </li>
+
+            <li>
+              Se precisar corrigir alguma informação,
+              toque em <strong>Voltar e editar</strong>.
+            </li>
+
+            <li>
+              Estando tudo correto, toque em{' '}
+              <strong>Confirmar</strong>.
+            </li>
+          </Passos>
+
+          <TituloTutorial>
+            Mais de um gênero
+          </TituloTutorial>
+
+          <TextoTutorial>
+            Um único recebimento pode conter vários
+            gêneros. O botão{' '}
+            <strong>+ Adicionar</strong> cria novos
+            itens dentro da mesma entrada, permitindo
+            registrar os materiais relacionados ao
+            mesmo recebimento sem criar lançamentos
+            separados desnecessariamente.
+          </TextoTutorial>
+
+          <TituloTutorial>
+            Lote e validade
+          </TituloTutorial>
+
+          <TextoTutorial>
+            Lote e validade são solicitados de acordo
+            com a configuração de cada gênero. Quando o
+            gênero exigir essas informações, o
+            recebimento somente poderá prosseguir após
+            o preenchimento dos campos obrigatórios.
+          </TextoTutorial>
+
+          <Aviso>
+            Confira cuidadosamente lote e validade
+            antes da confirmação. Essas informações
+            serão utilizadas posteriormente no
+            controle e na rastreabilidade do estoque,
+            inclusive para apoiar a aplicação do
+            princípio PVPS.
+          </Aviso>
+
+          <TituloTutorial>
+            Valor unitário
+          </TituloTutorial>
+
+          <TextoTutorial>
+            O sistema permite informar o valor unitário
+            de cada item do recebimento e apresenta o
+            valor total informado para a entrada. O
+            valor unitário não substitui a quantidade:
+            são informações distintas registradas para
+            o item.
+          </TextoTutorial>
+
+          <TituloTutorial>
+            Revisão antes da entrada
+          </TituloTutorial>
+
+          <TextoTutorial>
+            O botão{' '}
+            <strong>Revisar recebimento</strong> não
+            efetiva imediatamente a entrada. Ele
+            permite uma última conferência dos dados
+            antes da confirmação definitiva.
+          </TextoTutorial>
+
+          <Aviso tipo="informacao">
+            O estoque somente é atualizado quando o
+            recebimento é efetivamente confirmado.
+          </Aviso>
+
+          <TituloTutorial>
+            O que acontece após confirmar
+          </TituloTutorial>
+
+          <TextoTutorial>
+            Após a confirmação, o sistema cria o
+            recebimento, registra seus itens, acrescenta
+            as quantidades aos respectivos saldos de
+            estoque e registra a movimentação para fins
+            de rastreabilidade.
+          </TextoTutorial>
+
+          <TextoTutorial>
+            Quando o gênero possui controle por lote, o
+            sistema relaciona a entrada ao lote
+            informado. Quando o gênero não possui
+            controle por lote, a quantidade é somada ao
+            saldo sem lote existente para aquele gênero
+            e local, ou cria esse saldo caso ainda não
+            exista.
+          </TextoTutorial>
+
+          <Aviso tipo="informacao">
+            Após uma entrada concluída com sucesso, o
+            sistema informa o número do recebimento e
+            confirma que o estoque foi atualizado.
+          </Aviso>
+
+          <Aviso>
+            Se ocorrer uma falha durante a efetivação do
+            recebimento, o sistema não deve concluir
+            apenas parte da operação. A entrada é
+            processada de forma conjunta para preservar
+            a consistência do estoque.
           </Aviso>
         </Tutorial>
       </div>
