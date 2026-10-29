@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import packageJson from '@/package.json';
+import ManualEstoqueAprov from '@/components/ManualEstoqueAprov';
 
 export default function SobrePage() {
   return (
@@ -381,6 +382,10 @@ export default function SobrePage() {
             Corumbá-MS · 2026
           </div>
         </section>
+
+        {/* MANUAL DE UTILIZAÇÃO */}
+
+        <ManualEstoqueAprov />
 
         {/* VERSÃO */}
 
