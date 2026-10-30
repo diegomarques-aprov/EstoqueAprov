@@ -44,7 +44,11 @@ const criarUsuarioSchema = z.object({
 const atualizarUsuarioSchema = z.object({
   id: z.string().min(1),
 
-  nome: z.string().trim().min(2).max(120),
+  nome: z
+    .string()
+    .trim()
+    .min(2)
+    .max(120),
 
   postoGraduacao: z
     .string()
@@ -90,7 +94,9 @@ async function exigirAdministradorPrincipal() {
           error:
             'Sessão não encontrada. Faça login novamente.',
         },
-        { status: 401 }
+        {
+          status: 401,
+        }
       ),
     };
   }
@@ -106,7 +112,9 @@ async function exigirAdministradorPrincipal() {
           error:
             'Somente o Administrador Principal pode gerenciar usuários.',
         },
-        { status: 403 }
+        {
+          status: 403,
+        }
       ),
     };
   }
@@ -157,7 +165,9 @@ export async function GET() {
       ],
     });
 
-  return Response.json(usuarios);
+  return Response.json(
+    usuarios
+  );
 }
 
 export async function POST(
@@ -192,7 +202,9 @@ export async function POST(
           error:
             'Já existe um usuário com este login.',
         },
-        { status: 409 }
+        {
+          status: 409,
+        }
       );
     }
 
@@ -278,7 +290,9 @@ export async function POST(
 
     return Response.json(
       novoUsuario,
-      { status: 201 }
+      {
+        status: 201,
+      }
     );
   } catch (erro) {
     if (
@@ -291,7 +305,9 @@ export async function POST(
               ?.message ||
             'Verifique os dados informados para o novo usuário.',
         },
-        { status: 400 }
+        {
+          status: 400,
+        }
       );
     }
 
@@ -302,7 +318,9 @@ export async function POST(
         error:
           'Não foi possível cadastrar o usuário.',
       },
-      { status: 500 }
+      {
+        status: 500,
+      }
     );
   }
 }
@@ -336,7 +354,9 @@ export async function PUT(
           error:
             'Usuário não encontrado.',
         },
-        { status: 404 }
+        {
+          status: 404,
+        }
       );
     }
 
@@ -347,6 +367,7 @@ export async function PUT(
       await prisma.usuario.findFirst({
         where: {
           login,
+
           id: {
             not: body.id,
           },
@@ -359,13 +380,16 @@ export async function PUT(
           error:
             'Já existe outro usuário com este login.',
         },
-        { status: 409 }
+        {
+          status: 409,
+        }
       );
     }
 
     /*
-     * Proteções do Administrador Principal
+     * PROTEÇÕES DO ADMINISTRADOR PRINCIPAL
      */
+
     if (
       body.id ===
         acesso.usuario!.id &&
@@ -377,7 +401,9 @@ export async function PUT(
           error:
             'Você não pode desativar o seu próprio usuário.',
         },
-        { status: 400 }
+        {
+          status: 400,
+        }
       );
     }
 
@@ -392,29 +418,35 @@ export async function PUT(
           error:
             'Você não pode remover o seu próprio perfil de Administrador Principal.',
         },
-        { status: 400 }
+        {
+          status: 400,
+        }
       );
     }
 
     /*
-     * Impede que o sistema fique sem
-     * Administrador Principal ativo.
+     * GARANTE PELO MENOS UM
+     * ADMINISTRADOR PRINCIPAL ATIVO
      */
+
     if (
       usuarioAtual.perfil ===
         'ADMIN_PRINCIPAL' &&
       usuarioAtual.situacao ===
         'ATIVO' &&
-      (body.perfil !==
-        'ADMIN_PRINCIPAL' ||
+      (
+        body.perfil !==
+          'ADMIN_PRINCIPAL' ||
         body.situacao ===
-          'INATIVO')
+          'INATIVO'
+      )
     ) {
       const quantidadeAdministradoresPrincipais =
         await prisma.usuario.count({
           where: {
             perfil:
               'ADMIN_PRINCIPAL',
+
             situacao:
               'ATIVO',
           },
@@ -429,25 +461,21 @@ export async function PUT(
             error:
               'O sistema precisa manter pelo menos um Administrador Principal ativo.',
           },
-          { status: 400 }
+          {
+            status: 400,
+          }
         );
       }
     }
 
-    const novaSenha =
-      body.senha?.trim();
+    /*
+     * ALTERAÇÃO DE SENHA
+     */
 
-    const senhaHash =
-      novaSenha &&
-      novaSenha.length >= 8
-        ? await bcrypt.hash(
-            novaSenha,
-            12
-          )
-        : undefined;
+    const novaSenha =
+      body.senha?.trim() || '';
 
     if (
-      novaSenha &&
       novaSenha.length > 0 &&
       novaSenha.length < 8
     ) {
@@ -456,9 +484,27 @@ export async function PUT(
           error:
             'A nova senha deve possuir pelo menos 8 caracteres.',
         },
-        { status: 400 }
+        {
+          status: 400,
+        }
       );
     }
+
+    let novoSenhaHash:
+      | string
+      | undefined;
+
+    if (novaSenha.length >= 8) {
+      novoSenhaHash =
+        await bcrypt.hash(
+          novaSenha,
+          12
+        );
+    }
+
+    /*
+     * ATUALIZA O USUÁRIO
+     */
 
     const usuarioAtualizado =
       await prisma.usuario.update({
@@ -488,36 +534,77 @@ export async function PUT(
           situacao:
             body.situacao,
 
-          ...(senhaHash
+          ...(novoSenhaHash
             ? {
-                senhaHash,
+                senhaHash:
+                  novoSenhaHash,
               }
             : {}),
         },
-
-        select: {
-          id: true,
-          nome: true,
-          postoGraduacao: true,
-          funcao: true,
-          login: true,
-          perfil: true,
-          situacao: true,
-          ultimoAcesso: true,
-          criadoEm: true,
-        },
       });
+
+    /*
+     * CONFIRMA QUE A NOVA SENHA
+     * FOI REALMENTE GRAVADA
+     */
+
+    let senhaAlterada = false;
+
+    if (novaSenha.length >= 8) {
+      const usuarioConfirmacao =
+        await prisma.usuario.findUnique({
+          where: {
+            id: body.id,
+          },
+
+          select: {
+            senhaHash: true,
+          },
+        });
+
+      if (!usuarioConfirmacao) {
+        return Response.json(
+          {
+            error:
+              'Não foi possível confirmar a alteração da senha.',
+          },
+          {
+            status: 500,
+          }
+        );
+      }
+
+      senhaAlterada =
+        await bcrypt.compare(
+          novaSenha,
+          usuarioConfirmacao.senhaHash
+        );
+
+      if (!senhaAlterada) {
+        return Response.json(
+          {
+            error:
+              'A nova senha não foi gravada corretamente. Tente novamente.',
+          },
+          {
+            status: 500,
+          }
+        );
+      }
+    }
+
+    /*
+     * AUDITORIA
+     */
 
     await prisma.auditoria.create({
       data: {
         usuarioId:
           acesso.usuario!.id,
 
-        acao:
-          'ALTERAR',
+        acao: 'ALTERAR',
 
-        entidade:
-          'Usuario',
+        entidade: 'Usuario',
 
         entidadeId:
           usuarioAtualizado.id,
@@ -561,17 +648,53 @@ export async function PUT(
           situacao:
             usuarioAtualizado.situacao,
 
-          senhaAlterada:
-            Boolean(
-              senhaHash
-            ),
+          senhaAlterada,
         },
       },
     });
 
-    return Response.json(
-      usuarioAtualizado
-    );
+    /*
+     * RESPOSTA EXPLÍCITA PARA A TELA
+     */
+
+    return Response.json({
+      ok: true,
+
+      senhaAlterada,
+
+      mensagem: senhaAlterada
+        ? 'Senha alterada com sucesso.'
+        : 'Usuário atualizado com sucesso.',
+
+      usuario: {
+        id:
+          usuarioAtualizado.id,
+
+        nome:
+          usuarioAtualizado.nome,
+
+        postoGraduacao:
+          usuarioAtualizado.postoGraduacao,
+
+        funcao:
+          usuarioAtualizado.funcao,
+
+        login:
+          usuarioAtualizado.login,
+
+        perfil:
+          usuarioAtualizado.perfil,
+
+        situacao:
+          usuarioAtualizado.situacao,
+
+        ultimoAcesso:
+          usuarioAtualizado.ultimoAcesso,
+
+        criadoEm:
+          usuarioAtualizado.criadoEm,
+      },
+    });
   } catch (erro) {
     if (
       erro instanceof z.ZodError
@@ -583,18 +706,25 @@ export async function PUT(
               ?.message ||
             'Verifique os dados informados para o usuário.',
         },
-        { status: 400 }
+        {
+          status: 400,
+        }
       );
     }
 
-    console.error(erro);
+    console.error(
+      'Erro ao atualizar usuário:',
+      erro
+    );
 
     return Response.json(
       {
         error:
           'Não foi possível atualizar o usuário.',
       },
-      { status: 500 }
+      {
+        status: 500,
+      }
     );
   }
 }
