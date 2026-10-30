@@ -27,6 +27,13 @@ type Usuario = {
   criadoEm: string;
 };
 
+type RespostaAtualizacao = {
+  ok?: boolean;
+  senhaAlterada?: boolean;
+  mensagem?: string;
+  error?: string;
+};
+
 const perfis: {
   valor: Perfil;
   nome: string;
@@ -171,9 +178,19 @@ export default function UsuariosClient() {
     setSenhaEdicao,
   ] = useState('');
 
-  async function carregar() {
+  const [
+    confirmarSenhaEdicao,
+    setConfirmarSenhaEdicao,
+  ] = useState('');
+
+  async function carregar(
+    limparErro = true
+  ) {
     setCarregando(true);
-    setErro('');
+
+    if (limparErro) {
+      setErro('');
+    }
 
     try {
       const resposta =
@@ -271,11 +288,11 @@ export default function UsuariosClient() {
         'GRADUADO_SERVICO'
       );
 
+      await carregar(false);
+
       setSucesso(
         'Usuário cadastrado com sucesso.'
       );
-
-      await carregar();
     } catch {
       setErro(
         'Não foi possível cadastrar o usuário.'
@@ -320,11 +337,13 @@ export default function UsuariosClient() {
     );
 
     setSenhaEdicao('');
+    setConfirmarSenhaEdicao('');
   }
 
   function cancelarEdicao() {
     setEditandoId(null);
     setSenhaEdicao('');
+    setConfirmarSenhaEdicao('');
     limparMensagens();
   }
 
@@ -338,6 +357,33 @@ export default function UsuariosClient() {
     }
 
     limparMensagens();
+
+    const novaSenha =
+      senhaEdicao.trim();
+
+    const confirmacao =
+      confirmarSenhaEdicao.trim();
+
+    if (
+      novaSenha.length > 0 &&
+      novaSenha.length < 8
+    ) {
+      setErro(
+        'A nova senha deve possuir pelo menos 8 caracteres.'
+      );
+      return;
+    }
+
+    if (
+      novaSenha.length > 0 &&
+      novaSenha !== confirmacao
+    ) {
+      setErro(
+        'A confirmação da nova senha não confere.'
+      );
+      return;
+    }
+
     setSalvando(true);
 
     try {
@@ -351,6 +397,8 @@ export default function UsuariosClient() {
               'Content-Type':
                 'application/json',
             },
+
+            cache: 'no-store',
 
             body: JSON.stringify({
               id: editandoId,
@@ -368,34 +416,76 @@ export default function UsuariosClient() {
               situacao:
                 situacaoEdicao,
               senha:
-                senhaEdicao,
+                novaSenha,
             }),
           }
         );
 
-      const dados =
-        await resposta.json();
+      let dados:
+        RespostaAtualizacao = {};
+
+      try {
+        dados =
+          await resposta.json();
+      } catch {
+        dados = {};
+      }
 
       if (!resposta.ok) {
         setErro(
           dados.error ||
-            'Não foi possível atualizar o usuário.'
+            `Não foi possível atualizar o usuário. Código ${resposta.status}.`
         );
 
         return;
       }
 
-      setEditandoId(null);
+      /*
+       * Se uma nova senha foi enviada,
+       * a API precisa confirmar que ela
+       * foi realmente gravada no banco.
+       */
+
+      if (
+        novaSenha.length >= 8 &&
+        dados.senhaAlterada !== true
+      ) {
+        setErro(
+          'O sistema não confirmou a gravação da nova senha. A senha anterior foi mantida.'
+        );
+
+        return;
+      }
+
+      const mensagemFinal =
+        dados.mensagem ||
+        (novaSenha.length >= 8
+          ? 'Senha alterada com sucesso.'
+          : 'Usuário atualizado com sucesso.');
+
       setSenhaEdicao('');
+      setConfirmarSenhaEdicao('');
+
+      /*
+       * Fecha a edição somente depois
+       * da confirmação positiva da API.
+       */
+
+      setEditandoId(null);
+
+      /*
+       * Atualiza a relação sem apagar
+       * a mensagem de confirmação.
+       */
+
+      await carregar(false);
 
       setSucesso(
-        'Usuário atualizado com sucesso.'
+        mensagemFinal
       );
-
-      await carregar();
     } catch {
       setErro(
-        'Não foi possível atualizar o usuário.'
+        'Não foi possível comunicar com o servidor para atualizar o usuário.'
       );
     } finally {
       setSalvando(false);
@@ -630,6 +720,7 @@ export default function UsuariosClient() {
           </div>
 
           <button
+            type="submit"
             className="btn"
             disabled={salvando}
             style={{
@@ -660,7 +751,9 @@ export default function UsuariosClient() {
             lineHeight: 1.45,
           }}
         >
-          {erro}
+          <strong>
+            ⚠ {erro}
+          </strong>
         </div>
       )}
 
@@ -831,6 +924,7 @@ export default function UsuariosClient() {
                         onSubmit={
                           salvarEdicao
                         }
+                        autoComplete="off"
                         style={{
                           display:
                             'grid',
@@ -966,6 +1060,7 @@ export default function UsuariosClient() {
                             }
                             autoCapitalize="none"
                             autoCorrect="off"
+                            autoComplete="off"
                           />
                         </label>
 
@@ -1084,77 +1179,111 @@ export default function UsuariosClient() {
                           </span>
                         </div>
 
-                        <label>
-                          Nova senha
-
-                          <input
-                            type="password"
-                            value={
-                              senhaEdicao
-                            }
-                            onChange={(
-                              event
-                            ) =>
-                              setSenhaEdicao(
-                                event.target
-                                  .value
-                              )
-                            }
-                            placeholder="Deixe em branco para manter a senha atual"
-                            maxLength={
-                              100
-                            }
-                            autoComplete="new-password"
-                          />
-                        </label>
-
                         <div
                           style={{
                             padding:
-                              '11px',
+                              '12px',
                             borderRadius:
-                              '10px',
+                              '11px',
                             background:
                               'rgba(245,158,11,.06)',
                             border:
                               '1px solid rgba(245,158,11,.3)',
+                            display:
+                              'grid',
+                            gap: '11px',
                           }}
                         >
-                          <strong
-                            style={{
-                              display:
-                                'block',
-                              fontSize:
-                                '11px',
-                              marginBottom:
-                                '3px',
-                            }}
-                          >
-                            Redefinição de
-                            senha
-                          </strong>
+                          <div>
+                            <strong
+                              style={{
+                                display:
+                                  'block',
+                                fontSize:
+                                  '12px',
+                                marginBottom:
+                                  '3px',
+                              }}
+                            >
+                              Alterar senha
+                            </strong>
 
-                          <span
-                            className="muted"
-                            style={{
-                              display:
-                                'block',
-                              fontSize:
-                                '10px',
-                              lineHeight:
-                                1.45,
-                            }}
-                          >
-                            Se não houver
-                            necessidade de
-                            alterar a senha,
-                            deixe o campo em
-                            branco. A
-                            redefinição não
-                            altera o
-                            histórico do
-                            usuário.
-                          </span>
+                            <span
+                              className="muted"
+                              style={{
+                                display:
+                                  'block',
+                                fontSize:
+                                  '10px',
+                                lineHeight:
+                                  1.45,
+                              }}
+                            >
+                              Para manter a
+                              senha atual,
+                              deixe os dois
+                              campos abaixo
+                              em branco.
+                            </span>
+                          </div>
+
+                          <label>
+                            Nova senha
+
+                            <input
+                              type="password"
+                              value={
+                                senhaEdicao
+                              }
+                              onChange={(
+                                event
+                              ) =>
+                                setSenhaEdicao(
+                                  event.target
+                                    .value
+                                )
+                              }
+                              minLength={
+                                senhaEdicao
+                                  ? 8
+                                  : undefined
+                              }
+                              maxLength={
+                                100
+                              }
+                              autoComplete="new-password"
+                              placeholder="Mínimo de 8 caracteres"
+                            />
+                          </label>
+
+                          <label>
+                            Confirmar nova senha
+
+                            <input
+                              type="password"
+                              value={
+                                confirmarSenhaEdicao
+                              }
+                              onChange={(
+                                event
+                              ) =>
+                                setConfirmarSenhaEdicao(
+                                  event.target
+                                    .value
+                                )
+                              }
+                              minLength={
+                                confirmarSenhaEdicao
+                                  ? 8
+                                  : undefined
+                              }
+                              maxLength={
+                                100
+                              }
+                              autoComplete="new-password"
+                              placeholder="Digite novamente a nova senha"
+                            />
+                          </label>
                         </div>
 
                         <div
@@ -1167,6 +1296,7 @@ export default function UsuariosClient() {
                           }}
                         >
                           <button
+                            type="submit"
                             className="btn"
                             disabled={
                               salvando
@@ -1174,7 +1304,7 @@ export default function UsuariosClient() {
                           >
                             {salvando
                               ? 'Salvando...'
-                              : 'Salvar'}
+                              : 'Salvar alterações'}
                           </button>
 
                           <button
