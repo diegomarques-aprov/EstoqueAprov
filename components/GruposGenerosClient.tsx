@@ -19,6 +19,43 @@ type Grupo = {
   };
 };
 
+const estiloBotaoPequeno = {
+  width: 'auto',
+  minHeight: '34px',
+  padding: '6px 11px',
+  borderRadius: '8px',
+  fontSize: '11px',
+  fontWeight: 700,
+} as const;
+
+const estiloBotaoSecundario = {
+  width: 'auto',
+  minHeight: '34px',
+  padding: '6px 11px',
+  borderRadius: '8px',
+  border: '1px solid #284334',
+  background: '#0c1811',
+  color: '#fff',
+  fontSize: '11px',
+  fontWeight: 700,
+  cursor: 'pointer',
+} as const;
+
+const estiloBotaoExcluir = {
+  width: 'auto',
+  minHeight: '34px',
+  padding: '6px 11px',
+  borderRadius: '8px',
+  border:
+    '1px solid rgba(239,68,68,.55)',
+  background:
+    'rgba(239,68,68,.08)',
+  color: '#fca5a5',
+  fontSize: '11px',
+  fontWeight: 700,
+  cursor: 'pointer',
+} as const;
+
 export default function GruposGenerosClient() {
   const [grupos, setGrupos] =
     useState<Grupo[]>([]);
@@ -36,6 +73,13 @@ export default function GruposGenerosClient() {
 
   const [editando, setEditando] =
     useState<Grupo | null>(null);
+
+  const [
+    excluindoId,
+    setExcluindoId,
+  ] = useState<string | null>(
+    null
+  );
 
   const [
     nomeEdicao,
@@ -89,6 +133,24 @@ export default function GruposGenerosClient() {
     carregarDados();
   }, []);
 
+  useEffect(() => {
+    if (!sucesso) {
+      return;
+    }
+
+    const timer =
+      window.setTimeout(
+        () => {
+          setSucesso('');
+        },
+        4000
+      );
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [sucesso]);
+
   async function adicionar(
     ev: FormEvent<HTMLFormElement>
   ) {
@@ -108,10 +170,12 @@ export default function GruposGenerosClient() {
         '/api/grupos-generos',
         {
           method: 'POST',
+
           headers: {
             'content-type':
               'application/json',
           },
+
           body: JSON.stringify({
             nome: String(
               dados.get('nome') || ''
@@ -141,11 +205,11 @@ export default function GruposGenerosClient() {
 
       form.reset();
 
+      await carregarDados();
+
       setSucesso(
         'Grupo cadastrado com sucesso.'
       );
-
-      await carregarDados();
 
       nomeRef.current?.focus();
     } catch {
@@ -201,12 +265,15 @@ export default function GruposGenerosClient() {
         '/api/grupos-generos',
         {
           method: 'PUT',
+
           headers: {
             'content-type':
               'application/json',
           },
+
           body: JSON.stringify({
             id: editando.id,
+
             nome:
               nomeEdicao.trim(),
 
@@ -237,15 +304,75 @@ export default function GruposGenerosClient() {
       setDescricaoEdicao('');
       setSituacaoEdicao('ATIVO');
 
+      await carregarDados();
+
       setSucesso(
         'Grupo atualizado com sucesso.'
       );
-
-      await carregarDados();
     } catch {
       setErro(
         'Não foi possível alterar o grupo.'
       );
+    }
+  }
+
+  async function excluirGrupo(
+    grupo: Grupo
+  ) {
+    const confirmar =
+      window.confirm(
+        `Deseja realmente excluir o grupo "${grupo.nome}"?\n\nA exclusão somente será realizada se não houver categorias vinculadas a este grupo.`
+      );
+
+    if (!confirmar) {
+      return;
+    }
+
+    setErro('');
+    setSucesso('');
+    setExcluindoId(grupo.id);
+
+    try {
+      const resposta = await fetch(
+        '/api/grupos-generos',
+        {
+          method: 'DELETE',
+
+          headers: {
+            'content-type':
+              'application/json',
+          },
+
+          body: JSON.stringify({
+            id: grupo.id,
+          }),
+        }
+      );
+
+      const resultado =
+        await resposta.json();
+
+      if (!resposta.ok) {
+        setErro(
+          resultado.error ||
+            'Não foi possível excluir o grupo.'
+        );
+
+        return;
+      }
+
+      await carregarDados();
+
+      setSucesso(
+        resultado.mensagem ||
+          `Grupo "${grupo.nome}" excluído com sucesso.`
+      );
+    } catch {
+      setErro(
+        'Não foi possível comunicar com o servidor para excluir o grupo.'
+      );
+    } finally {
+      setExcluindoId(null);
     }
   }
 
@@ -365,36 +492,17 @@ export default function GruposGenerosClient() {
             </span>
           </div>
 
-          <button
-            className="btn"
-            type="submit"
-            style={{
-              width: '100%',
-              minHeight: '46px',
-            }}
-          >
-            Adicionar grupo
-          </button>
-
-          {sucesso &&
-            !editando && (
-              <div
-                role="status"
-                style={{
-                  padding: '11px',
-                  borderRadius: '10px',
-                  background:
-                    'rgba(43,138,87,.08)',
-                  border:
-                    '1px solid rgba(43,138,87,.4)',
-                  fontSize: '12px',
-                }}
-              >
-                <strong>
-                  ✓ {sucesso}
-                </strong>
-              </div>
-            )}
+          <div>
+            <button
+              className="btn"
+              type="submit"
+              style={
+                estiloBotaoPequeno
+              }
+            >
+              + Adicionar grupo
+            </button>
+          </div>
 
           {erro &&
             !editando && (
@@ -407,6 +515,28 @@ export default function GruposGenerosClient() {
             )}
         </form>
       </div>
+
+      {sucesso && (
+        <div
+          role="status"
+          aria-live="polite"
+          style={{
+            marginBottom: '16px',
+            padding: '11px 13px',
+            borderRadius: '10px',
+            background: '#123d27',
+            border:
+              '1px solid #2f9e62',
+            color: '#b9f6cf',
+            fontSize: '12px',
+            fontWeight: 800,
+            boxShadow:
+              '0 4px 14px rgba(0,0,0,.18)',
+          }}
+        >
+          ✓ {sucesso}
+        </div>
+      )}
 
       <div
         style={{
@@ -425,20 +555,20 @@ export default function GruposGenerosClient() {
               !mostrarGrupos
             )
           }
-          style={{
-            width: '100%',
-          }}
+          style={
+            estiloBotaoPequeno
+          }
         >
           {mostrarGrupos
-            ? 'Ocultar grupos cadastrados'
-            : `Ver grupos cadastrados (${grupos.length})`}
+            ? '− Ocultar grupos'
+            : `+ Ver grupos (${grupos.length})`}
         </button>
 
         {mostrarGrupos && (
           <div
             style={{
               display: 'grid',
-              gap: '10px',
+              gap: '8px',
               marginTop: '14px',
             }}
           >
@@ -472,9 +602,9 @@ export default function GruposGenerosClient() {
                   <article
                     key={grupo.id}
                     style={{
-                      padding: '13px',
+                      padding: '12px',
                       borderRadius:
-                        '12px',
+                        '11px',
                       background:
                         '#102018',
                       border:
@@ -594,17 +724,20 @@ export default function GruposGenerosClient() {
                         <div
                           style={{
                             display:
-                              'grid',
-                            gridTemplateColumns:
-                              'repeat(2, minmax(0, 1fr))',
+                              'flex',
+                            flexWrap:
+                              'wrap',
                             gap: '8px',
                           }}
                         >
                           <button
                             className="btn"
                             type="submit"
+                            style={
+                              estiloBotaoPequeno
+                            }
                           >
-                            Salvar
+                            ✓ Salvar
                           </button>
 
                           <button
@@ -612,22 +745,9 @@ export default function GruposGenerosClient() {
                             onClick={
                               cancelarEdicao
                             }
-                            style={{
-                              minHeight:
-                                '44px',
-                              borderRadius:
-                                '11px',
-                              border:
-                                '1px solid #284334',
-                              background:
-                                '#0c1811',
-                              color:
-                                '#fff',
-                              fontWeight:
-                                700,
-                              cursor:
-                                'pointer',
-                            }}
+                            style={
+                              estiloBotaoSecundario
+                            }
                           >
                             Cancelar
                           </button>
@@ -644,12 +764,6 @@ export default function GruposGenerosClient() {
                             alignItems:
                               'flex-start',
                             gap: '10px',
-                            paddingBottom:
-                              '10px',
-                            marginBottom:
-                              '11px',
-                            borderBottom:
-                              '1px solid rgba(255,255,255,.07)',
                           }}
                         >
                           <div
@@ -683,6 +797,28 @@ export default function GruposGenerosClient() {
                               {grupo.descricao ||
                                 'Sem descrição'}
                             </div>
+
+                            {(grupo._count
+                              ?.categorias ??
+                              0) > 0 && (
+                              <div
+                                className="muted"
+                                style={{
+                                  marginTop:
+                                    '5px',
+                                  fontSize:
+                                    '10px',
+                                }}
+                              >
+                                {
+                                  grupo
+                                    ._count
+                                    ?.categorias
+                                }{' '}
+                                categoria(s)
+                                vinculada(s)
+                              </div>
+                            )}
                           </div>
 
                           <span
@@ -717,57 +853,56 @@ export default function GruposGenerosClient() {
 
                         <div
                           style={{
-                            padding:
-                              '10px 11px',
-                            borderRadius:
-                              '10px',
-                            background:
-                              '#0c1811',
-                            border:
-                              '1px solid #284334',
-                          }}
-                        >
-                          <div
-                            className="muted"
-                            style={{
-                              fontSize:
-                                '10px',
-                              marginBottom:
-                                '2px',
-                            }}
-                          >
-                            Categorias
-                            vinculadas
-                          </div>
-
-                          <strong
-                            style={{
-                              fontSize:
-                                '14px',
-                            }}
-                          >
-                            {grupo._count
-                              ?.categorias ??
-                              0}
-                          </strong>
-                        </div>
-
-                        <button
-                          type="button"
-                          className="btn"
-                          onClick={() =>
-                            iniciarEdicao(
-                              grupo
-                            )
-                          }
-                          style={{
-                            width: '100%',
+                            display:
+                              'flex',
+                            flexWrap:
+                              'wrap',
+                            gap: '7px',
                             marginTop:
-                              '12px',
+                              '9px',
                           }}
                         >
-                          Editar grupo
-                        </button>
+                          <button
+                            type="button"
+                            className="btn"
+                            onClick={() =>
+                              iniciarEdicao(
+                                grupo
+                              )
+                            }
+                            style={
+                              estiloBotaoPequeno
+                            }
+                          >
+                            Editar grupo
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              excluirGrupo(
+                                grupo
+                              )
+                            }
+                            disabled={
+                              excluindoId ===
+                              grupo.id
+                            }
+                            style={{
+                              ...estiloBotaoExcluir,
+                              opacity:
+                                excluindoId ===
+                                grupo.id
+                                  ? 0.55
+                                  : 1,
+                            }}
+                          >
+                            {excluindoId ===
+                            grupo.id
+                              ? 'Excluindo...'
+                              : 'Excluir'}
+                          </button>
+                        </div>
                       </>
                     )}
                   </article>
@@ -791,27 +926,6 @@ export default function GruposGenerosClient() {
                 </span>
               </div>
             )}
-
-            {sucesso &&
-              !editando && (
-                <div
-                  role="status"
-                  style={{
-                    padding: '11px',
-                    borderRadius:
-                      '10px',
-                    background:
-                      'rgba(43,138,87,.08)',
-                    border:
-                      '1px solid rgba(43,138,87,.4)',
-                    fontSize: '12px',
-                  }}
-                >
-                  <strong>
-                    ✓ {sucesso}
-                  </strong>
-                </div>
-              )}
           </div>
         )}
       </div>
