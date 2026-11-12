@@ -52,6 +52,43 @@ type Genero = {
   situacao: Situacao;
 };
 
+const estiloBotaoPequeno = {
+  width: 'auto',
+  minHeight: '34px',
+  padding: '6px 11px',
+  borderRadius: '8px',
+  fontSize: '11px',
+  fontWeight: 700,
+} as const;
+
+const estiloBotaoSecundario = {
+  width: 'auto',
+  minHeight: '34px',
+  padding: '6px 11px',
+  borderRadius: '8px',
+  border: '1px solid #284334',
+  background: '#0c1811',
+  color: '#fff',
+  fontSize: '11px',
+  fontWeight: 700,
+  cursor: 'pointer',
+} as const;
+
+const estiloBotaoExcluir = {
+  width: 'auto',
+  minHeight: '34px',
+  padding: '6px 11px',
+  borderRadius: '8px',
+  border:
+    '1px solid rgba(239,68,68,.55)',
+  background:
+    'rgba(239,68,68,.08)',
+  color: '#fca5a5',
+  fontSize: '11px',
+  fontWeight: 700,
+  cursor: 'pointer',
+} as const;
+
 function formatarMoeda(
   valor: string | number
 ) {
@@ -63,38 +100,6 @@ function formatarMoeda(
       minimumFractionDigits: 2,
       maximumFractionDigits: 4,
     }
-  );
-}
-
-function CampoInfo({
-  titulo,
-  valor,
-}: {
-  titulo: string;
-  valor: React.ReactNode;
-}) {
-  return (
-    <div>
-      <div
-        className="muted"
-        style={{
-          fontSize: '10px',
-          marginBottom: '2px',
-        }}
-      >
-        {titulo}
-      </div>
-
-      <div
-        style={{
-          fontSize: '12px',
-          fontWeight: 600,
-          lineHeight: 1.4,
-        }}
-      >
-        {valor}
-      </div>
-    </div>
   );
 }
 
@@ -114,7 +119,9 @@ export default function GenerosClient() {
   const [locais, setLocais] =
     useState<Local[]>([]);
 
-  const [erro, setErro] = useState('');
+  const [erro, setErro] =
+    useState('');
+
   const [sucesso, setSucesso] =
     useState('');
 
@@ -126,8 +133,15 @@ export default function GenerosClient() {
   const [editando, setEditando] =
     useState<Genero | null>(null);
 
-  const [nomeEdicao, setNomeEdicao] =
-    useState('');
+  const [
+    excluindoId,
+    setExcluindoId,
+  ] = useState<string | null>(null);
+
+  const [
+    nomeEdicao,
+    setNomeEdicao,
+  ] = useState('');
 
   const [
     classeEdicao,
@@ -270,6 +284,24 @@ export default function GenerosClient() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [classe]);
 
+  useEffect(() => {
+    if (!sucesso) {
+      return;
+    }
+
+    const timer =
+      window.setTimeout(
+        () => {
+          setSucesso('');
+        },
+        4000
+      );
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [sucesso]);
+
   function alterarClasse(
     novaClasse: Classe
   ) {
@@ -277,6 +309,7 @@ export default function GenerosClient() {
     setEditando(null);
     setErro('');
     setSucesso('');
+    setMostrarGeneros(false);
   }
 
   function aplicarPadraoCategoria(
@@ -340,7 +373,9 @@ export default function GenerosClient() {
   ) {
     ev.preventDefault();
 
-    const form = ev.currentTarget;
+    const form =
+      ev.currentTarget;
+
     const dados =
       new FormData(form);
 
@@ -407,10 +442,12 @@ export default function GenerosClient() {
           '/api/generos',
           {
             method: 'POST',
+
             headers: {
               'content-type':
                 'application/json',
             },
+
             body: JSON.stringify(
               payload
             ),
@@ -431,11 +468,11 @@ export default function GenerosClient() {
 
       form.reset();
 
+      await carregarDados();
+
       setSucesso(
         `Gênero ${classe} cadastrado com sucesso.`
       );
-
-      await carregarDados();
 
       nomeRef.current?.focus();
     } catch {
@@ -570,37 +607,49 @@ export default function GenerosClient() {
           '/api/generos',
           {
             method: 'PUT',
+
             headers: {
               'content-type':
                 'application/json',
             },
+
             body: JSON.stringify({
               id: editando.id,
+
               nome:
                 nomeEdicao.trim(),
+
               classe:
                 classeEdicao,
+
               categoriaId:
                 categoriaEdicao ||
                 null,
+
               unidadeId:
                 unidadeEdicao,
+
               controlaLote:
                 loteEdicao,
+
               controlaValidade:
                 validadeEdicao,
+
               estoqueMinimo:
                 minimo === ''
                   ? null
                   : Number(minimo),
+
               valorUnitarioReferencia:
                 valorUnitario === ''
                   ? null
                   : Number(
                       valorUnitario
                     ),
+
               localPadraoId:
                 localEdicao || null,
+
               situacao:
                 situacaoEdicao,
             }),
@@ -641,6 +690,67 @@ export default function GenerosClient() {
     }
   }
 
+  async function excluirGenero(
+    genero: Genero
+  ) {
+    const confirmar =
+      window.confirm(
+        `Deseja realmente excluir o gênero "${genero.nome}"?\n\nA exclusão somente será realizada se este gênero nunca tiver sido utilizado. Se houver histórico, o sistema preservará o cadastro e orientará a inativação.`
+      );
+
+    if (!confirmar) {
+      return;
+    }
+
+    setErro('');
+    setSucesso('');
+    setExcluindoId(genero.id);
+
+    try {
+      const resposta =
+        await fetch(
+          '/api/generos',
+          {
+            method: 'DELETE',
+
+            headers: {
+              'content-type':
+                'application/json',
+            },
+
+            body: JSON.stringify({
+              id: genero.id,
+            }),
+          }
+        );
+
+      const resultado =
+        await resposta.json();
+
+      if (!resposta.ok) {
+        setErro(
+          resultado.error ||
+            'Não foi possível excluir o gênero.'
+        );
+
+        return;
+      }
+
+      await carregarDados();
+
+      setSucesso(
+        resultado.mensagem ||
+          `Gênero "${genero.nome}" excluído com sucesso.`
+      );
+    } catch {
+      setErro(
+        'Não foi possível comunicar com o servidor para excluir o gênero.'
+      );
+    } finally {
+      setExcluindoId(null);
+    }
+  }
+
   return (
     <>
       <div
@@ -661,19 +771,22 @@ export default function GenerosClient() {
                 alterarClasse(item)
               }
               style={{
-                minHeight: '52px',
-                borderRadius: '12px',
+                minHeight: '46px',
+                borderRadius: '10px',
+
                 border:
                   classe === item
                     ? '1px solid rgba(43,138,87,.8)'
                     : '1px solid #284334',
+
                 background:
                   classe === item
                     ? '#2b8a57'
                     : '#102018',
+
                 color: '#fff',
                 fontWeight: 800,
-                fontSize: '15px',
+                fontSize: '14px',
                 cursor: 'pointer',
               }}
             >
@@ -683,7 +796,7 @@ export default function GenerosClient() {
                 style={{
                   display: 'block',
                   marginTop: '2px',
-                  fontSize: '10px',
+                  fontSize: '9px',
                   fontWeight: 500,
                   opacity: 0.8,
                 }}
@@ -702,7 +815,8 @@ export default function GenerosClient() {
           padding: '13px',
           borderRadius: '12px',
           background: '#0c1811',
-          border: '1px solid #284334',
+          border:
+            '1px solid #284334',
           marginBottom: '16px',
         }}
       >
@@ -742,7 +856,8 @@ export default function GenerosClient() {
               padding: '5px 8px',
               borderRadius: '999px',
               background: '#183d2a',
-              border: '1px solid #284334',
+              border:
+                '1px solid #284334',
               fontSize: '11px',
               fontWeight: 800,
             }}
@@ -985,37 +1100,17 @@ export default function GenerosClient() {
             </select>
           </label>
 
-          <button
-            className="btn"
-            type="submit"
-            style={{
-              width: '100%',
-              minHeight: '46px',
-            }}
-          >
-            Salvar gênero {classe}
-          </button>
-
-          {sucesso &&
-            !editando && (
-              <div
-                role="status"
-                style={{
-                  padding: '11px',
-                  borderRadius:
-                    '10px',
-                  background:
-                    'rgba(43,138,87,.08)',
-                  border:
-                    '1px solid rgba(43,138,87,.4)',
-                  fontSize: '12px',
-                }}
-              >
-                <strong>
-                  ✓ {sucesso}
-                </strong>
-              </div>
-            )}
+          <div>
+            <button
+              className="btn"
+              type="submit"
+              style={
+                estiloBotaoPequeno
+              }
+            >
+              + Salvar gênero {classe}
+            </button>
+          </div>
 
           {erro &&
             !editando && (
@@ -1029,12 +1124,35 @@ export default function GenerosClient() {
         </form>
       </div>
 
+      {sucesso && (
+        <div
+          role="status"
+          aria-live="polite"
+          style={{
+            marginBottom: '16px',
+            padding: '11px 13px',
+            borderRadius: '10px',
+            background: '#123d27',
+            border:
+              '1px solid #2f9e62',
+            color: '#b9f6cf',
+            fontSize: '12px',
+            fontWeight: 800,
+            boxShadow:
+              '0 4px 14px rgba(0,0,0,.18)',
+          }}
+        >
+          ✓ {sucesso}
+        </div>
+      )}
+
       <div
         style={{
           padding: '13px',
           borderRadius: '12px',
           background: '#0c1811',
-          border: '1px solid #284334',
+          border:
+            '1px solid #284334',
         }}
       >
         <button
@@ -1045,20 +1163,20 @@ export default function GenerosClient() {
               !mostrarGeneros
             )
           }
-          style={{
-            width: '100%',
-          }}
+          style={
+            estiloBotaoPequeno
+          }
         >
           {mostrarGeneros
-            ? `Ocultar gêneros ${classe}`
-            : `Ver gêneros ${classe} cadastrados (${generos.length})`}
+            ? `− Ocultar gêneros ${classe}`
+            : `+ Ver gêneros ${classe} (${generos.length})`}
         </button>
 
         {mostrarGeneros && (
           <div
             style={{
               display: 'grid',
-              gap: '10px',
+              gap: '8px',
               marginTop: '14px',
             }}
           >
@@ -1092,11 +1210,12 @@ export default function GenerosClient() {
                   <article
                     key={genero.id}
                     style={{
-                      padding: '13px',
+                      padding: '12px',
                       borderRadius:
-                        '12px',
+                        '11px',
                       background:
                         '#102018',
+
                       border:
                         editando?.id ===
                         genero.id
@@ -1156,9 +1275,7 @@ export default function GenerosClient() {
                               )
                             }
                             required
-                            maxLength={
-                              120
-                            }
+                            maxLength={120}
                             autoFocus
                           />
                         </label>
@@ -1507,17 +1624,20 @@ export default function GenerosClient() {
                         <div
                           style={{
                             display:
-                              'grid',
-                            gridTemplateColumns:
-                              'repeat(2, minmax(0, 1fr))',
+                              'flex',
+                            flexWrap:
+                              'wrap',
                             gap: '8px',
                           }}
                         >
                           <button
                             className="btn"
                             type="submit"
+                            style={
+                              estiloBotaoPequeno
+                            }
                           >
-                            Salvar
+                            ✓ Salvar
                           </button>
 
                           <button
@@ -1525,22 +1645,9 @@ export default function GenerosClient() {
                             onClick={
                               cancelarEdicao
                             }
-                            style={{
-                              minHeight:
-                                '44px',
-                              borderRadius:
-                                '11px',
-                              border:
-                                '1px solid #284334',
-                              background:
-                                '#0c1811',
-                              color:
-                                '#fff',
-                              fontWeight:
-                                700,
-                              cursor:
-                                'pointer',
-                            }}
+                            style={
+                              estiloBotaoSecundario
+                            }
                           >
                             Cancelar
                           </button>
@@ -1557,31 +1664,30 @@ export default function GenerosClient() {
                             alignItems:
                               'flex-start',
                             gap: '10px',
-                            paddingBottom:
-                              '10px',
-                            marginBottom:
-                              '10px',
-                            borderBottom:
-                              '1px solid rgba(255,255,255,.07)',
                           }}
                         >
-                          <div>
+                          <div
+                            style={{
+                              minWidth: 0,
+                              flex: 1,
+                            }}
+                          >
                             <strong
                               style={{
+                                display:
+                                  'block',
                                 fontSize:
                                   '14px',
                               }}
                             >
-                              {
-                                genero.nome
-                              }
+                              {genero.nome}
                             </strong>
 
                             <div
                               className="muted"
                               style={{
                                 marginTop:
-                                  '3px',
+                                  '4px',
                                 fontSize:
                                   '11px',
                               }}
@@ -1597,6 +1703,91 @@ export default function GenerosClient() {
                                   .sigla
                               }
                             </div>
+
+                            <div
+                              className="muted"
+                              style={{
+                                marginTop:
+                                  '4px',
+                                fontSize:
+                                  '10px',
+                                lineHeight:
+                                  1.5,
+                              }}
+                            >
+                              Lote:{' '}
+                              {genero.controlaLote
+                                ? 'Sim'
+                                : 'Não'}
+                              {' • '}
+                              Validade:{' '}
+                              {genero.controlaValidade
+                                ? 'Sim'
+                                : 'Não'}
+                            </div>
+
+                            <div
+                              className="muted"
+                              style={{
+                                marginTop:
+                                  '2px',
+                                fontSize:
+                                  '10px',
+                                lineHeight:
+                                  1.5,
+                              }}
+                            >
+                              Estoque mínimo:{' '}
+                              {genero.estoqueMinimo ===
+                              null
+                                ? 'Não definido'
+                                : `${genero.estoqueMinimo} ${genero.unidade.sigla}`}
+                            </div>
+
+                            <div
+                              className="muted"
+                              style={{
+                                marginTop:
+                                  '2px',
+                                fontSize:
+                                  '10px',
+                                lineHeight:
+                                  1.5,
+                              }}
+                            >
+                              Local:{' '}
+                              {genero
+                                .localPadrao
+                                ?.nome ||
+                                'Não definido'}
+                            </div>
+
+                            {genero.valorUnitarioReferencia !==
+                              null && (
+                              <div
+                                className="muted"
+                                style={{
+                                  marginTop:
+                                    '2px',
+                                  fontSize:
+                                    '10px',
+                                  lineHeight:
+                                    1.5,
+                                }}
+                              >
+                                Valor de
+                                referência:{' '}
+                                {formatarMoeda(
+                                  genero.valorUnitarioReferencia
+                                )}
+                                /
+                                {
+                                  genero
+                                    .unidade
+                                    .sigla
+                                }
+                              </div>
+                            )}
                           </div>
 
                           <span
@@ -1605,20 +1796,25 @@ export default function GenerosClient() {
                                 '4px 7px',
                               borderRadius:
                                 '999px',
+
                               background:
                                 genero.situacao ===
                                 'ATIVO'
                                   ? 'rgba(43,138,87,.12)'
                                   : 'rgba(245,158,11,.10)',
+
                               border:
                                 genero.situacao ===
                                 'ATIVO'
                                   ? '1px solid rgba(43,138,87,.45)'
                                   : '1px solid rgba(245,158,11,.4)',
+
                               fontSize:
                                 '10px',
                               fontWeight:
                                 800,
+                              whiteSpace:
+                                'nowrap',
                             }}
                           >
                             {
@@ -1630,95 +1826,56 @@ export default function GenerosClient() {
                         <div
                           style={{
                             display:
-                              'grid',
-                            gridTemplateColumns:
-                              'repeat(2, minmax(0, 1fr))',
-                            gap:
-                              '11px 14px',
-                          }}
-                        >
-                          <CampoInfo
-                            titulo="Lote"
-                            valor={
-                              genero.controlaLote
-                                ? 'Sim'
-                                : 'Não'
-                            }
-                          />
-
-                          <CampoInfo
-                            titulo="Validade"
-                            valor={
-                              genero.controlaValidade
-                                ? 'Sim'
-                                : 'Não'
-                            }
-                          />
-
-                          <CampoInfo
-                            titulo="Estoque mínimo"
-                            valor={
-                              genero.estoqueMinimo ===
-                              null
-                                ? 'Não definido'
-                                : `${genero.estoqueMinimo} ${genero.unidade.sigla}`
-                            }
-                          />
-
-                          <CampoInfo
-                            titulo="Local habitual"
-                            valor={
-                              genero
-                                .localPadrao
-                                ?.nome ||
-                              'Não definido'
-                            }
-                          />
-                        </div>
-
-                        <div
-                          style={{
+                              'flex',
+                            flexWrap:
+                              'wrap',
+                            gap: '7px',
                             marginTop:
-                              '11px',
-                            padding:
-                              '10px',
-                            borderRadius:
-                              '10px',
-                            background:
-                              '#0c1811',
-                            border:
-                              '1px solid rgba(255,255,255,.07)',
+                              '9px',
                           }}
                         >
-                          <CampoInfo
-                            titulo="Valor unitário de referência"
-                            valor={
-                              genero.valorUnitarioReferencia ===
-                              null
-                                ? 'Não definido'
-                                : `${formatarMoeda(
-                                    genero.valorUnitarioReferencia
-                                  )}/${genero.unidade.sigla}`
+                          <button
+                            type="button"
+                            className="btn"
+                            onClick={() =>
+                              iniciarEdicao(
+                                genero
+                              )
                             }
-                          />
-                        </div>
+                            style={
+                              estiloBotaoPequeno
+                            }
+                          >
+                            Editar gênero
+                          </button>
 
-                        <button
-                          type="button"
-                          className="btn"
-                          onClick={() =>
-                            iniciarEdicao(
-                              genero
-                            )
-                          }
-                          style={{
-                            width: '100%',
-                            marginTop:
-                              '11px',
-                          }}
-                        >
-                          Editar gênero
-                        </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              excluirGenero(
+                                genero
+                              )
+                            }
+                            disabled={
+                              excluindoId ===
+                              genero.id
+                            }
+                            style={{
+                              ...estiloBotaoExcluir,
+
+                              opacity:
+                                excluindoId ===
+                                genero.id
+                                  ? 0.55
+                                  : 1,
+                            }}
+                          >
+                            {excluindoId ===
+                            genero.id
+                              ? 'Excluindo...'
+                              : 'Excluir'}
+                          </button>
+                        </div>
                       </>
                     )}
                   </article>
@@ -1742,27 +1899,6 @@ export default function GenerosClient() {
                 </span>
               </div>
             )}
-
-            {sucesso &&
-              !editando && (
-                <div
-                  role="status"
-                  style={{
-                    padding: '11px',
-                    borderRadius:
-                      '10px',
-                    background:
-                      'rgba(43,138,87,.08)',
-                    border:
-                      '1px solid rgba(43,138,87,.4)',
-                    fontSize: '12px',
-                  }}
-                >
-                  <strong>
-                    ✓ {sucesso}
-                  </strong>
-                </div>
-              )}
           </div>
         )}
       </div>
