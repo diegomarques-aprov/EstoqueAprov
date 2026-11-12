@@ -7,16 +7,54 @@ import {
   useState,
 } from 'react';
 
-type Situacao =
-  | 'ATIVO'
-  | 'INATIVO';
+type Situacao = 'ATIVO' | 'INATIVO';
 
 type Unidade = {
   id: string;
   sigla: string;
   nome: string;
   situacao: Situacao;
+  _count?: {
+    generos: number;
+  };
 };
+
+const estiloBotaoPequeno = {
+  width: 'auto',
+  minHeight: '34px',
+  padding: '6px 11px',
+  borderRadius: '8px',
+  fontSize: '11px',
+  fontWeight: 700,
+} as const;
+
+const estiloBotaoSecundario = {
+  width: 'auto',
+  minHeight: '34px',
+  padding: '6px 11px',
+  borderRadius: '8px',
+  border: '1px solid #284334',
+  background: '#0c1811',
+  color: '#fff',
+  fontSize: '11px',
+  fontWeight: 700,
+  cursor: 'pointer',
+} as const;
+
+const estiloBotaoExcluir = {
+  width: 'auto',
+  minHeight: '34px',
+  padding: '6px 11px',
+  borderRadius: '8px',
+  border:
+    '1px solid rgba(239,68,68,.55)',
+  background:
+    'rgba(239,68,68,.08)',
+  color: '#fca5a5',
+  fontSize: '11px',
+  fontWeight: 700,
+  cursor: 'pointer',
+} as const;
 
 export default function UnidadesClient() {
   const [unidades, setUnidades] =
@@ -37,6 +75,11 @@ export default function UnidadesClient() {
     useState<Unidade | null>(null);
 
   const [
+    excluindoId,
+    setExcluindoId,
+  ] = useState<string | null>(null);
+
+  const [
     siglaEdicao,
     setSiglaEdicao,
   ] = useState('');
@@ -49,24 +92,20 @@ export default function UnidadesClient() {
   const [
     situacaoEdicao,
     setSituacaoEdicao,
-  ] = useState<Situacao>(
-    'ATIVO'
-  );
+  ] =
+    useState<Situacao>('ATIVO');
 
   const siglaRef =
-    useRef<HTMLInputElement>(
-      null
-    );
+    useRef<HTMLInputElement>(null);
 
   async function carregarUnidades() {
     try {
-      const resposta =
-        await fetch(
-          '/api/unidades',
-          {
-            cache: 'no-store',
-          }
-        );
+      const resposta = await fetch(
+        '/api/unidades',
+        {
+          cache: 'no-store',
+        }
+      );
 
       const dados =
         await resposta.json();
@@ -92,6 +131,24 @@ export default function UnidadesClient() {
     carregarUnidades();
   }, []);
 
+  useEffect(() => {
+    if (!sucesso) {
+      return;
+    }
+
+    const timer =
+      window.setTimeout(
+        () => {
+          setSucesso('');
+        },
+        4000
+      );
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [sucesso]);
+
   async function adicionar(
     ev: FormEvent<HTMLFormElement>
   ) {
@@ -107,29 +164,27 @@ export default function UnidadesClient() {
     setSucesso('');
 
     try {
-      const resposta =
-        await fetch(
-          '/api/unidades',
-          {
-            method: 'POST',
-            headers: {
-              'content-type':
-                'application/json',
-            },
-            body: JSON.stringify({
-              sigla: String(
-                dados.get(
-                  'sigla'
-                ) || ''
-              ).trim(),
-              nome: String(
-                dados.get(
-                  'nome'
-                ) || ''
-              ).trim(),
-            }),
-          }
-        );
+      const resposta = await fetch(
+        '/api/unidades',
+        {
+          method: 'POST',
+
+          headers: {
+            'content-type':
+              'application/json',
+          },
+
+          body: JSON.stringify({
+            sigla: String(
+              dados.get('sigla') || ''
+            ).trim(),
+
+            nome: String(
+              dados.get('nome') || ''
+            ).trim(),
+          }),
+        }
+      );
 
       const resultado =
         await resposta.json();
@@ -145,11 +200,11 @@ export default function UnidadesClient() {
 
       form.reset();
 
+      await carregarUnidades();
+
       setSucesso(
         'Unidade de medida cadastrada com sucesso.'
       );
-
-      await carregarUnidades();
 
       siglaRef.current?.focus();
     } catch {
@@ -163,15 +218,8 @@ export default function UnidadesClient() {
     unidade: Unidade
   ) {
     setEditando(unidade);
-
-    setSiglaEdicao(
-      unidade.sigla
-    );
-
-    setNomeEdicao(
-      unidade.nome
-    );
-
+    setSiglaEdicao(unidade.sigla);
+    setNomeEdicao(unidade.nome);
     setSituacaoEdicao(
       unidade.situacao
     );
@@ -184,9 +232,7 @@ export default function UnidadesClient() {
     setEditando(null);
     setSiglaEdicao('');
     setNomeEdicao('');
-    setSituacaoEdicao(
-      'ATIVO'
-    );
+    setSituacaoEdicao('ATIVO');
     setErro('');
   }
 
@@ -203,26 +249,27 @@ export default function UnidadesClient() {
     setSucesso('');
 
     try {
-      const resposta =
-        await fetch(
-          '/api/unidades',
-          {
-            method: 'PUT',
-            headers: {
-              'content-type':
-                'application/json',
-            },
-            body: JSON.stringify({
-              id: editando.id,
-              sigla:
-                siglaEdicao.trim(),
-              nome:
-                nomeEdicao.trim(),
-              situacao:
-                situacaoEdicao,
-            }),
-          }
-        );
+      const resposta = await fetch(
+        '/api/unidades',
+        {
+          method: 'PUT',
+
+          headers: {
+            'content-type':
+              'application/json',
+          },
+
+          body: JSON.stringify({
+            id: editando.id,
+            sigla:
+              siglaEdicao.trim(),
+            nome:
+              nomeEdicao.trim(),
+            situacao:
+              situacaoEdicao,
+          }),
+        }
+      );
 
       const resultado =
         await resposta.json();
@@ -239,19 +286,77 @@ export default function UnidadesClient() {
       setEditando(null);
       setSiglaEdicao('');
       setNomeEdicao('');
-      setSituacaoEdicao(
-        'ATIVO'
-      );
+      setSituacaoEdicao('ATIVO');
+
+      await carregarUnidades();
 
       setSucesso(
         'Unidade de medida atualizada com sucesso.'
       );
-
-      await carregarUnidades();
     } catch {
       setErro(
         'Não foi possível alterar a unidade de medida.'
       );
+    }
+  }
+
+  async function excluirUnidade(
+    unidade: Unidade
+  ) {
+    const confirmar =
+      window.confirm(
+        `Deseja realmente excluir a unidade "${unidade.sigla} - ${unidade.nome}"?\n\nA exclusão somente será realizada se não houver gêneros vinculados a esta unidade.`
+      );
+
+    if (!confirmar) {
+      return;
+    }
+
+    setErro('');
+    setSucesso('');
+    setExcluindoId(unidade.id);
+
+    try {
+      const resposta = await fetch(
+        '/api/unidades',
+        {
+          method: 'DELETE',
+
+          headers: {
+            'content-type':
+              'application/json',
+          },
+
+          body: JSON.stringify({
+            id: unidade.id,
+          }),
+        }
+      );
+
+      const resultado =
+        await resposta.json();
+
+      if (!resposta.ok) {
+        setErro(
+          resultado.error ||
+            'Não foi possível excluir a unidade de medida.'
+        );
+
+        return;
+      }
+
+      await carregarUnidades();
+
+      setSucesso(
+        resultado.mensagem ||
+          `Unidade "${unidade.sigla} - ${unidade.nome}" excluída com sucesso.`
+      );
+    } catch {
+      setErro(
+        'Não foi possível comunicar com o servidor para excluir a unidade de medida.'
+      );
+    } finally {
+      setExcluindoId(null);
     }
   }
 
@@ -295,9 +400,8 @@ export default function UnidadesClient() {
                 lineHeight: 1.4,
               }}
             >
-              Informe a sigla e o
-              nome da unidade de
-              medida.
+              Informe a sigla e o nome
+              da unidade de medida.
             </div>
           </div>
 
@@ -366,43 +470,23 @@ export default function UnidadesClient() {
                 lineHeight: 1.45,
               }}
             >
-              A unidade cadastrada
-              ficará disponível para
-              utilização nos gêneros
-              QS e QR.
+              A unidade cadastrada ficará
+              disponível para utilização
+              nos gêneros QS e QR.
             </span>
           </div>
 
-          <button
-            className="btn"
-            type="submit"
-            style={{
-              width: '100%',
-              minHeight: '46px',
-            }}
-          >
-            Adicionar unidade
-          </button>
-
-          {sucesso &&
-            !editando && (
-              <div
-                role="status"
-                style={{
-                  padding: '11px',
-                  borderRadius: '10px',
-                  background:
-                    'rgba(43,138,87,.08)',
-                  border:
-                    '1px solid rgba(43,138,87,.4)',
-                  fontSize: '12px',
-                }}
-              >
-                <strong>
-                  ✓ {sucesso}
-                </strong>
-              </div>
-            )}
+          <div>
+            <button
+              className="btn"
+              type="submit"
+              style={
+                estiloBotaoPequeno
+              }
+            >
+              + Adicionar unidade
+            </button>
+          </div>
 
           {erro &&
             !editando && (
@@ -415,6 +499,28 @@ export default function UnidadesClient() {
             )}
         </form>
       </div>
+
+      {sucesso && (
+        <div
+          role="status"
+          aria-live="polite"
+          style={{
+            marginBottom: '16px',
+            padding: '11px 13px',
+            borderRadius: '10px',
+            background: '#123d27',
+            border:
+              '1px solid #2f9e62',
+            color: '#b9f6cf',
+            fontSize: '12px',
+            fontWeight: 800,
+            boxShadow:
+              '0 4px 14px rgba(0,0,0,.18)',
+          }}
+        >
+          ✓ {sucesso}
+        </div>
+      )}
 
       <div
         style={{
@@ -433,20 +539,20 @@ export default function UnidadesClient() {
               !mostrarUnidades
             )
           }
-          style={{
-            width: '100%',
-          }}
+          style={
+            estiloBotaoPequeno
+          }
         >
           {mostrarUnidades
-            ? 'Ocultar unidades cadastradas'
-            : `Ver unidades cadastradas (${unidades.length})`}
+            ? '− Ocultar unidades'
+            : `+ Ver unidades (${unidades.length})`}
         </button>
 
         {mostrarUnidades && (
           <div
             style={{
               display: 'grid',
-              gap: '10px',
+              gap: '8px',
               marginTop: '14px',
             }}
           >
@@ -474,18 +580,15 @@ export default function UnidadesClient() {
               </span>
             </div>
 
-            {unidades.length >
-            0 ? (
+            {unidades.length > 0 ? (
               unidades.map(
                 (unidade) => (
                   <article
-                    key={
-                      unidade.id
-                    }
+                    key={unidade.id}
                     style={{
-                      padding: '13px',
+                      padding: '12px',
                       borderRadius:
-                        '12px',
+                        '11px',
                       background:
                         '#102018',
                       border:
@@ -514,8 +617,7 @@ export default function UnidadesClient() {
                                 '15px',
                             }}
                           >
-                            Editar
-                            unidade
+                            Editar unidade
                           </strong>
 
                           <div
@@ -541,18 +643,14 @@ export default function UnidadesClient() {
                             value={
                               siglaEdicao
                             }
-                            onChange={(
-                              e
-                            ) =>
+                            onChange={(e) =>
                               setSiglaEdicao(
                                 e.target
                                   .value
                               )
                             }
                             required
-                            maxLength={
-                              10
-                            }
+                            maxLength={10}
                             autoFocus
                           />
                         </label>
@@ -564,18 +662,14 @@ export default function UnidadesClient() {
                             value={
                               nomeEdicao
                             }
-                            onChange={(
-                              e
-                            ) =>
+                            onChange={(e) =>
                               setNomeEdicao(
                                 e.target
                                   .value
                               )
                             }
                             required
-                            maxLength={
-                              60
-                            }
+                            maxLength={60}
                           />
                         </label>
 
@@ -586,9 +680,7 @@ export default function UnidadesClient() {
                             value={
                               situacaoEdicao
                             }
-                            onChange={(
-                              e
-                            ) =>
+                            onChange={(e) =>
                               setSituacaoEdicao(
                                 e.target
                                   .value as Situacao
@@ -605,58 +697,6 @@ export default function UnidadesClient() {
                           </select>
                         </label>
 
-                        <div
-                          style={{
-                            padding:
-                              '10px 11px',
-                            borderRadius:
-                              '10px',
-                            background:
-                              situacaoEdicao ===
-                              'ATIVO'
-                                ? 'rgba(43,138,87,.07)'
-                                : 'rgba(245,158,11,.07)',
-                            border:
-                              situacaoEdicao ===
-                              'ATIVO'
-                                ? '1px solid rgba(43,138,87,.35)'
-                                : '1px solid rgba(245,158,11,.35)',
-                          }}
-                        >
-                          <strong
-                            style={{
-                              display:
-                                'block',
-                              fontSize:
-                                '11px',
-                              marginBottom:
-                                '3px',
-                            }}
-                          >
-                            {situacaoEdicao ===
-                            'ATIVO'
-                              ? 'Unidade ativa'
-                              : 'Unidade inativa'}
-                          </strong>
-
-                          <span
-                            className="muted"
-                            style={{
-                              display:
-                                'block',
-                              fontSize:
-                                '10px',
-                              lineHeight:
-                                1.4,
-                            }}
-                          >
-                            {situacaoEdicao ===
-                            'ATIVO'
-                              ? 'A unidade permanece disponível para utilização nos cadastros.'
-                              : 'A unidade ficará marcada como inativa no sistema.'}
-                          </span>
-                        </div>
-
                         {erro && (
                           <div
                             className="error"
@@ -669,17 +709,20 @@ export default function UnidadesClient() {
                         <div
                           style={{
                             display:
-                              'grid',
-                            gridTemplateColumns:
-                              'repeat(2, minmax(0, 1fr))',
+                              'flex',
+                            flexWrap:
+                              'wrap',
                             gap: '8px',
                           }}
                         >
                           <button
                             className="btn"
                             type="submit"
+                            style={
+                              estiloBotaoPequeno
+                            }
                           >
-                            Salvar
+                            ✓ Salvar
                           </button>
 
                           <button
@@ -687,22 +730,9 @@ export default function UnidadesClient() {
                             onClick={
                               cancelarEdicao
                             }
-                            style={{
-                              minHeight:
-                                '44px',
-                              borderRadius:
-                                '11px',
-                              border:
-                                '1px solid #284334',
-                              background:
-                                '#0c1811',
-                              color:
-                                '#fff',
-                              fontWeight:
-                                700,
-                              cursor:
-                                'pointer',
-                            }}
+                            style={
+                              estiloBotaoSecundario
+                            }
                           >
                             Cancelar
                           </button>
@@ -719,18 +749,11 @@ export default function UnidadesClient() {
                             alignItems:
                               'flex-start',
                             gap: '10px',
-                            paddingBottom:
-                              '11px',
-                            marginBottom:
-                              '11px',
-                            borderBottom:
-                              '1px solid rgba(255,255,255,.07)',
                           }}
                         >
                           <div
                             style={{
-                              minWidth:
-                                0,
+                              minWidth: 0,
                               flex: 1,
                             }}
                           >
@@ -739,8 +762,8 @@ export default function UnidadesClient() {
                                 display:
                                   'flex',
                                 alignItems:
-                                  'center',
-                                gap: '8px',
+                                  'baseline',
+                                gap: '7px',
                                 flexWrap:
                                   'wrap',
                               }}
@@ -748,7 +771,7 @@ export default function UnidadesClient() {
                               <strong
                                 style={{
                                   fontSize:
-                                    '18px',
+                                    '15px',
                                 }}
                               >
                                 {
@@ -757,38 +780,40 @@ export default function UnidadesClient() {
                               </strong>
 
                               <span
+                                className="muted"
                                 style={{
-                                  padding:
-                                    '3px 6px',
-                                  borderRadius:
-                                    '999px',
-                                  background:
-                                    '#183d2a',
-                                  border:
-                                    '1px solid #284334',
                                   fontSize:
-                                    '9px',
-                                  fontWeight:
-                                    800,
+                                    '11px',
                                 }}
                               >
-                                MEDIDA
+                                {
+                                  unidade.nome
+                                }
                               </span>
                             </div>
 
-                            <div
-                              className="muted"
-                              style={{
-                                marginTop:
-                                  '4px',
-                                fontSize:
-                                  '12px',
-                              }}
-                            >
-                              {
-                                unidade.nome
-                              }
-                            </div>
+                            {(unidade
+                              ._count
+                              ?.generos ??
+                              0) > 0 && (
+                              <div
+                                className="muted"
+                                style={{
+                                  marginTop:
+                                    '4px',
+                                  fontSize:
+                                    '10px',
+                                }}
+                              >
+                                {
+                                  unidade
+                                    ._count
+                                    ?.generos
+                                }{' '}
+                                gênero(s)
+                                vinculado(s)
+                              </div>
+                            )}
                           </div>
 
                           <span
@@ -824,103 +849,56 @@ export default function UnidadesClient() {
                         <div
                           style={{
                             display:
-                              'grid',
-                            gridTemplateColumns:
-                              'repeat(2, minmax(0, 1fr))',
-                            gap: '8px',
-                          }}
-                        >
-                          <div
-                            style={{
-                              padding:
-                                '9px',
-                              borderRadius:
-                                '10px',
-                              background:
-                                '#0c1811',
-                              border:
-                                '1px solid #284334',
-                            }}
-                          >
-                            <div
-                              className="muted"
-                              style={{
-                                fontSize:
-                                  '9px',
-                                marginBottom:
-                                  '3px',
-                              }}
-                            >
-                              SIGLA
-                            </div>
-
-                            <strong
-                              style={{
-                                fontSize:
-                                  '12px',
-                              }}
-                            >
-                              {
-                                unidade.sigla
-                              }
-                            </strong>
-                          </div>
-
-                          <div
-                            style={{
-                              padding:
-                                '9px',
-                              borderRadius:
-                                '10px',
-                              background:
-                                '#0c1811',
-                              border:
-                                '1px solid #284334',
-                            }}
-                          >
-                            <div
-                              className="muted"
-                              style={{
-                                fontSize:
-                                  '9px',
-                                marginBottom:
-                                  '3px',
-                              }}
-                            >
-                              SITUAÇÃO
-                            </div>
-
-                            <strong
-                              style={{
-                                fontSize:
-                                  '12px',
-                              }}
-                            >
-                              {unidade.situacao ===
-                              'ATIVO'
-                                ? 'Ativa'
-                                : 'Inativa'}
-                            </strong>
-                          </div>
-                        </div>
-
-                        <button
-                          type="button"
-                          className="btn"
-                          onClick={() =>
-                            iniciarEdicao(
-                              unidade
-                            )
-                          }
-                          style={{
-                            width:
-                              '100%',
+                              'flex',
+                            flexWrap:
+                              'wrap',
+                            gap: '7px',
                             marginTop:
-                              '12px',
+                              '9px',
                           }}
                         >
-                          Editar unidade
-                        </button>
+                          <button
+                            type="button"
+                            className="btn"
+                            onClick={() =>
+                              iniciarEdicao(
+                                unidade
+                              )
+                            }
+                            style={
+                              estiloBotaoPequeno
+                            }
+                          >
+                            Editar unidade
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              excluirUnidade(
+                                unidade
+                              )
+                            }
+                            disabled={
+                              excluindoId ===
+                              unidade.id
+                            }
+                            style={{
+                              ...estiloBotaoExcluir,
+
+                              opacity:
+                                excluindoId ===
+                                unidade.id
+                                  ? 0.55
+                                  : 1,
+                            }}
+                          >
+                            {excluindoId ===
+                            unidade.id
+                              ? 'Excluindo...'
+                              : 'Excluir'}
+                          </button>
+                        </div>
                       </>
                     )}
                   </article>
@@ -938,39 +916,12 @@ export default function UnidadesClient() {
                     '1px solid #284334',
                 }}
               >
-                <span
-                  className="muted"
-                  style={{
-                    fontSize: '12px',
-                  }}
-                >
-                  Nenhuma unidade
-                  de medida
-                  cadastrada.
+                <span className="muted">
+                  Nenhuma unidade de
+                  medida cadastrada.
                 </span>
               </div>
             )}
-
-            {sucesso &&
-              !editando && (
-                <div
-                  role="status"
-                  style={{
-                    padding: '11px',
-                    borderRadius:
-                      '10px',
-                    background:
-                      'rgba(43,138,87,.08)',
-                    border:
-                      '1px solid rgba(43,138,87,.4)',
-                    fontSize: '12px',
-                  }}
-                >
-                  <strong>
-                    ✓ {sucesso}
-                  </strong>
-                </div>
-              )}
           </div>
         )}
       </div>
