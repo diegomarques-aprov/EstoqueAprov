@@ -6,38 +6,64 @@ const cadastroSchema = z.object({
   nome: z
     .string()
     .trim()
-    .min(2, 'Informe o nome da categoria.')
-    .max(80, 'O nome deve ter no máximo 80 caracteres.'),
+    .min(
+      2,
+      'Informe o nome da categoria.'
+    )
+    .max(
+      80,
+      'O nome deve ter no máximo 80 caracteres.'
+    ),
 
-  grupoId: z.string().nullable().optional(),
+  grupoId:
+    z.string().nullable().optional(),
 
-  controlaLotePadrao: z.boolean().nullable().optional(),
+  controlaLotePadrao:
+    z.boolean().nullable().optional(),
 
-  controlaValidadePadrao: z
-    .boolean()
-    .nullable()
-    .optional(),
+  controlaValidadePadrao:
+    z
+      .boolean()
+      .nullable()
+      .optional(),
 
-  localPadraoId: z.string().nullable().optional(),
+  localPadraoId:
+    z.string().nullable().optional(),
 });
 
-const alteracaoSchema = cadastroSchema.extend({
-  id: z.string().min(1, 'Categoria inválida.'),
-  situacao: z.enum(['ATIVO', 'INATIVO']),
-});
+const alteracaoSchema =
+  cadastroSchema.extend({
+    id: z
+      .string()
+      .min(
+        1,
+        'Categoria inválida.'
+      ),
 
-async function validarGrupo(grupoId?: string | null) {
+    situacao: z.enum([
+      'ATIVO',
+      'INATIVO',
+    ]),
+  });
+
+async function validarGrupo(
+  grupoId?: string | null
+) {
   if (!grupoId) {
     return null;
   }
 
-  const grupo = await prisma.grupoGenero.findUnique({
-    where: {
-      id: grupoId,
-    },
-  });
+  const grupo =
+    await prisma.grupoGenero.findUnique({
+      where: {
+        id: grupoId,
+      },
+    });
 
-  if (!grupo || grupo.situacao !== 'ATIVO') {
+  if (
+    !grupo ||
+    grupo.situacao !== 'ATIVO'
+  ) {
     return Response.json(
       {
         error:
@@ -52,18 +78,24 @@ async function validarGrupo(grupoId?: string | null) {
   return null;
 }
 
-async function validarLocal(localPadraoId?: string | null) {
+async function validarLocal(
+  localPadraoId?: string | null
+) {
   if (!localPadraoId) {
     return null;
   }
 
-  const local = await prisma.localArmazenamento.findUnique({
-    where: {
-      id: localPadraoId,
-    },
-  });
+  const local =
+    await prisma.localArmazenamento.findUnique({
+      where: {
+        id: localPadraoId,
+      },
+    });
 
-  if (!local || local.situacao !== 'ATIVO') {
+  if (
+    !local ||
+    local.situacao !== 'ATIVO'
+  ) {
     return Response.json(
       {
         error:
@@ -79,52 +111,63 @@ async function validarLocal(localPadraoId?: string | null) {
 }
 
 export async function GET() {
-  const guard = await requireAdmin();
+  const guard =
+    await requireAdmin();
 
   if (guard.error) {
     return guard.error;
   }
 
-  const categorias = await prisma.categoria.findMany({
-    include: {
-      grupo: true,
-      localPadrao: true,
-      _count: {
-        select: {
-          generos: true,
+  const categorias =
+    await prisma.categoria.findMany({
+      include: {
+        grupo: true,
+        localPadrao: true,
+
+        _count: {
+          select: {
+            generos: true,
+          },
         },
       },
-    },
-    orderBy: [
-      {
-        situacao: 'asc',
-      },
-      {
-        nome: 'asc',
-      },
-    ],
-  });
 
-  return Response.json(categorias);
+      orderBy: [
+        {
+          situacao: 'asc',
+        },
+        {
+          nome: 'asc',
+        },
+      ],
+    });
+
+  return Response.json(
+    categorias
+  );
 }
 
-export async function POST(request: Request) {
-  const guard = await requireAdmin();
+export async function POST(
+  request: Request
+) {
+  const guard =
+    await requireAdmin();
 
   if (guard.error) {
     return guard.error;
   }
 
   try {
-    const body = cadastroSchema.parse(
-      await request.json()
-    );
+    const body =
+      cadastroSchema.parse(
+        await request.json()
+      );
 
-    const existente = await prisma.categoria.findUnique({
-      where: {
-        nome: body.nome,
-      },
-    });
+    const existente =
+      await prisma.categoria.findUnique({
+        where: {
+          nome: body.nome,
+        },
+      });
 
     if (existente) {
       return Response.json(
@@ -138,42 +181,53 @@ export async function POST(request: Request) {
       );
     }
 
-    const erroGrupo = await validarGrupo(body.grupoId);
+    const erroGrupo =
+      await validarGrupo(
+        body.grupoId
+      );
 
     if (erroGrupo) {
       return erroGrupo;
     }
 
-    const erroLocal = await validarLocal(
-      body.localPadraoId
-    );
+    const erroLocal =
+      await validarLocal(
+        body.localPadraoId
+      );
 
     if (erroLocal) {
       return erroLocal;
     }
 
-    const categoria = await prisma.categoria.create({
-      data: {
-        nome: body.nome,
+    const categoria =
+      await prisma.categoria.create({
+        data: {
+          nome: body.nome,
 
-        grupoId: body.grupoId || null,
+          grupoId:
+            body.grupoId ||
+            null,
 
-        controlaLotePadrao:
-          body.controlaLotePadrao ?? null,
+          controlaLotePadrao:
+            body.controlaLotePadrao ??
+            null,
 
-        controlaValidadePadrao:
-          body.controlaValidadePadrao ?? null,
+          controlaValidadePadrao:
+            body.controlaValidadePadrao ??
+            null,
 
-        localPadraoId:
-          body.localPadraoId || null,
+          localPadraoId:
+            body.localPadraoId ||
+            null,
 
-        situacao: 'ATIVO',
-      },
-      include: {
-        grupo: true,
-        localPadrao: true,
-      },
-    });
+          situacao: 'ATIVO',
+        },
+
+        include: {
+          grupo: true,
+          localPadrao: true,
+        },
+      });
 
     return Response.json(
       {
@@ -185,11 +239,15 @@ export async function POST(request: Request) {
       }
     );
   } catch (error) {
-    if (error instanceof z.ZodError) {
+    if (
+      error instanceof
+      z.ZodError
+    ) {
       return Response.json(
         {
           error:
-            error.issues[0]?.message ||
+            error.issues[0]
+              ?.message ||
             'Dados inválidos.',
         },
         {
@@ -210,23 +268,28 @@ export async function POST(request: Request) {
   }
 }
 
-export async function PUT(request: Request) {
-  const guard = await requireAdmin();
+export async function PUT(
+  request: Request
+) {
+  const guard =
+    await requireAdmin();
 
   if (guard.error) {
     return guard.error;
   }
 
   try {
-    const body = alteracaoSchema.parse(
-      await request.json()
-    );
+    const body =
+      alteracaoSchema.parse(
+        await request.json()
+      );
 
     const categoriaAtual =
       await prisma.categoria.findUnique({
         where: {
           id: body.id,
         },
+
         include: {
           _count: {
             select: {
@@ -239,7 +302,8 @@ export async function PUT(request: Request) {
     if (!categoriaAtual) {
       return Response.json(
         {
-          error: 'Categoria não encontrada.',
+          error:
+            'Categoria não encontrada.',
         },
         {
           status: 404,
@@ -269,23 +333,29 @@ export async function PUT(request: Request) {
       );
     }
 
-    const erroGrupo = await validarGrupo(body.grupoId);
+    const erroGrupo =
+      await validarGrupo(
+        body.grupoId
+      );
 
     if (erroGrupo) {
       return erroGrupo;
     }
 
-    const erroLocal = await validarLocal(
-      body.localPadraoId
-    );
+    const erroLocal =
+      await validarLocal(
+        body.localPadraoId
+      );
 
     if (erroLocal) {
       return erroLocal;
     }
 
     if (
-      body.situacao === 'INATIVO' &&
-      categoriaAtual._count.generos > 0
+      body.situacao ===
+        'INATIVO' &&
+      categoriaAtual._count
+        .generos > 0
     ) {
       return Response.json(
         {
@@ -298,42 +368,55 @@ export async function PUT(request: Request) {
       );
     }
 
-    const categoria = await prisma.categoria.update({
-      where: {
-        id: body.id,
-      },
-      data: {
-        nome: body.nome,
+    const categoria =
+      await prisma.categoria.update({
+        where: {
+          id: body.id,
+        },
 
-        grupoId: body.grupoId || null,
+        data: {
+          nome: body.nome,
 
-        controlaLotePadrao:
-          body.controlaLotePadrao ?? null,
+          grupoId:
+            body.grupoId ||
+            null,
 
-        controlaValidadePadrao:
-          body.controlaValidadePadrao ?? null,
+          controlaLotePadrao:
+            body.controlaLotePadrao ??
+            null,
 
-        localPadraoId:
-          body.localPadraoId || null,
+          controlaValidadePadrao:
+            body.controlaValidadePadrao ??
+            null,
 
-        situacao: body.situacao,
-      },
-      include: {
-        grupo: true,
-        localPadrao: true,
-      },
-    });
+          localPadraoId:
+            body.localPadraoId ||
+            null,
+
+          situacao:
+            body.situacao,
+        },
+
+        include: {
+          grupo: true,
+          localPadrao: true,
+        },
+      });
 
     return Response.json({
       ok: true,
       categoria,
     });
   } catch (error) {
-    if (error instanceof z.ZodError) {
+    if (
+      error instanceof
+      z.ZodError
+    ) {
       return Response.json(
         {
           error:
-            error.issues[0]?.message ||
+            error.issues[0]
+              ?.message ||
             'Dados inválidos.',
         },
         {
@@ -349,6 +432,109 @@ export async function PUT(request: Request) {
       },
       {
         status: 500,
+      }
+    );
+  }
+}
+
+export async function DELETE(
+  request: Request
+) {
+  const guard =
+    await requireAdmin();
+
+  if (guard.error) {
+    return guard.error;
+  }
+
+  const resultado = z
+    .object({
+      id: z
+        .string()
+        .min(
+          1,
+          'Categoria inválida.'
+        ),
+    })
+    .safeParse(
+      await request.json()
+    );
+
+  if (!resultado.success) {
+    return Response.json(
+      {
+        error:
+          'Informe a categoria que deseja excluir.',
+      },
+      {
+        status: 400,
+      }
+    );
+  }
+
+  const categoria =
+    await prisma.categoria.findUnique({
+      where: {
+        id: resultado.data.id,
+      },
+
+      include: {
+        _count: {
+          select: {
+            generos: true,
+          },
+        },
+      },
+    });
+
+  if (!categoria) {
+    return Response.json(
+      {
+        error:
+          'Categoria não encontrada.',
+      },
+      {
+        status: 404,
+      }
+    );
+  }
+
+  if (
+    categoria._count.generos >
+    0
+  ) {
+    return Response.json(
+      {
+        error:
+          `A categoria "${categoria.nome}" não pode ser excluída porque possui ${categoria._count.generos} gênero(s) vinculado(s). Altere primeiro os gêneros vinculados a esta categoria.`,
+      },
+      {
+        status: 409,
+      }
+    );
+  }
+
+  try {
+    await prisma.categoria.delete({
+      where: {
+        id: categoria.id,
+      },
+    });
+
+    return Response.json({
+      ok: true,
+
+      mensagem:
+        `Categoria "${categoria.nome}" excluída com sucesso.`,
+    });
+  } catch {
+    return Response.json(
+      {
+        error:
+          'Não foi possível excluir a categoria. Verifique se ela possui algum vínculo no sistema.',
+      },
+      {
+        status: 409,
       }
     );
   }
