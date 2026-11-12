@@ -14,6 +14,28 @@ type Local = {
   situacao?: string;
 };
 
+const estiloBotaoPequeno = {
+  width: 'auto',
+  minHeight: '34px',
+  padding: '6px 11px',
+  borderRadius: '8px',
+  fontSize: '11px',
+  fontWeight: 700,
+} as const;
+
+const estiloBotaoSecundario = {
+  width: 'auto',
+  minHeight: '34px',
+  padding: '6px 11px',
+  borderRadius: '8px',
+  border: '1px solid #284334',
+  background: '#0c1811',
+  color: '#fff',
+  fontSize: '11px',
+  fontWeight: 700,
+  cursor: 'pointer',
+} as const;
+
 export default function LocaisClient() {
   const [locais, setLocais] =
     useState<Local[]>([]);
@@ -303,16 +325,17 @@ export default function LocaisClient() {
             </span>
           </div>
 
-          <button
-            className="btn"
-            type="submit"
-            style={{
-              width: '100%',
-              minHeight: '46px',
-            }}
-          >
-            Adicionar local
-          </button>
+          <div>
+            <button
+              className="btn"
+              type="submit"
+              style={
+                estiloBotaoPequeno
+              }
+            >
+              + Adicionar local
+            </button>
+          </div>
 
           {sucesso &&
             !editando && (
@@ -363,13 +386,13 @@ export default function LocaisClient() {
               !mostrarLocais
             )
           }
-          style={{
-            width: '100%',
-          }}
+          style={
+            estiloBotaoPequeno
+          }
         >
           {mostrarLocais
-            ? 'Ocultar locais cadastrados'
-            : `Ver locais cadastrados (${locais.length})`}
+            ? '− Ocultar locais'
+            : `+ Ver locais (${locais.length})`}
         </button>
 
         {mostrarLocais && (
@@ -505,17 +528,20 @@ export default function LocaisClient() {
                         <div
                           style={{
                             display:
-                              'grid',
-                            gridTemplateColumns:
-                              'repeat(2, minmax(0, 1fr))',
+                              'flex',
+                            flexWrap:
+                              'wrap',
                             gap: '8px',
                           }}
                         >
                           <button
                             className="btn"
                             type="submit"
+                            style={
+                              estiloBotaoPequeno
+                            }
                           >
-                            Salvar
+                            ✓ Salvar
                           </button>
 
                           <button
@@ -523,21 +549,9 @@ export default function LocaisClient() {
                             onClick={
                               cancelarEdicao
                             }
-                            style={{
-                              minHeight:
-                                '44px',
-                              borderRadius:
-                                '11px',
-                              border:
-                                '1px solid #284334',
-                              background:
-                                '#0c1811',
-                              color: '#fff',
-                              fontWeight:
-                                700,
-                              cursor:
-                                'pointer',
-                            }}
+                            style={
+                              estiloBotaoSecundario
+                            }
                           >
                             Cancelar
                           </button>
@@ -663,22 +677,27 @@ export default function LocaisClient() {
                           </div>
                         </div>
 
-                        <button
-                          type="button"
-                          className="btn"
-                          onClick={() =>
-                            iniciarEdicao(
-                              local
-                            )
-                          }
+                        <div
                           style={{
-                            width: '100%',
                             marginTop:
-                              '12px',
+                              '10px',
                           }}
                         >
-                          Editar local
-                        </button>
+                          <button
+                            type="button"
+                            className="btn"
+                            onClick={() =>
+                              iniciarEdicao(
+                                local
+                              )
+                            }
+                            style={
+                              estiloBotaoPequeno
+                            }
+                          >
+                            Editar local
+                          </button>
+                        </div>
                       </>
                     )}
                   </article>
