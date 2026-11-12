@@ -36,37 +36,42 @@ type Categoria = {
   };
 };
 
-function CampoInfo({
-  titulo,
-  valor,
-}: {
-  titulo: string;
-  valor: React.ReactNode;
-}) {
-  return (
-    <div>
-      <div
-        className="muted"
-        style={{
-          fontSize: '10px',
-          marginBottom: '2px',
-        }}
-      >
-        {titulo}
-      </div>
+const estiloBotaoPequeno = {
+  width: 'auto',
+  minHeight: '34px',
+  padding: '6px 11px',
+  borderRadius: '8px',
+  fontSize: '11px',
+  fontWeight: 700,
+} as const;
 
-      <div
-        style={{
-          fontSize: '12px',
-          fontWeight: 600,
-          lineHeight: 1.4,
-        }}
-      >
-        {valor}
-      </div>
-    </div>
-  );
-}
+const estiloBotaoSecundario = {
+  width: 'auto',
+  minHeight: '34px',
+  padding: '6px 11px',
+  borderRadius: '8px',
+  border: '1px solid #284334',
+  background: '#0c1811',
+  color: '#fff',
+  fontSize: '11px',
+  fontWeight: 700,
+  cursor: 'pointer',
+} as const;
+
+const estiloBotaoExcluir = {
+  width: 'auto',
+  minHeight: '34px',
+  padding: '6px 11px',
+  borderRadius: '8px',
+  border:
+    '1px solid rgba(239,68,68,.55)',
+  background:
+    'rgba(239,68,68,.08)',
+  color: '#fca5a5',
+  fontSize: '11px',
+  fontWeight: 700,
+  cursor: 'pointer',
+} as const;
 
 export default function CategoriasClient() {
   const [categorias, setCategorias] =
@@ -78,7 +83,9 @@ export default function CategoriasClient() {
   const [locais, setLocais] =
     useState<Local[]>([]);
 
-  const [erro, setErro] = useState('');
+  const [erro, setErro] =
+    useState('');
+
   const [sucesso, setSucesso] =
     useState('');
 
@@ -90,22 +97,37 @@ export default function CategoriasClient() {
   const [editando, setEditando] =
     useState<Categoria | null>(null);
 
-  const [nomeEdicao, setNomeEdicao] =
-    useState('');
+  const [
+    excluindoId,
+    setExcluindoId,
+  ] = useState<string | null>(
+    null
+  );
 
-  const [grupoEdicao, setGrupoEdicao] =
-    useState('');
+  const [
+    nomeEdicao,
+    setNomeEdicao,
+  ] = useState('');
 
-  const [loteEdicao, setLoteEdicao] =
-    useState(false);
+  const [
+    grupoEdicao,
+    setGrupoEdicao,
+  ] = useState('');
+
+  const [
+    loteEdicao,
+    setLoteEdicao,
+  ] = useState(false);
 
   const [
     validadeEdicao,
     setValidadeEdicao,
   ] = useState(false);
 
-  const [localEdicao, setLocalEdicao] =
-    useState('');
+  const [
+    localEdicao,
+    setLocalEdicao,
+  ] = useState('');
 
   const [
     situacaoEdicao,
@@ -126,9 +148,11 @@ export default function CategoriasClient() {
         fetch('/api/categorias', {
           cache: 'no-store',
         }),
+
         fetch('/api/grupos-generos', {
           cache: 'no-store',
         }),
+
         fetch('/api/locais', {
           cache: 'no-store',
         }),
@@ -192,6 +216,24 @@ export default function CategoriasClient() {
     carregarDados();
   }, []);
 
+  useEffect(() => {
+    if (!sucesso) {
+      return;
+    }
+
+    const timer =
+      window.setTimeout(
+        () => {
+          setSucesso('');
+        },
+        4000
+      );
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [sucesso]);
+
   const gruposAtivos =
     grupos.filter(
       (grupo) =>
@@ -210,8 +252,11 @@ export default function CategoriasClient() {
   ) {
     ev.preventDefault();
 
-    const form = ev.currentTarget;
-    const dados = new FormData(form);
+    const form =
+      ev.currentTarget;
+
+    const dados =
+      new FormData(form);
 
     setErro('');
     setSucesso('');
@@ -221,10 +266,12 @@ export default function CategoriasClient() {
         '/api/categorias',
         {
           method: 'POST',
+
           headers: {
             'content-type':
               'application/json',
           },
+
           body: JSON.stringify({
             nome: String(
               dados.get('nome') || ''
@@ -270,11 +317,11 @@ export default function CategoriasClient() {
 
       form.reset();
 
+      await carregarDados();
+
       setSucesso(
         'Categoria cadastrada com sucesso.'
       );
-
-      await carregarDados();
 
       nomeRef.current?.focus();
     } catch {
@@ -347,13 +394,16 @@ export default function CategoriasClient() {
         '/api/categorias',
         {
           method: 'PUT',
+
           headers: {
             'content-type':
               'application/json',
           },
+
           body: JSON.stringify({
             id: editando.id,
-            nome: nomeEdicao.trim(),
+            nome:
+              nomeEdicao.trim(),
 
             grupoId:
               grupoEdicao || null,
@@ -393,15 +443,75 @@ export default function CategoriasClient() {
       setLocalEdicao('');
       setSituacaoEdicao('ATIVO');
 
+      await carregarDados();
+
       setSucesso(
         'Categoria atualizada com sucesso.'
       );
-
-      await carregarDados();
     } catch {
       setErro(
         'Não foi possível alterar a categoria.'
       );
+    }
+  }
+
+  async function excluirCategoria(
+    categoria: Categoria
+  ) {
+    const confirmar =
+      window.confirm(
+        `Deseja realmente excluir a categoria "${categoria.nome}"?\n\nA exclusão somente será realizada se não houver gêneros vinculados a esta categoria.`
+      );
+
+    if (!confirmar) {
+      return;
+    }
+
+    setErro('');
+    setSucesso('');
+    setExcluindoId(categoria.id);
+
+    try {
+      const resposta = await fetch(
+        '/api/categorias',
+        {
+          method: 'DELETE',
+
+          headers: {
+            'content-type':
+              'application/json',
+          },
+
+          body: JSON.stringify({
+            id: categoria.id,
+          }),
+        }
+      );
+
+      const resultado =
+        await resposta.json();
+
+      if (!resposta.ok) {
+        setErro(
+          resultado.error ||
+            'Não foi possível excluir a categoria.'
+        );
+
+        return;
+      }
+
+      await carregarDados();
+
+      setSucesso(
+        resultado.mensagem ||
+          `Categoria "${categoria.nome}" excluída com sucesso.`
+      );
+    } catch {
+      setErro(
+        'Não foi possível comunicar com o servidor para excluir a categoria.'
+      );
+    } finally {
+      setExcluindoId(null);
     }
   }
 
@@ -412,7 +522,8 @@ export default function CategoriasClient() {
           padding: '13px',
           borderRadius: '12px',
           background: '#0c1811',
-          border: '1px solid #284334',
+          border:
+            '1px solid #284334',
           marginBottom: '16px',
         }}
       >
@@ -421,7 +532,8 @@ export default function CategoriasClient() {
             display: 'flex',
             justifyContent:
               'space-between',
-            alignItems: 'flex-start',
+            alignItems:
+              'flex-start',
             gap: '10px',
             marginBottom: '15px',
           }}
@@ -454,7 +566,8 @@ export default function CategoriasClient() {
               padding: '5px 8px',
               borderRadius: '999px',
               background: '#183d2a',
-              border: '1px solid #284334',
+              border:
+                '1px solid #284334',
               fontSize: '10px',
               fontWeight: 800,
               whiteSpace: 'nowrap',
@@ -578,7 +691,6 @@ export default function CategoriasClient() {
                 <span
                   style={{
                     fontSize: '11px',
-                    lineHeight: 1.3,
                   }}
                 >
                   Controla lote
@@ -612,7 +724,6 @@ export default function CategoriasClient() {
                 <span
                   style={{
                     fontSize: '11px',
-                    lineHeight: 1.3,
                   }}
                 >
                   Controla validade
@@ -666,54 +777,59 @@ export default function CategoriasClient() {
             </select>
           </label>
 
-          <button
-            className="btn"
-            type="submit"
-            style={{
-              width: '100%',
-              minHeight: '46px',
-            }}
-          >
-            Adicionar categoria
-          </button>
+          <div>
+            <button
+              className="btn"
+              type="submit"
+              style={
+                estiloBotaoPequeno
+              }
+            >
+              + Adicionar categoria
+            </button>
+          </div>
 
-          {sucesso &&
+          {erro &&
             !editando && (
               <div
-                role="status"
-                style={{
-                  padding: '11px',
-                  borderRadius: '10px',
-                  background:
-                    'rgba(43,138,87,.08)',
-                  border:
-                    '1px solid rgba(43,138,87,.4)',
-                  fontSize: '12px',
-                }}
+                className="error"
+                role="alert"
               >
-                <strong>
-                  ✓ {sucesso}
-                </strong>
+                {erro}
               </div>
             )}
-
-          {erro && !editando && (
-            <div
-              className="error"
-              role="alert"
-            >
-              {erro}
-            </div>
-          )}
         </form>
       </div>
+
+      {sucesso && (
+        <div
+          role="status"
+          aria-live="polite"
+          style={{
+            marginBottom: '16px',
+            padding: '11px 13px',
+            borderRadius: '10px',
+            background: '#123d27',
+            border:
+              '1px solid #2f9e62',
+            color: '#b9f6cf',
+            fontSize: '12px',
+            fontWeight: 800,
+            boxShadow:
+              '0 4px 14px rgba(0,0,0,.18)',
+          }}
+        >
+          ✓ {sucesso}
+        </div>
+      )}
 
       <div
         style={{
           padding: '13px',
           borderRadius: '12px',
           background: '#0c1811',
-          border: '1px solid #284334',
+          border:
+            '1px solid #284334',
         }}
       >
         <button
@@ -724,20 +840,20 @@ export default function CategoriasClient() {
               !mostrarCategorias
             )
           }
-          style={{
-            width: '100%',
-          }}
+          style={
+            estiloBotaoPequeno
+          }
         >
           {mostrarCategorias
-            ? 'Ocultar categorias cadastradas'
-            : `Ver categorias cadastradas (${categorias.length})`}
+            ? '− Ocultar categorias'
+            : `+ Ver categorias (${categorias.length})`}
         </button>
 
         {mostrarCategorias && (
           <div
             style={{
               display: 'grid',
-              gap: '10px',
+              gap: '8px',
               marginTop: '14px',
             }}
           >
@@ -771,9 +887,9 @@ export default function CategoriasClient() {
                   <article
                     key={categoria.id}
                     style={{
-                      padding: '13px',
+                      padding: '12px',
                       borderRadius:
-                        '12px',
+                        '11px',
                       background:
                         '#102018',
                       border:
@@ -815,8 +931,8 @@ export default function CategoriasClient() {
                             }}
                           >
                             Altere a
-                            organização e os
-                            padrões da
+                            organização e
+                            os padrões da
                             categoria.
                           </div>
                         </div>
@@ -1077,17 +1193,20 @@ export default function CategoriasClient() {
                         <div
                           style={{
                             display:
-                              'grid',
-                            gridTemplateColumns:
-                              'repeat(2, minmax(0, 1fr))',
+                              'flex',
+                            flexWrap:
+                              'wrap',
                             gap: '8px',
                           }}
                         >
                           <button
                             className="btn"
                             type="submit"
+                            style={
+                              estiloBotaoPequeno
+                            }
                           >
-                            Salvar
+                            ✓ Salvar
                           </button>
 
                           <button
@@ -1095,22 +1214,9 @@ export default function CategoriasClient() {
                             onClick={
                               cancelarEdicao
                             }
-                            style={{
-                              minHeight:
-                                '44px',
-                              borderRadius:
-                                '11px',
-                              border:
-                                '1px solid #284334',
-                              background:
-                                '#0c1811',
-                              color:
-                                '#fff',
-                              fontWeight:
-                                700,
-                              cursor:
-                                'pointer',
-                            }}
+                            style={
+                              estiloBotaoSecundario
+                            }
                           >
                             Cancelar
                           </button>
@@ -1127,17 +1233,18 @@ export default function CategoriasClient() {
                             alignItems:
                               'flex-start',
                             gap: '10px',
-                            paddingBottom:
-                              '10px',
-                            marginBottom:
-                              '11px',
-                            borderBottom:
-                              '1px solid rgba(255,255,255,.07)',
                           }}
                         >
-                          <div>
+                          <div
+                            style={{
+                              minWidth: 0,
+                              flex: 1,
+                            }}
+                          >
                             <strong
                               style={{
+                                display:
+                                  'block',
                                 fontSize:
                                   '14px',
                               }}
@@ -1151,9 +1258,11 @@ export default function CategoriasClient() {
                               className="muted"
                               style={{
                                 marginTop:
-                                  '3px',
+                                  '4px',
                                 fontSize:
                                   '11px',
+                                lineHeight:
+                                  1.45,
                               }}
                             >
                               Grupo:{' '}
@@ -1162,6 +1271,72 @@ export default function CategoriasClient() {
                                 ?.nome ||
                                 'Não definido'}
                             </div>
+
+                            <div
+                              className="muted"
+                              style={{
+                                marginTop:
+                                  '3px',
+                                fontSize:
+                                  '10px',
+                                lineHeight:
+                                  1.45,
+                              }}
+                            >
+                              Lote:{' '}
+                              {categoria.controlaLotePadrao
+                                ? 'Sim'
+                                : 'Não'}
+                              {' • '}
+                              Validade:{' '}
+                              {categoria.controlaValidadePadrao
+                                ? 'Sim'
+                                : 'Não'}
+                            </div>
+
+                            {categoria
+                              .localPadrao
+                              ?.nome && (
+                              <div
+                                className="muted"
+                                style={{
+                                  marginTop:
+                                    '3px',
+                                  fontSize:
+                                    '10px',
+                                }}
+                              >
+                                Local:{' '}
+                                {
+                                  categoria
+                                    .localPadrao
+                                    .nome
+                                }
+                              </div>
+                            )}
+
+                            {(categoria
+                              ._count
+                              ?.generos ??
+                              0) > 0 && (
+                              <div
+                                className="muted"
+                                style={{
+                                  marginTop:
+                                    '3px',
+                                  fontSize:
+                                    '10px',
+                                }}
+                              >
+                                {
+                                  categoria
+                                    ._count
+                                    ?.generos
+                                }{' '}
+                                gênero(s)
+                                vinculado(s)
+                              </div>
+                            )}
                           </div>
 
                           <span
@@ -1184,6 +1359,8 @@ export default function CategoriasClient() {
                                 '10px',
                               fontWeight:
                                 800,
+                              whiteSpace:
+                                'nowrap',
                             }}
                           >
                             {
@@ -1195,68 +1372,56 @@ export default function CategoriasClient() {
                         <div
                           style={{
                             display:
-                              'grid',
-                            gridTemplateColumns:
-                              'repeat(2, minmax(0, 1fr))',
-                            gap:
-                              '11px 14px',
-                          }}
-                        >
-                          <CampoInfo
-                            titulo="Lote por padrão"
-                            valor={
-                              categoria.controlaLotePadrao
-                                ? 'Sim'
-                                : 'Não'
-                            }
-                          />
-
-                          <CampoInfo
-                            titulo="Validade por padrão"
-                            valor={
-                              categoria.controlaValidadePadrao
-                                ? 'Sim'
-                                : 'Não'
-                            }
-                          />
-
-                          <CampoInfo
-                            titulo="Local habitual"
-                            valor={
-                              categoria
-                                .localPadrao
-                                ?.nome ||
-                              'Não definido'
-                            }
-                          />
-
-                          <CampoInfo
-                            titulo="Gêneros vinculados"
-                            valor={
-                              categoria
-                                ._count
-                                ?.generos ??
-                              0
-                            }
-                          />
-                        </div>
-
-                        <button
-                          type="button"
-                          className="btn"
-                          onClick={() =>
-                            iniciarEdicao(
-                              categoria
-                            )
-                          }
-                          style={{
-                            width: '100%',
+                              'flex',
+                            flexWrap:
+                              'wrap',
+                            gap: '7px',
                             marginTop:
-                              '12px',
+                              '9px',
                           }}
                         >
-                          Editar categoria
-                        </button>
+                          <button
+                            type="button"
+                            className="btn"
+                            onClick={() =>
+                              iniciarEdicao(
+                                categoria
+                              )
+                            }
+                            style={
+                              estiloBotaoPequeno
+                            }
+                          >
+                            Editar categoria
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              excluirCategoria(
+                                categoria
+                              )
+                            }
+                            disabled={
+                              excluindoId ===
+                              categoria.id
+                            }
+                            style={{
+                              ...estiloBotaoExcluir,
+
+                              opacity:
+                                excluindoId ===
+                                categoria.id
+                                  ? 0.55
+                                  : 1,
+                            }}
+                          >
+                            {excluindoId ===
+                            categoria.id
+                              ? 'Excluindo...'
+                              : 'Excluir'}
+                          </button>
+                        </div>
                       </>
                     )}
                   </article>
@@ -1280,27 +1445,6 @@ export default function CategoriasClient() {
                 </span>
               </div>
             )}
-
-            {sucesso &&
-              !editando && (
-                <div
-                  role="status"
-                  style={{
-                    padding: '11px',
-                    borderRadius:
-                      '10px',
-                    background:
-                      'rgba(43,138,87,.08)',
-                    border:
-                      '1px solid rgba(43,138,87,.4)',
-                    fontSize: '12px',
-                  }}
-                >
-                  <strong>
-                    ✓ {sucesso}
-                  </strong>
-                </div>
-              )}
           </div>
         )}
       </div>
