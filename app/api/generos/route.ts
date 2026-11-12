@@ -584,3 +584,190 @@ export async function PUT(
     );
   }
 }
+
+export async function DELETE(
+  req: Request
+) {
+  const guard =
+    await requireAdmin();
+
+  if (guard.error) {
+    return guard.error;
+  }
+
+  const resultado = z
+    .object({
+      id: z
+        .string()
+        .min(
+          1,
+          'Gênero inválido.'
+        ),
+    })
+    .safeParse(
+      await req.json()
+    );
+
+  if (!resultado.success) {
+    return Response.json(
+      {
+        error:
+          'Informe o gênero que deseja excluir.',
+      },
+      {
+        status: 400,
+      }
+    );
+  }
+
+  const genero =
+    await prisma.genero.findUnique({
+      where: {
+        id: resultado.data.id,
+      },
+
+      include: {
+        _count: {
+          select: {
+            lotes: true,
+            estoques: true,
+            itensRecebimento: true,
+            itensSaida: true,
+            movimentacoesEstoque:
+              true,
+            referenciasConsumoQS:
+              true,
+            itensPlanejamentoRessuprimentoQS:
+              true,
+            itensRessuprimentoComplementarQS:
+              true,
+            itensCompraQR: true,
+            itensRecebimentoCompraQR:
+              true,
+          },
+        },
+      },
+    });
+
+  if (!genero) {
+    return Response.json(
+      {
+        error:
+          'Gênero não encontrado.',
+      },
+      {
+        status: 404,
+      }
+    );
+  }
+
+  const vinculos =
+    genero._count;
+
+  const possuiHistorico =
+    vinculos.lotes > 0 ||
+    vinculos.estoques > 0 ||
+    vinculos.itensRecebimento > 0 ||
+    vinculos.itensSaida > 0 ||
+    vinculos.movimentacoesEstoque >
+      0 ||
+    vinculos.referenciasConsumoQS >
+      0 ||
+    vinculos
+      .itensPlanejamentoRessuprimentoQS >
+      0 ||
+    vinculos
+      .itensRessuprimentoComplementarQS >
+      0 ||
+    vinculos.itensCompraQR > 0 ||
+    vinculos
+      .itensRecebimentoCompraQR > 0;
+
+  if (possuiHistorico) {
+    return Response.json(
+      {
+        error:
+          `O gênero "${genero.nome}" não pode ser excluído porque já possui vínculo ou histórico no sistema. Para preservar os registros do estoque, recebimentos, saídas e planejamentos, edite o gênero e altere sua situação para INATIVO.`,
+      },
+      {
+        status: 409,
+      }
+    );
+  }
+
+  try {
+    await prisma.$transaction(
+      async (tx) => {
+        await tx.auditoria.create({
+          data: {
+            usuarioId:
+              guard.user!.id,
+
+            acao: 'EXCLUIR',
+
+            entidade:
+              'Genero',
+
+            entidadeId:
+              genero.id,
+
+            dadosAnteriores: {
+              nome:
+                genero.nome,
+
+              classe:
+                genero.classe,
+
+              categoriaId:
+                genero.categoriaId,
+
+              unidadeId:
+                genero.unidadeId,
+
+              controlaLote:
+                genero.controlaLote,
+
+              controlaValidade:
+                genero.controlaValidade,
+
+              estoqueMinimo:
+                genero.estoqueMinimo,
+
+              valorUnitarioReferencia:
+                genero.valorUnitarioReferencia,
+
+              localPadraoId:
+                genero.localPadraoId,
+
+              situacao:
+                genero.situacao,
+            },
+          },
+        });
+
+        await tx.genero.delete({
+          where: {
+            id: genero.id,
+          },
+        });
+      }
+    );
+
+    return Response.json({
+      ok: true,
+
+      mensagem:
+        `Gênero "${genero.nome}" excluído com sucesso.`,
+    });
+  } catch {
+    return Response.json(
+      {
+        error:
+          'Não foi possível excluir o gênero. Verifique se existe algum vínculo com registros do sistema.',
+      },
+      {
+        status: 409,
+      }
+    );
+  }
+}
