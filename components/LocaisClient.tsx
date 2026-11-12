@@ -36,6 +36,21 @@ const estiloBotaoSecundario = {
   cursor: 'pointer',
 } as const;
 
+const estiloBotaoExcluir = {
+  width: 'auto',
+  minHeight: '34px',
+  padding: '6px 11px',
+  borderRadius: '8px',
+  border:
+    '1px solid rgba(239,68,68,.55)',
+  background:
+    'rgba(239,68,68,.08)',
+  color: '#fca5a5',
+  fontSize: '11px',
+  fontWeight: 700,
+  cursor: 'pointer',
+} as const;
+
 export default function LocaisClient() {
   const [locais, setLocais] =
     useState<Local[]>([]);
@@ -53,6 +68,13 @@ export default function LocaisClient() {
 
   const [editando, setEditando] =
     useState<Local | null>(null);
+
+  const [
+    excluindoId,
+    setExcluindoId,
+  ] = useState<string | null>(
+    null
+  );
 
   const [
     nomeEdicao,
@@ -88,12 +110,13 @@ export default function LocaisClient() {
       return;
     }
 
-    const timer = window.setTimeout(
-      () => {
-        setSucesso('');
-      },
-      4000
-    );
+    const timer =
+      window.setTimeout(
+        () => {
+          setSucesso('');
+        },
+        4000
+      );
 
     return () => {
       window.clearTimeout(timer);
@@ -118,10 +141,12 @@ export default function LocaisClient() {
       '/api/locais',
       {
         method: 'POST',
+
         headers: {
           'content-type':
             'application/json',
         },
+
         body: JSON.stringify(
           Object.fromEntries(dados)
         ),
@@ -191,10 +216,12 @@ export default function LocaisClient() {
       '/api/locais',
       {
         method: 'PUT',
+
         headers: {
           'content-type':
             'application/json',
         },
+
         body: JSON.stringify({
           id: editando.id,
           nome: nomeEdicao,
@@ -225,6 +252,66 @@ export default function LocaisClient() {
     setSucesso(
       'Local atualizado com sucesso.'
     );
+  }
+
+  async function excluirLocal(
+    local: Local
+  ) {
+    const confirmar =
+      window.confirm(
+        `Deseja realmente excluir o local "${local.nome}"?\n\nEssa ação somente será realizada se o local ainda não possuir vínculos com gêneros, estoque, recebimentos ou movimentações.`
+      );
+
+    if (!confirmar) {
+      return;
+    }
+
+    setErro('');
+    setSucesso('');
+    setExcluindoId(local.id);
+
+    try {
+      const r = await fetch(
+        '/api/locais',
+        {
+          method: 'DELETE',
+
+          headers: {
+            'content-type':
+              'application/json',
+          },
+
+          body: JSON.stringify({
+            id: local.id,
+          }),
+        }
+      );
+
+      const resposta =
+        await r.json();
+
+      if (!r.ok) {
+        setErro(
+          resposta.error ||
+            'Não foi possível excluir o local.'
+        );
+
+        return;
+      }
+
+      await carregarLocais();
+
+      setSucesso(
+        resposta.mensagem ||
+          `Local "${local.nome}" excluído com sucesso.`
+      );
+    } catch {
+      setErro(
+        'Não foi possível comunicar com o servidor para excluir o local.'
+      );
+    } finally {
+      setExcluindoId(null);
+    }
   }
 
   return (
@@ -652,6 +739,11 @@ export default function LocaisClient() {
 
                         <div
                           style={{
+                            display:
+                              'flex',
+                            flexWrap:
+                              'wrap',
+                            gap: '7px',
                             marginTop:
                               '9px',
                           }}
@@ -669,6 +761,32 @@ export default function LocaisClient() {
                             }
                           >
                             Editar local
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              excluirLocal(
+                                local
+                              )
+                            }
+                            disabled={
+                              excluindoId ===
+                              local.id
+                            }
+                            style={{
+                              ...estiloBotaoExcluir,
+                              opacity:
+                                excluindoId ===
+                                local.id
+                                  ? 0.55
+                                  : 1,
+                            }}
+                          >
+                            {excluindoId ===
+                            local.id
+                              ? 'Excluindo...'
+                              : 'Excluir'}
                           </button>
                         </div>
                       </>
