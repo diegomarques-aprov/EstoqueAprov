@@ -124,6 +124,38 @@ export default function EstoqueInicialClient() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [classe]);
 
+  useEffect(() => {
+    if (
+      !mensagem.includes(
+        'sucesso'
+      )
+    ) {
+      return;
+    }
+
+    const timer =
+      window.setTimeout(
+        () => {
+          setMensagem('');
+        },
+        4000
+      );
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [mensagem]);
+
+  function alterarClasse(
+    novaClasse: 'QS' | 'QR'
+  ) {
+    setClasse(novaClasse);
+    setGeneroId('');
+    setLote('');
+    setValidade('');
+    setMensagem('');
+  }
+
   async function salvar(
     evento: FormEvent<HTMLFormElement>
   ) {
@@ -189,21 +221,21 @@ export default function EstoqueInicialClient() {
     <>
       <div
         style={{
-          display: 'grid',
-          gridTemplateColumns:
-            'repeat(2, minmax(0, 1fr))',
+          display: 'flex',
           gap: '8px',
-          marginBottom: '17px',
+          flexWrap: 'wrap',
+          marginBottom: '16px',
         }}
       >
         <button
           type="button"
           onClick={() =>
-            setClasse('QS')
+            alterarClasse('QS')
           }
           style={{
-            minHeight: '52px',
-            borderRadius: '12px',
+            minHeight: '38px',
+            padding: '6px 16px',
+            borderRadius: '9px',
             border:
               classe === 'QS'
                 ? '1px solid rgba(43,138,87,.8)'
@@ -214,16 +246,15 @@ export default function EstoqueInicialClient() {
                 : '#102018',
             color: '#fff',
             fontWeight: 800,
-            fontSize: '15px',
+            fontSize: '12px',
             cursor: 'pointer',
           }}
         >
           QS
           <span
             style={{
-              display: 'block',
-              marginTop: '2px',
-              fontSize: '10px',
+              marginLeft: '6px',
+              fontSize: '9px',
               fontWeight: 500,
               opacity: 0.8,
             }}
@@ -235,11 +266,12 @@ export default function EstoqueInicialClient() {
         <button
           type="button"
           onClick={() =>
-            setClasse('QR')
+            alterarClasse('QR')
           }
           style={{
-            minHeight: '52px',
-            borderRadius: '12px',
+            minHeight: '38px',
+            padding: '6px 16px',
+            borderRadius: '9px',
             border:
               classe === 'QR'
                 ? '1px solid rgba(43,138,87,.8)'
@@ -250,16 +282,15 @@ export default function EstoqueInicialClient() {
                 : '#102018',
             color: '#fff',
             fontWeight: 800,
-            fontSize: '15px',
+            fontSize: '12px',
             cursor: 'pointer',
           }}
         >
           QR
           <span
             style={{
-              display: 'block',
-              marginTop: '2px',
-              fontSize: '10px',
+              marginLeft: '6px',
+              fontSize: '9px',
               fontWeight: 500,
               opacity: 0.8,
             }}
@@ -267,36 +298,6 @@ export default function EstoqueInicialClient() {
             Compra local
           </span>
         </button>
-      </div>
-
-      <div
-        style={{
-          padding: '11px 12px',
-          marginBottom: '16px',
-          borderRadius: '11px',
-          background: '#0c1811',
-          border: '1px solid #284334',
-        }}
-      >
-        <div
-          className="muted"
-          style={{
-            fontSize: '11px',
-            marginBottom: '3px',
-          }}
-        >
-          Classe selecionada
-        </div>
-
-        <strong
-          style={{
-            fontSize: '14px',
-          }}
-        >
-          {classe === 'QS'
-            ? 'QS — Cadeia de suprimento'
-            : 'QR — Compra local'}
-        </strong>
       </div>
 
       <form
@@ -343,8 +344,8 @@ export default function EstoqueInicialClient() {
         {genero && (
           <div
             style={{
-              padding: '11px 12px',
-              borderRadius: '11px',
+              padding: '10px 12px',
+              borderRadius: '10px',
               background:
                 'rgba(43,138,87,.07)',
               border:
@@ -362,24 +363,33 @@ export default function EstoqueInicialClient() {
               }}
             >
               <div>
-                <div
-                  className="muted"
-                  style={{
-                    fontSize: '10px',
-                  }}
-                >
-                  Gênero selecionado
-                </div>
-
                 <strong
                   style={{
                     display: 'block',
-                    marginTop: '2px',
                     fontSize: '13px',
                   }}
                 >
                   {genero.nome}
                 </strong>
+
+                <div
+                  className="muted"
+                  style={{
+                    marginTop: '4px',
+                    fontSize: '10px',
+                    lineHeight: 1.45,
+                  }}
+                >
+                  {genero.controlaLote
+                    ? 'Lote obrigatório'
+                    : 'Sem controle de lote'}
+
+                  {' · '}
+
+                  {genero.controlaValidade
+                    ? 'Validade obrigatória'
+                    : 'Sem controle de validade'}
+                </div>
               </div>
 
               <span
@@ -398,25 +408,6 @@ export default function EstoqueInicialClient() {
               >
                 {genero.unidade.sigla}
               </span>
-            </div>
-
-            <div
-              className="muted"
-              style={{
-                marginTop: '8px',
-                fontSize: '11px',
-                lineHeight: 1.45,
-              }}
-            >
-              {genero.controlaLote
-                ? 'Lote obrigatório'
-                : 'Sem controle de lote'}
-
-              {' · '}
-
-              {genero.controlaValidade
-                ? 'Validade obrigatória'
-                : 'Sem controle de validade'}
             </div>
           </div>
         )}
@@ -506,64 +497,75 @@ export default function EstoqueInicialClient() {
           </label>
         )}
 
-        {genero &&
-          !genero.controlaLote && (
-            <div
-              style={{
-                padding: '11px 12px',
-                borderRadius:
-                  '11px',
-                background:
-                  '#0c1811',
-                border:
-                  '1px solid #284334',
-                fontSize: '11px',
-                lineHeight: 1.45,
-              }}
-            >
-              <span className="muted">
-                O gênero selecionado não
-                exige informação de lote.
-              </span>
-            </div>
-          )}
-
-        <button
-          type="submit"
-          className="btn"
-          disabled={salvando}
-          style={{
-            width: '100%',
-            minHeight: '46px',
-          }}
-        >
-          {salvando
-            ? 'Registrando...'
-            : 'Registrar saldo inicial'}
-        </button>
+        <div>
+          <button
+            type="submit"
+            className="btn"
+            disabled={salvando}
+            style={{
+              width: 'auto',
+              minHeight: '36px',
+              padding: '7px 13px',
+              borderRadius: '8px',
+              fontSize: '11px',
+              fontWeight: 700,
+            }}
+          >
+            {salvando
+              ? 'Registrando...'
+              : '+ Registrar saldo inicial'}
+          </button>
+        </div>
 
         {mensagem && (
           <div
+            role={
+              mensagem.includes(
+                'sucesso'
+              )
+                ? 'status'
+                : 'alert'
+            }
             style={{
-              padding: '12px',
-              borderRadius: '11px',
+              padding: '11px 12px',
+              borderRadius: '10px',
+
               background:
                 mensagem.includes(
                   'sucesso'
                 )
-                  ? 'rgba(43,138,87,.08)'
+                  ? '#123d27'
                   : 'rgba(245,158,11,.08)',
+
               border:
                 mensagem.includes(
                   'sucesso'
                 )
-                  ? '1px solid rgba(43,138,87,.45)'
+                  ? '1px solid #2f9e62'
                   : '1px solid rgba(245,158,11,.45)',
+
+              color:
+                mensagem.includes(
+                  'sucesso'
+                )
+                  ? '#b9f6cf'
+                  : undefined,
+
               fontSize: '12px',
               lineHeight: 1.45,
+              fontWeight:
+                mensagem.includes(
+                  'sucesso'
+                )
+                  ? 800
+                  : 400,
             }}
           >
-            {mensagem}
+            {mensagem.includes(
+              'sucesso'
+            )
+              ? `✓ ${mensagem}`
+              : mensagem}
           </div>
         )}
       </form>
