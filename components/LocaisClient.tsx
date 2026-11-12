@@ -83,6 +83,23 @@ export default function LocaisClient() {
     carregarLocais();
   }, []);
 
+  useEffect(() => {
+    if (!sucesso) {
+      return;
+    }
+
+    const timer = window.setTimeout(
+      () => {
+        setSucesso('');
+      },
+      4000
+    );
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [sucesso]);
+
   async function adicionar(
     ev: FormEvent<HTMLFormElement>
   ) {
@@ -125,11 +142,11 @@ export default function LocaisClient() {
 
     form.reset();
 
+    await carregarLocais();
+
     setSucesso(
       'Local cadastrado com sucesso.'
     );
-
-    await carregarLocais();
 
     nomeRef.current?.focus();
   }
@@ -203,11 +220,11 @@ export default function LocaisClient() {
     setNomeEdicao('');
     setDescricaoEdicao('');
 
+    await carregarLocais();
+
     setSucesso(
       'Local atualizado com sucesso.'
     );
-
-    await carregarLocais();
   }
 
   return (
@@ -337,37 +354,38 @@ export default function LocaisClient() {
             </button>
           </div>
 
-          {sucesso &&
-            !editando && (
-              <div
-                role="status"
-                style={{
-                  padding: '11px',
-                  borderRadius: '10px',
-                  background:
-                    'rgba(43,138,87,.08)',
-                  border:
-                    '1px solid rgba(43,138,87,.4)',
-                  fontSize: '12px',
-                }}
-              >
-                <strong>
-                  ✓ {sucesso}
-                </strong>
-              </div>
-            )}
-
-          {erro &&
-            !editando && (
-              <div
-                className="error"
-                role="alert"
-              >
-                {erro}
-              </div>
-            )}
+          {erro && (
+            <div
+              className="error"
+              role="alert"
+            >
+              {erro}
+            </div>
+          )}
         </form>
       </div>
+
+      {sucesso && (
+        <div
+          role="status"
+          aria-live="polite"
+          style={{
+            marginBottom: '16px',
+            padding: '11px 13px',
+            borderRadius: '10px',
+            background: '#123d27',
+            border:
+              '1px solid #2f9e62',
+            color: '#b9f6cf',
+            fontSize: '12px',
+            fontWeight: 800,
+            boxShadow:
+              '0 4px 14px rgba(0,0,0,.18)',
+          }}
+        >
+          ✓ {sucesso}
+        </div>
+      )}
 
       <div
         style={{
@@ -399,7 +417,7 @@ export default function LocaisClient() {
           <div
             style={{
               display: 'grid',
-              gap: '10px',
+              gap: '8px',
               marginTop: '14px',
             }}
           >
@@ -433,9 +451,9 @@ export default function LocaisClient() {
                   <article
                     key={local.id}
                     style={{
-                      padding: '13px',
+                      padding: '12px',
                       borderRadius:
-                        '12px',
+                        '11px',
                       background:
                         '#102018',
                       border:
@@ -568,12 +586,6 @@ export default function LocaisClient() {
                             alignItems:
                               'flex-start',
                             gap: '10px',
-                            paddingBottom:
-                              '10px',
-                            marginBottom:
-                              '11px',
-                            borderBottom:
-                              '1px solid rgba(255,255,255,.07)',
                           }}
                         >
                           <div
@@ -640,47 +652,8 @@ export default function LocaisClient() {
 
                         <div
                           style={{
-                            padding:
-                              '10px 11px',
-                            borderRadius:
-                              '10px',
-                            background:
-                              '#0c1811',
-                            border:
-                              '1px solid #284334',
-                          }}
-                        >
-                          <div
-                            className="muted"
-                            style={{
-                              fontSize:
-                                '10px',
-                              marginBottom:
-                                '3px',
-                            }}
-                          >
-                            Uso no estoque
-                          </div>
-
-                          <div
-                            style={{
-                              fontSize:
-                                '11px',
-                              lineHeight:
-                                1.45,
-                            }}
-                          >
-                            Local disponível
-                            para armazenamento
-                            e movimentação de
-                            gêneros.
-                          </div>
-                        </div>
-
-                        <div
-                          style={{
                             marginTop:
-                              '10px',
+                              '9px',
                           }}
                         >
                           <button
@@ -721,27 +694,6 @@ export default function LocaisClient() {
                 </span>
               </div>
             )}
-
-            {sucesso &&
-              !editando && (
-                <div
-                  role="status"
-                  style={{
-                    padding: '11px',
-                    borderRadius:
-                      '10px',
-                    background:
-                      'rgba(43,138,87,.08)',
-                    border:
-                      '1px solid rgba(43,138,87,.4)',
-                    fontSize: '12px',
-                  }}
-                >
-                  <strong>
-                    ✓ {sucesso}
-                  </strong>
-                </div>
-              )}
           </div>
         )}
       </div>
