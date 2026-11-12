@@ -7,71 +7,96 @@ const cadastroSchema = z.object({
     .string()
     .trim()
     .min(2, 'Informe o nome do grupo.')
-    .max(80, 'O nome deve ter no máximo 80 caracteres.'),
+    .max(
+      80,
+      'O nome deve ter no máximo 80 caracteres.'
+    ),
 
   descricao: z
     .string()
     .trim()
-    .max(200, 'A descrição deve ter no máximo 200 caracteres.')
+    .max(
+      200,
+      'A descrição deve ter no máximo 200 caracteres.'
+    )
     .nullable()
     .optional(),
 });
 
-const alteracaoSchema = cadastroSchema.extend({
-  id: z.string().min(1, 'Grupo inválido.'),
-  situacao: z.enum(['ATIVO', 'INATIVO']),
-});
+const alteracaoSchema =
+  cadastroSchema.extend({
+    id: z
+      .string()
+      .min(
+        1,
+        'Grupo inválido.'
+      ),
+
+    situacao: z.enum([
+      'ATIVO',
+      'INATIVO',
+    ]),
+  });
 
 export async function GET() {
-  const guard = await requireAdmin();
+  const guard =
+    await requireAdmin();
 
   if (guard.error) {
     return guard.error;
   }
 
-  const grupos = await prisma.grupoGenero.findMany({
-    include: {
-      _count: {
-        select: {
-          categorias: true,
+  const grupos =
+    await prisma.grupoGenero.findMany({
+      include: {
+        _count: {
+          select: {
+            categorias: true,
+          },
         },
       },
-    },
-    orderBy: [
-      {
-        situacao: 'asc',
-      },
-      {
-        nome: 'asc',
-      },
-    ],
-  });
+
+      orderBy: [
+        {
+          situacao: 'asc',
+        },
+        {
+          nome: 'asc',
+        },
+      ],
+    });
 
   return Response.json(grupos);
 }
 
-export async function POST(request: Request) {
-  const guard = await requireAdmin();
+export async function POST(
+  request: Request
+) {
+  const guard =
+    await requireAdmin();
 
   if (guard.error) {
     return guard.error;
   }
 
   try {
-    const body = cadastroSchema.parse(
-      await request.json()
-    );
+    const body =
+      cadastroSchema.parse(
+        await request.json()
+      );
 
-    const existente = await prisma.grupoGenero.findUnique({
-      where: {
-        nome: body.nome,
-      },
-    });
+    const existente =
+      await prisma.grupoGenero.findUnique({
+        where: {
+          nome: body.nome,
+        },
+      });
 
     if (existente) {
       return Response.json(
         {
-          error: 'Já existe um grupo com esse nome.',
+          error:
+            'Já existe um grupo com esse nome.',
         },
         {
           status: 409,
@@ -79,13 +104,18 @@ export async function POST(request: Request) {
       );
     }
 
-    const grupo = await prisma.grupoGenero.create({
-      data: {
-        nome: body.nome,
-        descricao: body.descricao || null,
-        situacao: 'ATIVO',
-      },
-    });
+    const grupo =
+      await prisma.grupoGenero.create({
+        data: {
+          nome: body.nome,
+
+          descricao:
+            body.descricao ||
+            null,
+
+          situacao: 'ATIVO',
+        },
+      });
 
     return Response.json(
       {
@@ -97,11 +127,15 @@ export async function POST(request: Request) {
       }
     );
   } catch (error) {
-    if (error instanceof z.ZodError) {
+    if (
+      error instanceof
+      z.ZodError
+    ) {
       return Response.json(
         {
           error:
-            error.issues[0]?.message ||
+            error.issues[0]
+              ?.message ||
             'Dados inválidos.',
         },
         {
@@ -122,35 +156,42 @@ export async function POST(request: Request) {
   }
 }
 
-export async function PUT(request: Request) {
-  const guard = await requireAdmin();
+export async function PUT(
+  request: Request
+) {
+  const guard =
+    await requireAdmin();
 
   if (guard.error) {
     return guard.error;
   }
 
   try {
-    const body = alteracaoSchema.parse(
-      await request.json()
-    );
+    const body =
+      alteracaoSchema.parse(
+        await request.json()
+      );
 
-    const grupoAtual = await prisma.grupoGenero.findUnique({
-      where: {
-        id: body.id,
-      },
-      include: {
-        _count: {
-          select: {
-            categorias: true,
+    const grupoAtual =
+      await prisma.grupoGenero.findUnique({
+        where: {
+          id: body.id,
+        },
+
+        include: {
+          _count: {
+            select: {
+              categorias: true,
+            },
           },
         },
-      },
-    });
+      });
 
     if (!grupoAtual) {
       return Response.json(
         {
-          error: 'Grupo não encontrado.',
+          error:
+            'Grupo não encontrado.',
         },
         {
           status: 404,
@@ -158,11 +199,12 @@ export async function PUT(request: Request) {
       );
     }
 
-    const mesmoNome = await prisma.grupoGenero.findUnique({
-      where: {
-        nome: body.nome,
-      },
-    });
+    const mesmoNome =
+      await prisma.grupoGenero.findUnique({
+        where: {
+          nome: body.nome,
+        },
+      });
 
     if (
       mesmoNome &&
@@ -180,8 +222,10 @@ export async function PUT(request: Request) {
     }
 
     if (
-      body.situacao === 'INATIVO' &&
-      grupoAtual._count.categorias > 0
+      body.situacao ===
+        'INATIVO' &&
+      grupoAtual._count
+        .categorias > 0
     ) {
       return Response.json(
         {
@@ -194,27 +238,38 @@ export async function PUT(request: Request) {
       );
     }
 
-    const grupo = await prisma.grupoGenero.update({
-      where: {
-        id: body.id,
-      },
-      data: {
-        nome: body.nome,
-        descricao: body.descricao || null,
-        situacao: body.situacao,
-      },
-    });
+    const grupo =
+      await prisma.grupoGenero.update({
+        where: {
+          id: body.id,
+        },
+
+        data: {
+          nome: body.nome,
+
+          descricao:
+            body.descricao ||
+            null,
+
+          situacao:
+            body.situacao,
+        },
+      });
 
     return Response.json({
       ok: true,
       grupo,
     });
   } catch (error) {
-    if (error instanceof z.ZodError) {
+    if (
+      error instanceof
+      z.ZodError
+    ) {
       return Response.json(
         {
           error:
-            error.issues[0]?.message ||
+            error.issues[0]
+              ?.message ||
             'Dados inválidos.',
         },
         {
@@ -230,6 +285,109 @@ export async function PUT(request: Request) {
       },
       {
         status: 500,
+      }
+    );
+  }
+}
+
+export async function DELETE(
+  request: Request
+) {
+  const guard =
+    await requireAdmin();
+
+  if (guard.error) {
+    return guard.error;
+  }
+
+  const resultado = z
+    .object({
+      id: z
+        .string()
+        .min(
+          1,
+          'Grupo inválido.'
+        ),
+    })
+    .safeParse(
+      await request.json()
+    );
+
+  if (!resultado.success) {
+    return Response.json(
+      {
+        error:
+          'Informe o grupo que deseja excluir.',
+      },
+      {
+        status: 400,
+      }
+    );
+  }
+
+  const grupo =
+    await prisma.grupoGenero.findUnique({
+      where: {
+        id: resultado.data.id,
+      },
+
+      include: {
+        _count: {
+          select: {
+            categorias: true,
+          },
+        },
+      },
+    });
+
+  if (!grupo) {
+    return Response.json(
+      {
+        error:
+          'Grupo não encontrado.',
+      },
+      {
+        status: 404,
+      }
+    );
+  }
+
+  if (
+    grupo._count.categorias >
+    0
+  ) {
+    return Response.json(
+      {
+        error:
+          `O grupo "${grupo.nome}" não pode ser excluído porque possui ${grupo._count.categorias} categoria(s) vinculada(s). Altere ou remova primeiro essas vinculações.`,
+      },
+      {
+        status: 409,
+      }
+    );
+  }
+
+  try {
+    await prisma.grupoGenero.delete({
+      where: {
+        id: grupo.id,
+      },
+    });
+
+    return Response.json({
+      ok: true,
+
+      mensagem:
+        `Grupo "${grupo.nome}" excluído com sucesso.`,
+    });
+  } catch {
+    return Response.json(
+      {
+        error:
+          'Não foi possível excluir o grupo. Verifique se ele possui algum vínculo no sistema.',
+      },
+      {
+        status: 409,
       }
     );
   }
