@@ -7,13 +7,19 @@ const cadastroSchema = z.object({
     .string()
     .trim()
     .min(1, 'Informe a sigla da unidade.')
-    .max(10, 'A sigla deve ter no máximo 10 caracteres.'),
+    .max(
+      10,
+      'A sigla deve ter no máximo 10 caracteres.'
+    ),
 
   nome: z
     .string()
     .trim()
     .min(2, 'Informe o nome da unidade.')
-    .max(60, 'O nome deve ter no máximo 60 caracteres.'),
+    .max(
+      60,
+      'O nome deve ter no máximo 60 caracteres.'
+    ),
 });
 
 const alteracaoSchema = z.object({
@@ -31,11 +37,15 @@ const alteracaoSchema = z.object({
     .min(2, 'Informe o nome da unidade.')
     .max(60),
 
-  situacao: z.enum(['ATIVO', 'INATIVO']),
+  situacao: z.enum([
+    'ATIVO',
+    'INATIVO',
+  ]),
 });
 
 export async function GET() {
-  const guard = await requireAdmin();
+  const guard =
+    await requireAdmin();
 
   if (guard.error) {
     return guard.error;
@@ -43,6 +53,14 @@ export async function GET() {
 
   const unidades =
     await prisma.unidadeMedida.findMany({
+      include: {
+        _count: {
+          select: {
+            generos: true,
+          },
+        },
+      },
+
       orderBy: [
         {
           situacao: 'asc',
@@ -56,17 +74,21 @@ export async function GET() {
   return Response.json(unidades);
 }
 
-export async function POST(request: Request) {
-  const guard = await requireAdmin();
+export async function POST(
+  request: Request
+) {
+  const guard =
+    await requireAdmin();
 
   if (guard.error) {
     return guard.error;
   }
 
   try {
-    const body = cadastroSchema.parse(
-      await request.json()
-    );
+    const body =
+      cadastroSchema.parse(
+        await request.json()
+      );
 
     const existente =
       await prisma.unidadeMedida.findUnique({
@@ -105,12 +127,16 @@ export async function POST(request: Request) {
         status: 201,
       }
     );
-  } catch (error: any) {
-    if (error instanceof z.ZodError) {
+  } catch (error) {
+    if (
+      error instanceof
+      z.ZodError
+    ) {
       return Response.json(
         {
           error:
-            error.issues[0]?.message ||
+            error.issues[0]
+              ?.message ||
             'Dados inválidos.',
         },
         {
@@ -131,23 +157,28 @@ export async function POST(request: Request) {
   }
 }
 
-export async function PUT(request: Request) {
-  const guard = await requireAdmin();
+export async function PUT(
+  request: Request
+) {
+  const guard =
+    await requireAdmin();
 
   if (guard.error) {
     return guard.error;
   }
 
   try {
-    const body = alteracaoSchema.parse(
-      await request.json()
-    );
+    const body =
+      alteracaoSchema.parse(
+        await request.json()
+      );
 
     const unidadeAtual =
       await prisma.unidadeMedida.findUnique({
         where: {
           id: body.id,
         },
+
         include: {
           _count: {
             select: {
@@ -192,8 +223,10 @@ export async function PUT(request: Request) {
     }
 
     if (
-      body.situacao === 'INATIVO' &&
-      unidadeAtual._count.generos > 0
+      body.situacao ===
+        'INATIVO' &&
+      unidadeAtual._count
+        .generos > 0
     ) {
       return Response.json(
         {
@@ -211,10 +244,12 @@ export async function PUT(request: Request) {
         where: {
           id: body.id,
         },
+
         data: {
           sigla: body.sigla,
           nome: body.nome,
-          situacao: body.situacao,
+          situacao:
+            body.situacao,
         },
       });
 
@@ -222,12 +257,16 @@ export async function PUT(request: Request) {
       ok: true,
       unidade,
     });
-  } catch (error: any) {
-    if (error instanceof z.ZodError) {
+  } catch (error) {
+    if (
+      error instanceof
+      z.ZodError
+    ) {
       return Response.json(
         {
           error:
-            error.issues[0]?.message ||
+            error.issues[0]
+              ?.message ||
             'Dados inválidos.',
         },
         {
@@ -243,6 +282,108 @@ export async function PUT(request: Request) {
       },
       {
         status: 500,
+      }
+    );
+  }
+}
+
+export async function DELETE(
+  request: Request
+) {
+  const guard =
+    await requireAdmin();
+
+  if (guard.error) {
+    return guard.error;
+  }
+
+  const resultado = z
+    .object({
+      id: z
+        .string()
+        .min(
+          1,
+          'Unidade inválida.'
+        ),
+    })
+    .safeParse(
+      await request.json()
+    );
+
+  if (!resultado.success) {
+    return Response.json(
+      {
+        error:
+          'Informe a unidade de medida que deseja excluir.',
+      },
+      {
+        status: 400,
+      }
+    );
+  }
+
+  const unidade =
+    await prisma.unidadeMedida.findUnique({
+      where: {
+        id: resultado.data.id,
+      },
+
+      include: {
+        _count: {
+          select: {
+            generos: true,
+          },
+        },
+      },
+    });
+
+  if (!unidade) {
+    return Response.json(
+      {
+        error:
+          'Unidade de medida não encontrada.',
+      },
+      {
+        status: 404,
+      }
+    );
+  }
+
+  if (
+    unidade._count.generos > 0
+  ) {
+    return Response.json(
+      {
+        error:
+          `A unidade "${unidade.sigla} - ${unidade.nome}" não pode ser excluída porque possui ${unidade._count.generos} gênero(s) vinculado(s). Altere primeiro os gêneros vinculados a esta unidade.`,
+      },
+      {
+        status: 409,
+      }
+    );
+  }
+
+  try {
+    await prisma.unidadeMedida.delete({
+      where: {
+        id: unidade.id,
+      },
+    });
+
+    return Response.json({
+      ok: true,
+
+      mensagem:
+        `Unidade "${unidade.sigla} - ${unidade.nome}" excluída com sucesso.`,
+    });
+  } catch {
+    return Response.json(
+      {
+        error:
+          'Não foi possível excluir a unidade de medida. Verifique se ela possui algum vínculo no sistema.',
+      },
+      {
+        status: 409,
       }
     );
   }
